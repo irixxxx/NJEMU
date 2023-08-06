@@ -70,6 +70,10 @@ ADHOC = 0
 PSP_EBOOT_ICON = data/ncdz.png
 endif
 
+ifeq ($(ADHOC), 1)
+SAVE_STATE = 1
+endif
+
 ifeq ($(VERSION_BUILD), 0)
 VERSION_STR = $(VERSION_MAJOR).$(VERSION_MINOR)
 else
@@ -228,7 +232,6 @@ endif
 
 ifeq ($(ADHOC), 1)
 CDEFS += -DADHOC=1
-SAVE_STATE = 1
 endif
 
 ifeq ($(SAVE_STATE), 1)
