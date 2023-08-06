@@ -40,6 +40,8 @@
 #include "common/power_driver.h"
 #include "common/video_driver.h"
 #include "common/ui_text_driver.h"
+#include "common/platform_driver.h"
+#include "emumain.h"
 
 #include "psp/config.h"
 #include "psp/filer.h"
@@ -81,9 +83,5 @@ enum
 
 extern volatile int Loop;
 extern volatile int Sleep;
-extern char launchDir[MAX_PATH];
-extern int devkit_version;
-extern int systembuttons_available;
-extern int njemu_debug;
 
 #endif /* PSP_MAIN_H */

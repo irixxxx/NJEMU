@@ -155,7 +155,7 @@ int draw_battery_status(int draw)
 
 int draw_volume_status(int draw)
 {
-	if (devkit_version >= 0x03050210 && systembuttons_available)
+	if (platform_driver->getDevkitVersion(platform_data) >= 0x03050210 && systembuttons_available)
 	{
 		static TICKER disp_end = 0;
 		int volume = readMainVolume();

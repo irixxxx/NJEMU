@@ -46,6 +46,10 @@ int machine_sound_type;
 uint32_t frames_displayed;
 int fatal_error;
 
+char launchDir[MAX_PATH];
+char screenshotDir[MAX_PATH];  // スクリーンショト保存PATH
+bool systembuttons_available;
+void *platform_data = NULL;
 
 /******************************************************************************
 	ローカル変数
@@ -423,4 +427,42 @@ void save_snapshot(void)
 	mp3_pause(0);
 #endif
 	sound_mute(0);
+}
+
+
+int main(int argc, char *argv[]) {
+	platform_data = platform_driver->init();
+
+	getcwd(launchDir, MAX_PATH - 1);
+	strcat(launchDir, "/");
+
+	memset(screenshotDir, 0x00, sizeof(screenshotDir));
+
+	// Call main platform-specific entry point
+	platform_driver->main(platform_data, argc, argv);
+
+	mkdir(screenshotDir,0777); // スクショ用フォルダ作成
+
+	power_driver->setLowestCpuClock(NULL);
+	ui_text_data = ui_text_driver->init();
+	pad_init();
+
+	#if VIDEO_32BPP
+	video_driver->setMode(video_data, 32);
+#else
+	video_data = video_driver->init();
+#endif
+
+	// Platform system buttom
+	systembuttons_available = platform_driver->startSystemButtons(platform_data);
+
+	file_browser();
+	video_driver->free(video_data);
+	ui_text_driver->free(ui_text_data);
+	pad_exit();
+
+	// Platform exit
+	platform_driver->free(platform_data);
+
+	return 0;
 }

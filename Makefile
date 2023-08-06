@@ -121,6 +121,7 @@ MAINOBJS = \
 	common/input_driver.o \
 	common/video_driver.o \
 	common/ui_text_driver.o \
+	common/platform_driver.o \
 	common/sound.o \
 
 ifeq ($(ADHOC), 1)

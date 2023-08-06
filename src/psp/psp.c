@@ -23,6 +23,13 @@ PSP_MODULE_INFO(TARGET_STR, PSP_MODULE_USER, VERSION_MAJOR, VERSION_MINOR);
 PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER);
 #endif
 
+typedef struct psp_platform {
+	SceUID modID;
+	int32_t devkit_version;
+#if SYSTEM_BUTTONS
+	char prx_path[MAX_PATH];
+#endif
+} psp_platform_t;
 
 /******************************************************************************
 	グローバル変数
@@ -30,11 +37,6 @@ PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER);
 
 volatile int Loop;
 volatile int Sleep;
-char launchDir[MAX_PATH];
-char screenshotDir[MAX_PATH];  // スクリーンショト保存PATH
-int devkit_version;
-int systembuttons_available;
-int njemu_debug;
 
 
 /******************************************************************************
@@ -143,25 +145,58 @@ static int SetupCallbacks(void)
 
 
 /*--------------------------------------------------------
-	main()
+	Kernelモード main()
 --------------------------------------------------------*/
 
+// #ifdef KERNEL_MODE
+// int main(int argc, char *argv[])
+// {
+// 	SceUID main_thread;
+
+// 	pspSdkInstallNoPlainModuleCheckPatch();
+// 	pspSdkInstallKernelLoadModulePatch();
+
+// #ifdef ADHOC
+// 	pspSdkLoadAdhocModules();
+// #endif
+
+// 	main_thread = sceKernelCreateThread(
+// 						"User Mode Thread",
+// 						user_main,
+// 						0x11,
+// 						256 * 1024,
+// 						PSP_THREAD_ATTR_USER,
+// 						NULL
+// 					);
+
+// 	sceKernelStartThread(main_thread, 0, 0);
+// 	sceKernelWaitThreadEnd(main_thread, NULL);
+
+// 	sceKernelExitGame();
+
+// 	return 0;
+// }
+// #endif
+
+static void *psp_init(void) {
+	psp_platform_t *psp = (psp_platform_t*)calloc(1, sizeof(psp_platform_t));
+	return psp;
+}
+
+static void psp_free(void *data) {
+	psp_platform_t *psp = (psp_platform_t*)data;
+
 #ifdef KERNEL_MODE
-static int user_main(SceSize args, void *argp)
+	sceKernelExitThread(0);
 #else
-int main(int argc, char *argv[])
-#endif
-{
-	SceUID modID;
-#if SYSTEM_BUTTONS
-	char prx_path[MAX_PATH];
+	sceKernelExitGame();
 #endif
 
-	getcwd(launchDir, MAX_PATH - 1);
-	strcat(launchDir, "/");
+	free(psp);
+}
 
-	memset(screenshotDir, 0x00, sizeof(screenshotDir));
-
+static void psp_main(void *data, int argc, char *argv[]) {
+	psp_platform_t *psp = (psp_platform_t*)data;
 #if	(EMU_SYSTEM == CPS1)
 	strcat(screenshotDir, "ms0:/PICTURE/CPS1");
 #endif
@@ -175,83 +210,38 @@ int main(int argc, char *argv[])
 	strcat(screenshotDir, "ms0:/PICTURE/NCDZ");
 #endif
 
-	mkdir(screenshotDir,0777); // スクショ用フォルダ作成
-
-	devkit_version = sceKernelDevkitVersion();
-	njemu_debug = 0;
+	psp->devkit_version = sceKernelDevkitVersion();
 
 	SetupCallbacks();
+}
 
-	power_driver->setLowestCpuClock(NULL);
-
-	ui_text_data = ui_text_driver->init();
-	pad_init();
-
-#if VIDEO_32BPP
-	video_driver->setMode(video_data, 32);
-#else
-	video_data = video_driver->init();
-#endif
-
+static bool psp_startSystemButtons(void *data) {
+	psp_platform_t *psp = (psp_platform_t*)data;
 #if SYSTEM_BUTTONS
-	sprintf(prx_path, "%sSystemButtons.prx", launchDir);
+	sprintf(psp->prx_path, "%sSystemButtons.prx", launchDir);
 
-	if ((modID = pspSdkLoadStartModule(prx_path, PSP_MEMORY_PARTITION_KERNEL)) >= 0)
+	if ((psp->modID = pspSdkLoadStartModule(psp->prx_path, PSP_MEMORY_PARTITION_KERNEL)) >= 0)
 	{
 		initSystemButtons(devkit_version);
-		systembuttons_available = 1;
+		return true;
 	}
 	else
 #endif
 	{
-		systembuttons_available = 0;
+		return false;
 	}
-
-	file_browser();
-	video_driver->free(video_data);
-	ui_text_driver->free(ui_text_data);
-	pad_exit();
-
-#ifdef KERNEL_MODE
-	sceKernelExitThread(0);
-#else
-	sceKernelExitGame();
-#endif
-
-	return 0;
 }
 
-
-/*--------------------------------------------------------
-	Kernelモード main()
---------------------------------------------------------*/
-
-#ifdef KERNEL_MODE
-int main(int argc, char *argv[])
-{
-	SceUID main_thread;
-
-	pspSdkInstallNoPlainModuleCheckPatch();
-	pspSdkInstallKernelLoadModulePatch();
-
-#ifdef ADHOC
-	pspSdkLoadAdhocModules();
-#endif
-
-	main_thread = sceKernelCreateThread(
-						"User Mode Thread",
-						user_main,
-						0x11,
-						256 * 1024,
-						PSP_THREAD_ATTR_USER,
-						NULL
-					);
-
-	sceKernelStartThread(main_thread, 0, 0);
-	sceKernelWaitThreadEnd(main_thread, NULL);
-
-	sceKernelExitGame();
-
-	return 0;
+static int32_t psp_getDevkitVersion(void *data) {
+	psp_platform_t *psp = (psp_platform_t*)data;
+	return psp->devkit_version;
 }
-#endif
+
+platform_driver_t platform_psp = {
+	"psp",
+	psp_init,
+	psp_free,
+	psp_main,
+	psp_startSystemButtons,
+	psp_getDevkitVersion,
+};

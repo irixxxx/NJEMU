@@ -363,7 +363,7 @@ int adhocLoadModules(void)
 #ifdef KERNEL_MODE
 	return adhoc_modules_loaded;
 #else
-	if (devkit_version >= 0x02000010)
+	if (platform_driver->getDevkitVersion(platform_data) >= 0x02000010)
 	{
 		int error;
 
@@ -389,7 +389,7 @@ int adhocUnloadModules(void)
 #ifdef KERNEL_MODE
 	return 0;
 #else
-	if (devkit_version >= 0x02000010)
+	if (platform_driver->getDevkitVersion(platform_data) >= 0x02000010)
 	{
 		int error;
 

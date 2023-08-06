@@ -168,7 +168,7 @@ void ui_init(void)
 		dst += BUF_WIDTH;
 	}
 
-	if (devkit_version >= 0x03050210)
+	if (platform_driver->getDevkitVersion(platform_data) >= 0x03050210)
 	{
 		tex_volicon = texture16_addr(BUF_WIDTH - 112, 2000);
 

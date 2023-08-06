@@ -23,6 +23,7 @@
 #include "common/sound.h"
 #include "common/power_driver.h"
 #include "common/ticker_driver.h"
+#include "common/platform_driver.h"
 #ifdef ADHOC
 #include "common/adhoc.h"
 #endif
@@ -52,6 +53,13 @@
 #include "ncdz/ncdz.h"
 #endif
 
+#ifndef MAX_PATH
+#define MAX_PATH 256
+#endif
+
+extern char launchDir[MAX_PATH];
+extern char screenshotDir[MAX_PATH];
+extern bool systembuttons_available;
 
 extern char game_name[16];
 extern char parent_name[16];
