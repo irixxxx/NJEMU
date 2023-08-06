@@ -17,9 +17,14 @@ jobs:
       matrix:
         psp_mode: [LARGE_MEMORY=0, LARGE_MEMORY=1]
         command_list: [COMMAND_LIST=0, COMMAND_LIST=1]
-        adhoc: [ADHOC=0] # ADHOC=1 is not working currently
+        adhoc: [ADHOC=0, ADHOC=1]
         save_state: [SAVE_STATE=1, SAVE_STATE=0]
         emulator: [BUILD_CPS1=1, BUILD_CPS2=1, BUILD_MVS=1, BUILD_NCDZ=1]
+        exclude:
+          - emulator: BUILD_NCDZ=1
+            adhoc: ADHOC=1
+          - adhoc: ADHOC=1
+            save_state: SAVE_STATE=0
 
     container: pspdev/pspdev:latest
     steps:
