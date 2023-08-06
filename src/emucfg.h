@@ -9,6 +9,10 @@
 #ifndef EMUCONFIG_H
 #define EMUCONFIG_H
 
+#ifndef MAX_PATH
+#define MAX_PATH 256
+#endif
+
 #ifndef EMUSYS_VALUE
 #define EMUSYS_VALUE
 #define CPS1	0

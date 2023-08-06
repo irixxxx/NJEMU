@@ -9,7 +9,77 @@
 #ifndef EMUMAIN_H
 #define EMUMAIN_H
 
+#ifndef MAX_PATH
+#define MAX_PATH 256
+#endif
+
+enum
+{
+	LOOP_EXIT = 0,
+	LOOP_BROWSER,
+	LOOP_RESTART,
+	LOOP_RESET,
+	LOOP_EXEC
+};
+
+enum
+{
+	UI_PAL_TITLE = 0,
+	UI_PAL_SELECT,
+	UI_PAL_NORMAL,
+	UI_PAL_INFO,
+	UI_PAL_WARNING,
+	UI_PAL_BG1,
+	UI_PAL_BG2,
+	UI_PAL_FRAME,
+	UI_PAL_FILESEL1,
+	UI_PAL_FILESEL2,
+	UI_PAL_MAX
+};
+
+enum
+{
+	WP_LOGO = 0,
+	WP_FILER,
+	WP_GAMECFG,
+	WP_KEYCFG,
+	WP_STATE,
+	WP_COLORCFG,
+	WP_DIPSW,
+	WP_CMDLIST,
+	NUM_WALLPAPERS
+};
+
+enum
+{
+	ICON_CONFIG = 0,
+	ICON_KEYCONFIG,
+	ICON_FOLDER,
+	ICON_SYSTEM,
+	ICON_RETURN,
+	ICON_EXIT,
+	ICON_DIPSWITCH,
+	ICON_CMDLIST,
+	ICON_UPPERDIR,
+	ICON_MEMSTICK,
+	ICON_ZIPFILE,
+	ICON_BATTERY1,
+	ICON_BATTERY2,
+	ICON_BATTERY3,
+	ICON_BATTERY4,
+	ICON_COMMANDDAT,
+	ICON_COLORCFG,
+	MAX_ICONS
+};
+
 #include <stdbool.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <malloc.h>
 
 #if defined(PSP)
 #include "psp/psp.h"
@@ -24,6 +94,9 @@
 #include "common/power_driver.h"
 #include "common/ticker_driver.h"
 #include "common/platform_driver.h"
+#include "common/video_driver.h"
+#include "common/ui_text_driver.h"
+#include "common/input_driver.h"
 #ifdef ADHOC
 #include "common/adhoc.h"
 #endif
@@ -51,10 +124,6 @@
 #include "mvs/mvs.h"
 #elif (EMU_SYSTEM == NCDZ)
 #include "ncdz/ncdz.h"
-#endif
-
-#ifndef MAX_PATH
-#define MAX_PATH 256
 #endif
 
 extern char launchDir[MAX_PATH];
@@ -89,6 +158,9 @@ extern int machine_sound_type;
 
 extern uint32_t frames_displayed;
 extern int fatal_error;
+
+extern volatile int Loop;
+extern volatile int Sleep;
 
 void emu_main(void);
 

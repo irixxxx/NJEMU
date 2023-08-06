@@ -115,7 +115,7 @@ int zopen(const char *filename)
 
 	if (unzfile == NULL)
 	{
-		SceUID fd;
+		int32_t fd;
 
 		strcpy(basedirend, filename);
 		fd = open(basedir, O_RDONLY, 0777);

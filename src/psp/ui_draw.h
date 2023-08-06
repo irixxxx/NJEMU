@@ -9,6 +9,8 @@
 #ifndef PSP_UI_DRAW_H
 #define PSP_UI_DRAW_H
 
+#include "emumain.h"
+
 struct font_t
 {
 	const uint8_t *data;
@@ -36,49 +38,12 @@ struct font_t
 #define FONT_LEFTTRIANGLE	"\x1d"
 #define FONT_RIGHTTRIANGLE	"\x1e"
 
-enum
-{
-	ICON_CONFIG = 0,
-	ICON_KEYCONFIG,
-	ICON_FOLDER,
-	ICON_SYSTEM,
-	ICON_RETURN,
-	ICON_EXIT,
-	ICON_DIPSWITCH,
-	ICON_CMDLIST,
-	ICON_UPPERDIR,
-	ICON_MEMSTICK,
-	ICON_ZIPFILE,
-	ICON_BATTERY1,
-	ICON_BATTERY2,
-	ICON_BATTERY3,
-	ICON_BATTERY4,
-	ICON_COMMANDDAT,
-	ICON_COLORCFG,
-	MAX_ICONS
-};
-
 typedef struct ui_palette_t
 {
 	int r;
 	int g;
 	int b;
 } UI_PALETTE;
-
-enum
-{
-	UI_PAL_TITLE = 0,
-	UI_PAL_SELECT,
-	UI_PAL_NORMAL,
-	UI_PAL_INFO,
-	UI_PAL_WARNING,
-	UI_PAL_BG1,
-	UI_PAL_BG2,
-	UI_PAL_FRAME,
-	UI_PAL_FILESEL1,
-	UI_PAL_FILESEL2,
-	UI_PAL_MAX
-};
 
 #define CHARSET_DEFAULT		0
 #define CHARSET_ISO8859_1	1

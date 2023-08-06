@@ -9,6 +9,9 @@
 #ifndef ZFILE_H
 #define ZFILE_H
 
+#include <stdint.h>
+#include "emucfg.h"
+
 struct zip_find_t
 {
 	char name[MAX_PATH];

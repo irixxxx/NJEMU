@@ -9,6 +9,9 @@
 #ifndef LOAD_ROM_H
 #define LOAD_ROM_H
 
+#include <stddef.h>
+#include <stdint.h>
+
 enum
 {
 	ROM_LOAD = 0,

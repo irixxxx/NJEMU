@@ -8,6 +8,8 @@
 
 /*------------------------------- core macros -------------------------------*/
 
+#include <stdint.h>
+
 #define AY						CPU->A[Opcode & 7]
 #define AX						CPU->A[(Opcode >> 9) & 7]
 #define A7						CPU->A[7]
@@ -1086,7 +1088,7 @@
 	{																		\
 		if (res & 1)														\
 		{																	\
-			WRITE_MEM_##size(adr, *(u##size *)src);							\
+			WRITE_MEM_##size(adr, *(uint##size##_t *)src);							\
 			adr += (size / 8);												\
 		}																	\
 		src += 4;															\
@@ -1105,7 +1107,7 @@
 		if (res & 1)														\
 		{																	\
 			adr -= (size / 8);												\
-			WRITE_MEM_##size##PD(adr, *(u##size *)src);						\
+			WRITE_MEM_##size##PD(adr, *(uint##size##_t *)src);						\
 		}																	\
 		src -= 4;															\
 	} while (res >>= 1);													\

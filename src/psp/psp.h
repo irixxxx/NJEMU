@@ -72,16 +72,4 @@
 #define REFRESH_RATE		(59.940059)		// (9000000Hz * 1) / (525 * 286)
 #define TICKS_PER_FRAME		(16683.333333)
 
-enum
-{
-	LOOP_EXIT = 0,
-	LOOP_BROWSER,
-	LOOP_RESTART,
-	LOOP_RESET,
-	LOOP_EXEC
-};
-
-extern volatile int Loop;
-extern volatile int Sleep;
-
 #endif /* PSP_MAIN_H */

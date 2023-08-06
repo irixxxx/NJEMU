@@ -179,7 +179,9 @@ OSOBJS += $(OS)/SystemButtons.o
 endif
 
 ifeq ($(UI_32BPP), 1)
+ifeq ($(NO_GUI), 0)
 OSOBJS += $(OS)/wallpaper.o
+endif
 endif
 
 #------------------------------------------------------------------------------
