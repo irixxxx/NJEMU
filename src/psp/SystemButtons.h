@@ -11,6 +11,7 @@
 extern "C" {
 #endif
 
+#if defined(SYSTEM_BUTTONS)
 void initSystemButtons(int devkit_version);
 unsigned int readSystemButtons(void);
 unsigned int readHomeButton(void);
@@ -22,6 +23,7 @@ unsigned int readScreenButton(void);
 unsigned int readHoldSwitch(void);
 unsigned int readWLANSwitch(void);
 int readMainVolume(void);
+#endif
 
 #ifdef __cplusplus
 }

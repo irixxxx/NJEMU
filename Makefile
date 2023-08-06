@@ -173,7 +173,9 @@ ifeq ($(ADHOC), 1)
 OSOBJS += $(OS)/adhoc.o
 endif
 
+ifeq ($(SYSTEM_BUTTONS), 1)
 OSOBJS += $(OS)/SystemButtons.o
+endif
 
 ifeq ($(UI_32BPP), 1)
 OSOBJS += $(OS)/wallpaper.o
