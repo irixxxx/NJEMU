@@ -2,7 +2,7 @@
 
 	emumain.c
 
-	ƒGƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“ƒRƒA
+	ï¿½Gï¿½~ï¿½ï¿½ï¿½ï¿½ï¿½[ï¿½Vï¿½ï¿½ï¿½ï¿½ï¿½Rï¿½A
 
 ******************************************************************************/
 
@@ -169,6 +169,9 @@ extern UI_PALETTE ui_palette[UI_PAL_MAX];
 
 #if defined(PSP)
 #include "psp/psp.h"
+#endif
+#if defined(PS2)
+#include "ps2/ps2.h"
 #endif
 
 #include "include/osd_cpu.h"
