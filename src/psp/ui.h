@@ -31,15 +31,6 @@ enum
 };
 #endif
 
-enum
-{
-	BG_DEFAULT = 0,
-	BG_USER,
-	BG_LOGOONLY,
-	BG_DISABLE,
-	BG_MAX
-};
-
 #if VIDEO_32BPP
 extern int bgimage_type;
 extern int bgimage_blightness;
@@ -149,31 +140,6 @@ int messagebox(int number);
 /*--------------------------------------------------------
 	¥Ø¥ë¥×±íÊ¾
 --------------------------------------------------------*/
-
-enum
-{
-	HELP_FILEBROWSER = 0,
-	HELP_MAINMENU,
-#if (EMU_SYSTEM == MVS)
-	HELP_SELECTBIOS,
-#endif
-	HELP_GAMECONFIG,
-	HELP_KEYCONFIG,
-#if (EMU_SYSTEM == CPS1 || EMU_SYSTEM == MVS)
-	HELP_DIPSWITCH,
-#endif
-#ifdef SAVE_STATE
-	HELP_STATE,
-#endif
-#if VIDEO_32BPP
-	HELP_COLORSETTINGS,
-#endif
-#ifdef COMMAND_LIST
-	HELP_COMMANDLIST,
-#endif
-	HELP_CHEATCONFIG,
-	HELP_NUM_MAX
-};
 
 int help(int number);
 

@@ -21,30 +21,6 @@ struct font_t
 	int skipy;
 };
 
-#define FONTSIZE			14
-
-#define FONT_UPARROW		"\x10"
-#define FONT_DOWNARROW		"\x11"
-#define FONT_LEFTARROW		"\x12"
-#define FONT_RIGHTARROW		"\x13"
-#define FONT_CIRCLE			"\x14"
-#define FONT_CROSS			"\x15"
-#define FONT_SQUARE			"\x16"
-#define FONT_TRIANGLE		"\x17"
-#define FONT_LTRIGGER		"\x18"
-#define FONT_RTRIGGER		"\x19"
-#define FONT_UPTRIANGLE		"\x1b"
-#define FONT_DOWNTRIANGLE	"\x1c"
-#define FONT_LEFTTRIANGLE	"\x1d"
-#define FONT_RIGHTTRIANGLE	"\x1e"
-
-typedef struct ui_palette_t
-{
-	int r;
-	int g;
-	int b;
-} UI_PALETTE;
-
 #define CHARSET_DEFAULT		0
 #define CHARSET_ISO8859_1	1
 #define CHARSET_LATIN1		1
