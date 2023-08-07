@@ -54,13 +54,15 @@ COREOBJS = \
 	ncdz/inptport.o \
 	ncdz/timer.o \
 	ncdz/vidhrdw.o \
-	ncdz/sprite.o \
+	ncdz/$(OS)_sprite.o \
 	sound/2610intf.o \
 	sound/ym2610.o \
 
+ifeq ($(NO_GUI), 0)
 ICONOBJS = \
 	$(OS)/icon/ncdz_s.o \
 	$(OS)/icon/ncdz_l.o
+endif
 
 OSOBJS += \
 	common/mp3.o

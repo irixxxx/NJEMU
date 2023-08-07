@@ -47,13 +47,15 @@ COREOBJS = \
 	mvs/dipsw.o \
 	mvs/timer.o \
 	mvs/vidhrdw.o \
-	mvs/sprite.o \
+	mvs/$(OS)_sprite.o \
 	mvs/pd4990a.o \
 	mvs/neocrypt.o \
 	mvs/biosmenu.o \
 	sound/2610intf.o \
 	sound/ym2610.o
 
+ifeq ($(NO_GUI), 0)
 ICONOBJS = \
 	$(OS)/icon/mvs_s.o \
 	$(OS)/icon/mvs_l.o
+endif

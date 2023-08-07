@@ -48,13 +48,15 @@ COREOBJS = \
 	cps1/dipsw.o \
 	cps1/timer.o \
 	cps1/vidhrdw.o \
-	cps1/sprite.o \
+	cps1/$(OS)_sprite.o \
 	cps1/eeprom.o \
 	cps1/kabuki.o \
 	sound/2151intf.o \
 	sound/ym2151.o \
 	sound/qsound.o
 
+ifeq ($(NO_GUI), 0)
 ICONOBJS = \
 	$(OS)/icon/cps_s.o \
 	$(OS)/icon/cps_l.o
+endif
