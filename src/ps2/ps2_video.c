@@ -261,8 +261,7 @@ static void ps2_setMode(void *data, int mode)
 #if VIDEO_32BPP
 	if (video_mode != mode)
 	{
-		if (video_mode) ps2_exit(ps2);
-
+		ps2_exit(ps2);
 		video_mode = mode;
 
 		ps2_start(data);
