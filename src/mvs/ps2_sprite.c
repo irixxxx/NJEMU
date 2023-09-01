@@ -17,7 +17,6 @@
 
 #define MAKE_FIX_KEY(code, attr)	(code | (attr << 28))
 #define MAKE_SPR_KEY(code, attr)	(code | ((attr & 0x0f00) << 20))
-#define PSP_UNCACHE_PTR(p)			(((uint32_t)(p)) | 0x40000000)
 
 
 /******************************************************************************
@@ -574,6 +573,7 @@ void blit_finish_fix(void)
 
 void blit_draw_spr(int x, int y, int w, int h, uint32_t code, uint16_t attr)
 {
+	printf("blit_draw_spr(%i, %i, %i, %i, %i, %i)\n", x, y, w, h, code, attr);
 	int16_t idx;
 	GSPRIMUVPOINT *vertices;
 	gs_rgbaq color = color_to_RGBAQ(0x80, 0x80, 0x80, 0x80, 0);
@@ -655,16 +655,35 @@ void blit_draw_spr(int x, int y, int w, int h, uint32_t code, uint16_t attr)
 	SPRÃè»­½KÁË
 ------------------------------------------------------------------------*/
 
+static enum WorkBuffer getWorkBufferForSPR(uint8_t index) {
+	printf("getWorkBufferForSPR(%i)\n", index);
+	switch (index) {
+		case 0:
+			return TEX_SPR0;
+		case 1:
+			return TEX_SPR1;
+		case 2:
+			return TEX_SPR2;
+		default:
+			return TEX_SPR0;
+	}
+}
+
 void blit_finish_spr(void)
 {
 	printf("blit_finish_spr\n");
 	int i, total_sprites = 0;
 	uint16_t flags, *pflags = spr_flags;
 	GSPRIMUVPOINT *vertices, *vertices_tmp;
+	uint16_t *clut_tmp;
+	enum WorkBuffer workBuffer;
 
 	if (!spr_index) return;
+	printf("blit_finish_spr has spr_index\n");
 
-	// flags = *pflags;
+	GSPRIMUVPOINT vertex_buffer[spr_num];
+
+	flags = *pflags;
 
 	// sceGuStart(GU_DIRECT, gulist);
 	// sceGuDrawBufferList(GU_PSM_5551, work_frame, BUF_WIDTH);
@@ -672,33 +691,40 @@ void blit_finish_spr(void)
 	// sceGuTexImage(0, 512, 512, BUF_WIDTH, tex_spr[flags & 3]);
 	// sceGuClutLoad(256/8, &clut[flags & 0xf00]);
 
-	// vertices_tmp = vertices = (struct Vertex *)sceGuGetMemory(spr_num * sizeof(struct Vertex));
+	workBuffer = getWorkBufferForSPR(flags & 3);
+	clut_tmp = &clut[flags & 0xf00];
 
-	// for (i = 0; i < spr_num; i += 2)
-	// {
-	// 	if (flags != *pflags)
-	// 	{
-	// 		if (total_sprites)
-	// 		{
-	// 			sceGuDrawArray(GU_SPRITES, TEXTURE_FLAGS, total_sprites, NULL, vertices);
-	// 			total_sprites = 0;
-	// 			vertices = vertices_tmp;
-	// 		}
+	vertices_tmp = vertices = &vertex_buffer[0];
 
-	// 		flags = *pflags;
-	// 		sceGuTexImage(0, 512, 512, BUF_WIDTH, tex_spr[flags & 3]);
-	// 		sceGuClutLoad(256/8, &clut[flags & 0xf00]);
-	// 	}
+	for (i = 0; i < spr_num; i += 2)
+	{
+		if (flags != *pflags)
+		{
+			if (total_sprites)
+			{
+				// sceGuDrawArray(GU_SPRITES, TEXTURE_FLAGS, total_sprites, NULL, vertices);
+				video_driver->blitFinishFix(video_data, workBuffer, clut_tmp, total_sprites, vertices);
+				total_sprites = 0;
+				vertices = vertices_tmp;
+			}
 
-	// 	vertices_tmp[0] = vertices_spr[i + 0];
-	// 	vertices_tmp[1] = vertices_spr[i + 1];
+			flags = *pflags;
+			workBuffer = getWorkBufferForSPR(flags & 3);
+			clut_tmp = &clut[flags & 0xf00];
+			// sceGuTexImage(0, 512, 512, BUF_WIDTH, tex_spr[flags & 3]);
+			// sceGuClutLoad(256/8, &clut[flags & 0xf00]);
+		}
 
-	// 	vertices_tmp += 2;
-	// 	total_sprites += 2;
-	// 	pflags++;
-	// }
+		vertices_tmp[0] = vertices_spr[i + 0];
+		vertices_tmp[1] = vertices_spr[i + 1];
 
-	// if (total_sprites)
+		vertices_tmp += 2;
+		total_sprites += 2;
+		pflags++;
+	}
+
+	if (total_sprites)
+		video_driver->blitFinishFix(video_data, workBuffer, clut_tmp, total_sprites, vertices);
 	// 	sceGuDrawArray(GU_SPRITES, TEXTURE_FLAGS, total_sprites, NULL, vertices);
 
 	// sceGuFinish();
