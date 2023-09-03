@@ -195,7 +195,7 @@ void autoframeskip_reset(void)
 	frames_since_last_fps = 0;
 
 	game_speed_percent = 100;
-	frames_per_second = REFRESH_RATE;
+	frames_per_second = (int) REFRESH_RATE;
 	frames_displayed = 0;
 
 	warming_up = 1;

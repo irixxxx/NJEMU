@@ -31,7 +31,8 @@ static int  zip_filepos;
 /*------------------------------------------------------
 	ZIPファイルを開く
 ------------------------------------------------------*/
-
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wvoid-pointer-to-int-cast"
 int zip_open(const char *path)
 {
 	if (unzfile != NULL) zip_close();
@@ -45,7 +46,7 @@ int zip_open(const char *path)
 
 	return -1;
 }
-
+#pragma clang diagnostic pop
 
 /*------------------------------------------------------
 	ZIPファイルを閉じる
@@ -108,7 +109,8 @@ int zip_findnext(struct zip_find_t *file)
 /*------------------------------------------------------
 	ZIPファイル内のファイルを開く
 ------------------------------------------------------*/
-
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wvoid-pointer-to-int-cast"
 int zopen(const char *filename)
 {
 	zip_cached_len = 0;
@@ -128,6 +130,7 @@ int zopen(const char *filename)
 
 	return -1;
 }
+#pragma clang diagnostic pop
 
 
 /*------------------------------------------------------
