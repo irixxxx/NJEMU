@@ -45,6 +45,9 @@ video_driver_t *video_drivers[] = {
 #ifdef PS2
 	&video_ps2,
 #endif
+#ifdef X86_64
+	&video_x86_64,
+#endif
 	&video_null,
 	NULL,
 };
