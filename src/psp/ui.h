@@ -106,7 +106,5 @@ int messagebox(int number);
 	�إ�ױ�ʾ
 --------------------------------------------------------*/
 
-int help(int number);
-
 
 #endif /* PSP_UI_H */

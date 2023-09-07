@@ -175,6 +175,9 @@ extern UI_PALETTE ui_palette[UI_PAL_MAX];
 #if defined(PS2)
 #include "ps2/ps2.h"
 #endif
+#if defined(X86_64)
+#include "x86_64/x86_64.h"
+#endif
 
 #include "include/osd_cpu.h"
 #include "include/cpuintrf.h"

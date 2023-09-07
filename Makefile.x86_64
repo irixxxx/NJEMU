@@ -36,7 +36,7 @@ VERSION_BUILD = 0
 # Defines
 #------------------------------------------------------------------------------
 
-OS = pc
+OS = x86_64
 
 # You need to select at least one target, show error if none is selected
 ifeq ($(BUILD_CPS1), 0)
@@ -88,8 +88,8 @@ RM = -rm
 #------------------------------------------------------------------------------
 
 INCDIR = \
-	-Isrc \
-	-Isrc/zip \
+	src \
+	src/zip \
 
 
 #------------------------------------------------------------------------------
@@ -208,7 +208,7 @@ CDEFS = -DINLINE='static __inline' \
 	-DVERSION_MAJOR=$(VERSION_MAJOR) \
 	-DVERSION_MINOR=$(VERSION_MINOR) \
 	-DVERSION_BUILD=$(VERSION_BUILD) \
-	-DPS2
+	-DX86_64
 
 ifeq ($(LARGE_MEMORY), 1)
 CDEFS += -DLARGE_MEMORY=1
@@ -249,14 +249,14 @@ CFLAGS += $(CDEFS)
 #------------------------------------------------------------------------------
 
 LIBDIR =
-LDFLAGS = -L$(PS2DEV)/gsKit/lib -L$(PS2SDK)/ports/lib
-INCDIR += -I$(PS2DEV)/gsKit/include -I$(PS2SDK)/ports/include
+LDFLAGS = 
+INCDIR +=
 
 #------------------------------------------------------------------------------
 # Library
 #------------------------------------------------------------------------------
 
-LIBS = -lpatches -lgskit -ldmakit -lps2_drivers -lz
+LIBS = -lz
 
 ifeq ($(LARGE_MEMORY), 1)
 endif
@@ -272,7 +272,7 @@ endif
 # Rules to make libraries
 #------------------------------------------------------------------------------
 
-CFLAGS += $(INCDIR)
+CFLAGS += $(INCDIR:%=-I%)
 ALLOBJS = $(MAINOBJS) $(COREOBJS) $(OSOBJS) $(FONTOBJS) $(ICONOBJS)
 OBJS = $(ALLOBJS:%=src/%)
 EXECUTABLE = $(TARGET)

@@ -104,7 +104,6 @@ void textfont_print(int sx, int sy, int r, int g, int b, const char *s, int flag
 	���������軭 (��`�����󥿥ե��`����)
 ------------------------------------------------------*/
 
-void small_icon(int sx, int sy, int r, int g, int b, int no);
 void small_icon_light(int sx, int sy, int r, int g, int b, int no);
 
 void large_icon(int sx, int sy, int r, int g, int b, int no);
