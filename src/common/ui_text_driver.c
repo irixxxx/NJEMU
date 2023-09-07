@@ -24,6 +24,9 @@ ui_text_driver_t *ui_text_drivers[] = {
 #ifdef PS2
 	&ui_text_ps2,
 #endif
+#ifdef X86_64
+	&ui_text_x86_64,
+#endif
 	&ui_text_null,
 	NULL,
 };
