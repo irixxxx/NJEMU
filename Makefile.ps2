@@ -207,9 +207,7 @@ endif
 # Compiler Defines
 #------------------------------------------------------------------------------
 
-CDEFS = -DINLINE='static __inline' \
-	-Dinline=__inline \
-	-D__inline__=__inline \
+CDEFS = \
 	-DBUILD_$(TARGET)=1 \
 	-DTARGET_STR='"$(TARGET)"' \
 	-DVERSION_STR='"$(VERSION_STR)"' \

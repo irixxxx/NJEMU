@@ -549,7 +549,7 @@ static int png_read_file(FILE *fp, struct png_info *p)
 --------------------------------------------------------*/
 
 #if VIDEO_32BPP
-INLINE void adjust_blightness(uint8_t *r, uint8_t *g, uint8_t *b)
+static inline void adjust_blightness(uint8_t *r, uint8_t *g, uint8_t *b)
 {
 	switch (bgimage_blightness)
 	{

@@ -305,7 +305,7 @@ static void draw_sprites_hardware(int min_y, int max_y)
 }
 
 
-INLINE int sprite_on_scanline(int scanline, int y, int rows)
+static inline int sprite_on_scanline(int scanline, int y, int rows)
 {
 	/* check if the current scanline falls inside this sprite,
        two possible scenerios, wrap around or not */

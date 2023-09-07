@@ -327,7 +327,7 @@ void neogeo_reset_driver_type(void)
 	Adjust display position interrupt
 ------------------------------------------------------*/
 
-INLINE void adjust_display_position_interrupt(void)
+static inline void adjust_display_position_interrupt(void)
 {
 	if ((display_counter + 1) != 0)
 	{
@@ -524,7 +524,7 @@ static void raster_interrupt_aof2(int line)
 	Select BIOS vector (0x3a0003 / 0x3a0013)
 ------------------------------------------------------*/
 
-INLINE void set_main_cpu_vector_table_source(uint8_t data)
+static inline void set_main_cpu_vector_table_source(uint8_t data)
 {
 	memcpy(memory_region_cpu1, neogeo_vectors[data], 0x80);
 	blit_set_fix_clear_flag();
@@ -537,7 +537,7 @@ INLINE void set_main_cpu_vector_table_source(uint8_t data)
 	Select palette RAM bank  (0x3a000f / 0x3a001f)
 ------------------------------------------------------*/
 
-INLINE void neogeo_set_palette_bank(uint8_t data)
+static inline void neogeo_set_palette_bank(uint8_t data)
 {
 	if (palette_bank != data)
 	{
@@ -552,7 +552,7 @@ INLINE void neogeo_set_palette_bank(uint8_t data)
 	Write VRAM offset ($3c0001)
 ------------------------------------------------------*/
 
-INLINE void set_videoram_offset(uint16_t data)
+static inline void set_videoram_offset(uint16_t data)
 {
 	videoram_offset = data;
 
@@ -565,7 +565,7 @@ INLINE void set_videoram_offset(uint16_t data)
 	Read data from VRAM ($3c0001 / $3c0003)
 ------------------------------------------------------*/
 
-INLINE uint16_t get_videoram_data(void)
+static inline uint16_t get_videoram_data(void)
 {
 	return videoram_read_buffer;
 }
@@ -575,7 +575,7 @@ INLINE uint16_t get_videoram_data(void)
 	Write data to VRAM ($3c0003)
 ------------------------------------------------------*/
 
-INLINE void set_videoram_data(uint16_t data)
+static inline void set_videoram_data(uint16_t data)
 {
 	neogeo_videoram[videoram_offset] = data;
 
@@ -591,7 +591,7 @@ INLINE void set_videoram_data(uint16_t data)
 	Read VRAM modulo ($3c0005)
 ------------------------------------------------------*/
 
-INLINE uint16_t get_videoram_modulo(void)
+static inline uint16_t get_videoram_modulo(void)
 {
 	return videoram_modulo;
 }
@@ -601,7 +601,7 @@ INLINE uint16_t get_videoram_modulo(void)
 	Write VRAM modulo ($3c0005)
 ------------------------------------------------------*/
 
-INLINE void set_videoram_modulo(uint16_t data)
+static inline void set_videoram_modulo(uint16_t data)
 {
 	videoram_modulo = data;
 }
@@ -611,7 +611,7 @@ INLINE void set_videoram_modulo(uint16_t data)
 	Read video control data ($3c0007)
 ---------------------------------------------------------*/
 
-INLINE uint16_t get_video_control(void)
+static inline uint16_t get_video_control(void)
 {
 	scanline_read = 1;
 
@@ -635,7 +635,7 @@ INLINE uint16_t get_video_control(void)
 	Write video control data ($3c0007)
 ---------------------------------------------------------*/
 
-INLINE void set_video_control(uint16_t data)
+static inline void set_video_control(uint16_t data)
 {
 	auto_animation_speed = data >> 8;
 	auto_animation_disabled = data & 0x0008;
@@ -648,7 +648,7 @@ INLINE void set_video_control(uint16_t data)
 	Set display counter (MSB) (0x3c0008)
 ------------------------------------------------------*/
 
-INLINE void neogeo_set_display_counter_msb(uint16_t data)
+static inline void neogeo_set_display_counter_msb(uint16_t data)
 {
 	if (neogeo_driver_type == NORMAL) return;
 
@@ -660,7 +660,7 @@ INLINE void neogeo_set_display_counter_msb(uint16_t data)
 	Set display counter (LSB) (0x3c000a)
 ------------------------------------------------------*/
 
-INLINE void neogeo_set_display_counter_lsb(uint16_t data)
+static inline void neogeo_set_display_counter_lsb(uint16_t data)
 {
 	if (neogeo_driver_type == NORMAL) return;
 
@@ -680,7 +680,7 @@ INLINE void neogeo_set_display_counter_lsb(uint16_t data)
 	Write IRQ acknowledge ($3c000c)
 ------------------------------------------------------*/
 
-INLINE void neogeo_acknowledge_interrupt(uint16_t data)
+static inline void neogeo_acknowledge_interrupt(uint16_t data)
 {
 	if (data & 0x02) display_position_interrupt_pending = 0;
 	if (data & 0x04) vblank_interrupt_pending = 0;
@@ -797,7 +797,7 @@ static WRITE16_HANDLER( hardware_upload_w )
 	Set upload offset 1   ($ff0064)
 ------------------------------------------------------*/
 
-INLINE WRITE16_HANDLER( upload_offset1_w )
+static inline WRITE16_HANDLER( upload_offset1_w )
 {
 	if (offset)
 		upload_offset1 = (upload_offset1 & 0xffff0000) | (uint32_t)data;
@@ -810,7 +810,7 @@ INLINE WRITE16_HANDLER( upload_offset1_w )
 	Set upload offset 2   ($ff0068)
 ------------------------------------------------------*/
 
-INLINE WRITE16_HANDLER( upload_offset2_w )
+static inline WRITE16_HANDLER( upload_offset2_w )
 {
 	if (offset)
 		upload_offset2 = (upload_offset2 & 0xffff0000) | (uint32_t)data;
@@ -825,7 +825,7 @@ INLINE WRITE16_HANDLER( upload_offset2_w )
 	Set upload pattern data   ($ff006c)
 ------------------------------------------------------*/
 
-INLINE WRITE16_HANDLER( upload_pattern_w )
+static inline WRITE16_HANDLER( upload_pattern_w )
 {
 	upload_pattern = data;
 	upload_mode = UPLOAD_PATTERN;
@@ -836,7 +836,7 @@ INLINE WRITE16_HANDLER( upload_pattern_w )
 	Set upload length  ($ff0070)
 ------------------------------------------------------*/
 
-INLINE WRITE16_HANDLER( upload_length_w )
+static inline WRITE16_HANDLER( upload_length_w )
 {
 	if (offset)
 		upload_length = (upload_length & 0xffff0000) | (uint32_t)data;
@@ -849,7 +849,7 @@ INLINE WRITE16_HANDLER( upload_length_w )
 	Set external memory type ($ff0105)
 ------------------------------------------------------*/
 
-INLINE WRITE16_HANDLER( exmem_type_w )
+static inline WRITE16_HANDLER( exmem_type_w )
 {
 	exmem[exmem_counter] = data;
 
@@ -869,7 +869,7 @@ INLINE WRITE16_HANDLER( exmem_type_w )
 	Disable draw SPR plane ($ff0111)
 ------------------------------------------------------*/
 
-INLINE WRITE16_HANDLER( spr_plane_disable_w )
+static inline WRITE16_HANDLER( spr_plane_disable_w )
 {
 	spr_disable = data & 0xff;
 }
@@ -879,7 +879,7 @@ INLINE WRITE16_HANDLER( spr_plane_disable_w )
 	Disable draw FIX plane ($ff0115)
 ------------------------------------------------------*/
 
-INLINE WRITE16_HANDLER( fix_plane_disable_w )
+static inline WRITE16_HANDLER( fix_plane_disable_w )
 {
 	fix_disable = data & 0xff;
 }
@@ -889,7 +889,7 @@ INLINE WRITE16_HANDLER( fix_plane_disable_w )
 	Enable video output ($ff0119)
 ------------------------------------------------------*/
 
-INLINE WRITE16_HANDLER( video_output_enable_w )
+static inline WRITE16_HANDLER( video_output_enable_w )
 {
 	video_enable = data & 0xff;
 }
@@ -902,7 +902,7 @@ INLINE WRITE16_HANDLER( video_output_enable_w )
 	                             ($ff0129) - FIX RAM
 ------------------------------------------------------*/
 
-INLINE WRITE16_HANDLER( exmem_latch_w )
+static inline WRITE16_HANDLER( exmem_latch_w )
 {
 	if (exmem_counter < 0xff)
 	{
@@ -919,7 +919,7 @@ INLINE WRITE16_HANDLER( exmem_latch_w )
 	                             ($ff0149) - FIX RAM
 ------------------------------------------------------*/
 
-INLINE WRITE16_HANDLER( exmem_latch_clear_w )
+static inline WRITE16_HANDLER( exmem_latch_clear_w )
 {
 	offset &= 0x0f;
 
@@ -938,7 +938,7 @@ INLINE WRITE16_HANDLER( exmem_latch_clear_w )
 	Set uploading flag ($ff0161)
 ------------------------------------------------------*/
 
-INLINE WRITE16_HANDLER( upload_executing_w )
+static inline WRITE16_HANDLER( upload_executing_w )
 {
 	upload_executing = data & 0xff;
 }
@@ -948,7 +948,7 @@ INLINE WRITE16_HANDLER( upload_executing_w )
 	Z80 reset / enable ($ff0183)
 ------------------------------------------------------*/
 
-INLINE WRITE16_HANDLER( z80_reset_w )
+static inline WRITE16_HANDLER( z80_reset_w )
 {
 	z80_set_reset_line(data ? CLEAR_LINE : ASSERT_LINE);
 }
@@ -959,7 +959,7 @@ INLINE WRITE16_HANDLER( z80_reset_w )
 	                          ($ff01a3) - PCM-A RAM
 ------------------------------------------------------*/
 
-INLINE WRITE16_HANDLER( exmem_bank_w )
+static inline WRITE16_HANDLER( exmem_bank_w )
 {
 	offset &= 0x0f;
 	exmem_bank[offset] = data & 0x03;

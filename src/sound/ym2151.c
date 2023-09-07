@@ -1177,7 +1177,7 @@ int YM2151ReadStatus(void)
 #define volume_calc(OP) ((OP)->tl + ((uint32_t)(OP)->volume) + (AM & (OP)->AMmask))
 
 
-INLINE int32_t op_calc(uint32_t phase, uint32_t env, int32_t pm)
+static inline int32_t op_calc(uint32_t phase, uint32_t env, int32_t pm)
 {
 	env = (env << 3) + sin_tab[(((int32_t)((phase & ~FREQ_MASK) + (pm))) >> FREQ_SH) & SIN_MASK];
 

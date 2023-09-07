@@ -380,7 +380,7 @@ void neogeo_reset_driver_type(void)
 	Adjust display position interrupt
 ------------------------------------------------------*/
 
-INLINE void adjust_display_position_interrupt(void)
+static inline void adjust_display_position_interrupt(void)
 {
 	if ((display_counter + 1) != 0)
 	{
@@ -513,7 +513,7 @@ void neogeo_raster_interrupt(int line)
 	Select BIOS vector (0x3a0003 / 0x3a0013)
 ------------------------------------------------------*/
 
-INLINE void set_main_cpu_vector_table_source(uint8_t data)
+static inline void set_main_cpu_vector_table_source(uint8_t data)
 {
 	memcpy(memory_region_cpu1, neogeo_vectors[data], 0x80);
 	main_cpu_vector_table_source = data;
@@ -545,7 +545,7 @@ INLINE void set_main_cpu_vector_table_source(uint8_t data)
 	Select palette RAM bank  (0x3a000f / 0x3a001f)
 ------------------------------------------------------*/
 
-INLINE void neogeo_set_palette_bank(uint8_t data)
+static inline void neogeo_set_palette_bank(uint8_t data)
 {
 	if (palette_bank != data)
 	{
@@ -560,7 +560,7 @@ INLINE void neogeo_set_palette_bank(uint8_t data)
 	Write VRAM offset ($3c0001)
 ------------------------------------------------------*/
 
-INLINE void set_videoram_offset(uint16_t data)
+static inline void set_videoram_offset(uint16_t data)
 {
 	videoram_offset = data;
 
@@ -573,7 +573,7 @@ INLINE void set_videoram_offset(uint16_t data)
 	Read data from VRAM ($3c0001 / $3c0003)
 ------------------------------------------------------*/
 
-INLINE uint16_t get_videoram_data(void)
+static inline uint16_t get_videoram_data(void)
 {
 	return videoram_read_buffer;
 }
@@ -583,7 +583,7 @@ INLINE uint16_t get_videoram_data(void)
 	Write data to VRAM ($3c0003)
 ------------------------------------------------------*/
 
-INLINE void set_videoram_data(uint16_t data)
+static inline void set_videoram_data(uint16_t data)
 {
 	neogeo_videoram[videoram_offset] = data;
 
@@ -599,7 +599,7 @@ INLINE void set_videoram_data(uint16_t data)
 	Read VRAM modulo ($3c0005)
 ------------------------------------------------------*/
 
-INLINE uint16_t get_videoram_modulo(void)
+static inline uint16_t get_videoram_modulo(void)
 {
 	return videoram_modulo;
 }
@@ -609,7 +609,7 @@ INLINE uint16_t get_videoram_modulo(void)
 	Write VRAM modulo ($3c0005)
 ------------------------------------------------------*/
 
-INLINE void set_videoram_modulo(uint16_t data)
+static inline void set_videoram_modulo(uint16_t data)
 {
 	videoram_modulo = data;
 }
@@ -619,7 +619,7 @@ INLINE void set_videoram_modulo(uint16_t data)
 	Read video control data ($3c0007)
 ---------------------------------------------------------*/
 
-INLINE uint16_t get_video_control(void)
+static inline uint16_t get_video_control(void)
 {
 	scanline_read = 1;
 
@@ -643,7 +643,7 @@ INLINE uint16_t get_video_control(void)
 	Write video control data ($3c0007)
 ---------------------------------------------------------*/
 
-INLINE void set_video_control(uint16_t data)
+static inline void set_video_control(uint16_t data)
 {
 	auto_animation_speed = data >> 8;
 	auto_animation_disabled = data & 0x0008;
@@ -656,7 +656,7 @@ INLINE void set_video_control(uint16_t data)
 	Set display counter (MSB) (0x3c0008)
 ------------------------------------------------------*/
 
-INLINE void neogeo_set_display_counter_msb(uint16_t data)
+static inline void neogeo_set_display_counter_msb(uint16_t data)
 {
 	if (neogeo_driver_type == NORMAL) return;
 
@@ -668,7 +668,7 @@ INLINE void neogeo_set_display_counter_msb(uint16_t data)
 	Set display counter (LSB) (0x3c000a)
 ------------------------------------------------------*/
 
-INLINE void neogeo_set_display_counter_lsb(uint16_t data)
+static inline void neogeo_set_display_counter_lsb(uint16_t data)
 {
 	if (neogeo_driver_type == NORMAL) return;
 
@@ -683,7 +683,7 @@ INLINE void neogeo_set_display_counter_lsb(uint16_t data)
 	Write IRQ acknowledge ($3c000c)
 ------------------------------------------------------*/
 
-INLINE void neogeo_acknowledge_interrupt(uint16_t data)
+static inline void neogeo_acknowledge_interrupt(uint16_t data)
 {
 	if (data & 0x02) display_position_interrupt_pending = 0;
 	if (data & 0x04) vblank_interrupt_pending = 0;
