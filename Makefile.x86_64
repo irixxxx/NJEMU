@@ -185,9 +185,14 @@ include src/makefiles/$(TARGET).mak
 #------------------------------------------------------------------------------
 
 CFLAGS = \
-	-Wall \
+	-fno-builtin \
 	-Wno-unused-command-line-argument \
-	-Wno-void-pointer-to-int-cast
+	-Wno-void-pointer-to-int-cast \
+	-Wno-int-to-pointer-cast \
+	-Wno-pointer-to-int-cast \
+	-Wno-invalid-source-encoding \
+	-Wno-unused-but-set-variable \
+	-Wno-unused-function \
 
 ifeq ($(DEBUG), 1)
 CFLAGS += -O0 -g
