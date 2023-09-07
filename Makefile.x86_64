@@ -150,8 +150,8 @@ else
 
 endif
 
-# OSOBJS += \
-# 	$(OS)/$(OS)_platform.o \
+OSOBJS += \
+	$(OS)/$(OS)_platform.o \
 # 	$(OS)/$(OS)_thread.o \
 # 	$(OS)/$(OS)_audio.o \
 # 	$(OS)/$(OS)_power.o \
