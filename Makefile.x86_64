@@ -125,9 +125,9 @@ MAINOBJS = \
 # MAINOBJS += common/state.o
 # endif
 
-# ifeq ($(NO_GUI), 1)
-# OSOBJS += $(OS)/$(OS)_no_gui.o
-# else
+ifeq ($(NO_GUI), 1)
+OSOBJS += $(OS)/$(OS)_no_gui.o
+else
 # FONTOBJS = \
 # 	$(OS)/font/graphic.o \
 # 	$(OS)/font/ascii_14p.o \
@@ -147,7 +147,7 @@ MAINOBJS = \
 # 	$(OS)/ui_menu.o \
 # 	$(OS)/png.o \
 
-# endif
+endif
 
 # OSOBJS += \
 # 	$(OS)/$(OS)_platform.o \
@@ -282,7 +282,7 @@ all: $(EXECUTABLE)
 
 # Target to build the executable
 $(EXECUTABLE): $(OBJS)
-	$(CC) $(CFLAGS) $(LIBDIRS) -o $@ $(OBJS) $(LIBS)
+	$(CC) $(CFLAGS) $(LIBDIRS) -o $@ $(OBJS) $(LDFLAGS) $(LIBS)
 
 
 # Target to clean files
