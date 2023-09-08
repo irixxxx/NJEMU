@@ -167,11 +167,11 @@ bool pad_pressed_any(void)
 
 void pad_wait_clear(void)
 {
-	while (poll_gamepad())
-	{
-		video_driver->waitVsync(video_data);
-		if (!Loop) break;
-	}
+	// while (poll_gamepad())
+	// {
+	// 	video_driver->waitVsync(video_data);
+	// 	if (!Loop) break;
+	// }
 
 	pad = 0;
 	pressed_check = 0;
