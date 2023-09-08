@@ -119,7 +119,7 @@ static int load_rom_cpu1(void)
 	int i, res;
 	char fname[32], *parent;
 
-	if ((memory_region_cpu1 = memalign(MEM_ALIGN, memory_length_cpu1)) == NULL)
+	if ((memory_region_cpu1 = malloc(memory_length_cpu1)) == NULL)
 	{
 		error_memory("REGION_CPU1");
 		return 0;
@@ -160,7 +160,7 @@ static int load_rom_cpu2(void)
 	int i, res;
 	char fname[32], *parent;
 
-	if ((memory_region_cpu2 = memalign(MEM_ALIGN, memory_length_cpu2)) == NULL)
+	if ((memory_region_cpu2 = malloc(memory_length_cpu2)) == NULL)
 	{
 		error_memory("REGION_CPU2");
 		return 0;
@@ -210,17 +210,17 @@ static int load_rom_gfx1(void)
 	if (gfx_total_elements[TILE08] > 0x10000) gfx_total_elements[TILE08] = 0x10000;
 	if (gfx_total_elements[TILE32] > 0x10000) gfx_total_elements[TILE32] = 0x10000;
 
-	if ((gfx_pen_usage[TILE08] = memalign(MEM_ALIGN, gfx_total_elements[TILE08])) == NULL)
+	if ((gfx_pen_usage[TILE08] = malloc(gfx_total_elements[TILE08])) == NULL)
 	{
 		error_memory("GFX_PEN_USAGE (tile8)");
 		return 0;
 	}
-	if ((gfx_pen_usage[TILE16] = memalign(MEM_ALIGN, gfx_total_elements[TILE16])) == NULL)
+	if ((gfx_pen_usage[TILE16] = malloc(gfx_total_elements[TILE16])) == NULL)
 	{
 		error_memory("GFX_PEN_USAGE (tile16)");
 		return 0;
 	}
-	if ((gfx_pen_usage[TILE32] = memalign(MEM_ALIGN, gfx_total_elements[TILE32])) == NULL)
+	if ((gfx_pen_usage[TILE32] = malloc(gfx_total_elements[TILE32])) == NULL)
 	{
 		error_memory("GFX_PEN_USAGE (tile32)");
 		return 0;
@@ -283,7 +283,7 @@ static int load_rom_sound1(void)
 	int i, res;
 	char fname[32], *parent;
 
-	if ((memory_region_sound1 = memalign(MEM_ALIGN, memory_length_sound1)) == NULL)
+	if ((memory_region_sound1 = malloc(memory_length_sound1)) == NULL)
 	{
 		error_memory("REGION_SOUND1");
 		return 0;
@@ -323,7 +323,7 @@ static int load_rom_user1(void)
 {
 	if (memory_length_user1)
 	{
-		if ((memory_region_user1 = memalign(MEM_ALIGN, memory_length_user1)) == NULL)
+		if ((memory_region_user1 = malloc(memory_length_user1)) == NULL)
 		{
 			error_memory("REGION_USER1");
 			return 0;

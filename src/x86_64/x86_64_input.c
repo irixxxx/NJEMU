@@ -15,7 +15,7 @@ static void x86_64_free(void *data) {
 }
 
 static uint32_t x86_64_poll(void *data) {
-	uint32_t btnsData = 0;
+	uint32_t btnsData = 1;
 	return btnsData;
 }
 

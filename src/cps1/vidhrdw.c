@@ -263,7 +263,7 @@ static int cps1_gfx_decode(void)
 	}
 
 	cps1_object_num = memory_length_gfx1 >> 7;
-	if ((cps1_object_pen_usage = memalign(MEM_ALIGN, cps1_object_num)) == NULL)
+	if ((cps1_object_pen_usage = malloc(cps1_object_num)) == NULL)
 		return 0;
 
 	memset(cps1_object_pen_usage, 0, cps1_object_num);

@@ -112,7 +112,7 @@ static int load_rom_cpu1(void)
 	int i, res;
 	char fname[32], *parent;
 
-	if ((memory_region_cpu1 = memalign(MEM_ALIGN, memory_length_cpu1)) == NULL)
+	if ((memory_region_cpu1 = malloc(memory_length_cpu1)) == NULL)
 	{
 		error_memory("REGION_CPU1");
 		return 0;
@@ -153,7 +153,7 @@ static int load_rom_cpu2(void)
 	int i, res;
 	char fname[32], *parent;
 
-	if ((memory_region_cpu2 = memalign(MEM_ALIGN, memory_length_cpu2)) == NULL)
+	if ((memory_region_cpu2 = malloc(memory_length_cpu2)) == NULL)
 	{
 		error_memory("REGION_CPU2");
 		return 0;
@@ -194,7 +194,7 @@ static int load_rom_gfx1(void)
 	int i, res;
 	char fname[32], *parent;
 
-	if ((memory_region_gfx1 = memalign(MEM_ALIGN, memory_length_gfx1)) == NULL)
+	if ((memory_region_gfx1 = malloc(memory_length_gfx1)) == NULL)
 	{
 		error_memory("REGION_GFX1");
 		return 0;
@@ -237,7 +237,7 @@ static int load_rom_sound1(void)
 
 	if (!memory_length_sound1) return 1;
 
-	if ((memory_region_sound1 = memalign(MEM_ALIGN, memory_length_sound1)) == NULL)
+	if ((memory_region_sound1 = malloc(memory_length_sound1)) == NULL)
 	{
 		error_memory("REGION_SOUND1");
 		return 0;
@@ -277,7 +277,7 @@ static int load_rom_user1(void)
 {
 	if (memory_length_user1 == 0) return 1;
 
-	if ((memory_region_user1 = memalign(MEM_ALIGN, memory_length_user1)) == NULL)
+	if ((memory_region_user1 = malloc(memory_length_user1)) == NULL)
 	{
 		error_memory("REGION_USER1");
 		return 0;
@@ -661,7 +661,7 @@ int memory_init(void)
 		z80_write_memory_8 = cps1_qsound_writemem;
 		memory_length_user2 = 0x8000;
 
-		if ((memory_region_user2 = (uint8_t *)memalign(MEM_ALIGN, 0x8000)) == NULL)
+		if ((memory_region_user2 = (uint8_t *)malloc(0x8000)) == NULL)
 		{
 			fatalerror(TEXT(COULD_NOT_ALLOCATE_MEMORY_0x8000BYTE));
 			return 0;

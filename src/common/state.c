@@ -213,7 +213,7 @@ int state_save(int slot)
 	if ((fd = open(path, O_WRONLY|O_CREAT, 0777)) >= 0)
 #if (EMU_SYSTEM == NCDZ)
 	{
-		if ((inbuf = memalign(MEM_ALIGN, STATE_BUFFER_SIZE)) == NULL)
+		if ((inbuf = malloc(STATE_BUFFER_SIZE)) == NULL)
 		{
 			strcpy(error_mes, TEXT(COULD_NOT_ALLOCATE_STATE_BUFFER));
 			goto error;
@@ -248,7 +248,7 @@ int state_save(int slot)
 
 		insize = (uint32_t)state_buffer - (uint32_t)inbuf;
 		outsize = insize * 1.1 + 12;
-		if ((outbuf = memalign(MEM_ALIGN, outsize)) == NULL)
+		if ((outbuf = malloc(outsize)) == NULL)
 		{
 			strcpy(error_mes, TEXT(COULD_NOT_ALLOCATE_STATE_BUFFER));
 			free(inbuf);
@@ -281,7 +281,7 @@ int state_save(int slot)
 		state_buffer = state_buffer_base;
 #else
 #if (EMU_SYSTEM == CPS1 || (EMU_SYSTEM == CPS2 && defined(LARGE_MEMORY)))
-		state_buffer = state_buffer_base = memalign(MEM_ALIGN, STATE_BUFFER_SIZE);
+		state_buffer = state_buffer_base = malloc(STATE_BUFFER_SIZE);
 #else
 		state_buffer = state_buffer_base = cache_alloc_state_buffer(STATE_BUFFER_SIZE);
 #endif
@@ -411,7 +411,7 @@ int state_load(int slot)
 		update_progress();
 
 		read(fd, &insize, 4);
-		if ((inbuf = memalign(MEM_ALIGN, insize)) == NULL)
+		if ((inbuf = malloc(insize)) == NULL)
 		{
 			strcpy(error_mes, TEXT(COULD_NOT_ALLOCATE_STATE_BUFFER));
 			close(fd);
@@ -425,7 +425,7 @@ int state_load(int slot)
 		update_progress();
 
 		outsize = STATE_BUFFER_SIZE;
-		if ((outbuf = memalign(MEM_ALIGN, outsize)) == NULL)
+		if ((outbuf = malloc(outsize)) == NULL)
 		{
 			strcpy(error_mes, TEXT(COULD_NOT_ALLOCATE_STATE_BUFFER));
 			free(inbuf);
