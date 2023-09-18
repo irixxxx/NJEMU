@@ -2,7 +2,7 @@
  *
  * CZ80 (Z80 CPU emulator) version 0.9
  * Compiled with Dev-C++
- * Copyright 2004-2005 St�phane Dallongeville
+ * Copyright 2004-2005 Stéphane Dallongeville
  *
  * (Modified by NJ)
  *
@@ -10,6 +10,10 @@
 
 #ifndef CZ80_H
 #define CZ80_H
+
+// uintptr_t
+#include <stdlib.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,12 +23,14 @@ extern "C" {
 /* Z80 core Structures & definitions */
 /*************************************/
 
-#define CZ80_FETCH_BITS			4   // [4-12]   default = 8
+// NB this must have at least the value of (16-Z80_MEM_SHIFT)
+#define CZ80_FETCH_BITS			6   // [4-12]   default = 8
 
 #define CZ80_FETCH_SFT			(16 - CZ80_FETCH_BITS)
 #define CZ80_FETCH_BANK			(1 << CZ80_FETCH_BITS)
 
-#define CZ80_LITTLE_ENDIAN		1
+#define PICODRIVE_HACKS			1
+#define CZ80_LITTLE_ENDIAN		CPU_IS_LE
 #define CZ80_USE_JUMPTABLE		1
 #define CZ80_BIG_FLAGS_ARRAY	1
 #ifdef BUILD_CPS1
@@ -32,17 +38,17 @@ extern "C" {
 #else
 #define CZ80_ENCRYPTED_ROM		0
 #endif
-#define CZ80_EMULATE_R_EXACTLY	0
+#define CZ80_EMULATE_R_EXACTLY	1
 
 #define zR8(A)		(*CPU->pzR8[A])
 #define zR16(A)		(CPU->pzR16[A]->W)
 
-#define pzAF		&(CPU->AF)
-#define zAF			CPU->AF.W
-#define zlAF		CPU->AF.B.L
-#define zhAF		CPU->AF.B.H
-#define zA			zhAF
-#define zF			zlAF
+#define pzFA		&(CPU->FA)
+#define zFA			CPU->FA.W
+#define zlFA		CPU->FA.B.L
+#define zhFA		CPU->FA.B.H
+#define zA			zlFA
+#define zF			zhFA
 
 #define pzBC		&(CPU->BC)
 #define zBC			CPU->BC.W
@@ -65,11 +71,11 @@ extern "C" {
 #define zH			zhHL
 #define zL			zlHL
 
-#define zAF2		CPU->AF2.W
-#define zlAF2		CPU->AF2.B.L
-#define zhAF2		CPU->AF2.B.H
-#define zA2			zhAF2
-#define zF2			zlAF2
+#define zFA2		CPU->FA2.W
+#define zlFA2		CPU->FA2.B.L
+#define zhFA2		CPU->FA2.B.H
+#define zA2			zhFA2
+#define zF2			zlFA2
 
 #define zBC2		CPU->BC2.W
 #define zDE2		CPU->DE2.W
@@ -128,6 +134,10 @@ extern "C" {
 #define CZ80_IFF_SFT	CZ80_PF_SFT
 #define CZ80_IFF		CZ80_PF
 
+#define	CZ80_HAS_INT	0x1
+#define	CZ80_HAS_NMI	0x2
+#define	CZ80_HALTED	0x4
+
 #ifndef IRQ_LINE_STATE
 #define IRQ_LINE_STATE
 #define CLEAR_LINE		0		/* clear (a fired, held or pulsed) line */
@@ -141,13 +151,13 @@ enum
 {
 	CZ80_PC = 1,
 	CZ80_SP,
-	CZ80_AF,
+	CZ80_FA,
 	CZ80_BC,
 	CZ80_DE,
 	CZ80_HL,
 	CZ80_IX,
 	CZ80_IY,
-	CZ80_AF2,
+	CZ80_FA2,
 	CZ80_BC2,
 	CZ80_DE2,
 	CZ80_HL2,
@@ -186,26 +196,26 @@ typedef struct cz80_t
 			union16 BC;
 			union16 DE;
 			union16 HL;
-			union16 AF;
+			union16 FA;
 		};
 	};
 
 	union16 IX;
 	union16 IY;
 	union16 SP;
-	uint32_t PC;
+	uint32_t unusedPC;	/* left for binary compat */
 
 	union16 BC2;
 	union16 DE2;
 	union16 HL2;
-	union16 AF2;
+	union16 FA2;
 
 	union16 R;
 	union16 IFF;
 
 	uint8_t I;
 	uint8_t IM;
-	uint8_t HaltState;
+	uint8_t Status;
 	uint8_t dummy;
 
 	int32_t IRQLine;
@@ -213,11 +223,12 @@ typedef struct cz80_t
 	int32_t ICount;
 	int32_t ExtraCycles;
 
-	uint32_t BasePC;
-	uint32_t Fetch[CZ80_FETCH_BANK];
+	uintptr_t BasePC;
+	uintptr_t PC;
+	uintptr_t Fetch[CZ80_FETCH_BANK];
 #if CZ80_ENCRYPTED_ROM
-	int32_t OPBase;
-	int32_t OPFetch[CZ80_FETCH_BANK];
+	uintptr_t OPBase;
+	uintptr_t OPFetch[CZ80_FETCH_BANK];
 #endif
 
 	uint8_t *pzR8[8];
@@ -255,7 +266,7 @@ void Cz80_Set_IRQ(cz80_struc *CPU, int32_t line, int32_t state);
 uint32_t  Cz80_Get_Reg(cz80_struc *CPU, int32_t regnum);
 void Cz80_Set_Reg(cz80_struc *CPU, int32_t regnum, uint32_t value);
 
-void Cz80_Set_Fetch(cz80_struc *CPU, uint32_t low_adr, uint32_t high_adr, uint32_t fetch_adr);
+void Cz80_Set_Fetch(cz80_struc *CPU, uint32_t low_adr, uint32_t high_adr, uintptr_t fetch_adr);
 #if CZ80_ENCRYPTED_ROM
 void Cz80_Set_Encrypt_Range(cz80_struc *CPU, uint32_t low_adr, uint32_t high_adr, uint32_t decrypted_rom);
 #endif

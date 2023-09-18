@@ -29,11 +29,11 @@ void z80_init(void)
 	Cz80_Set_ReadB(&CZ80, z80_read_memory_8);
 	Cz80_Set_WriteB(&CZ80, z80_write_memory_8);
 #elif (EMU_SYSTEM == CPS2)
-	Cz80_Set_Fetch(&CZ80, 0x0000, 0xffff, (uint32_t)memory_region_cpu2);
+	Cz80_Set_Fetch(&CZ80, 0x0000, 0xffff, (uintptr_t)memory_region_cpu2);
 	Cz80_Set_ReadB(&CZ80, &z80_read_memory_8);
 	Cz80_Set_WriteB(&CZ80, &z80_write_memory_8);
 #elif (EMU_SYSTEM == MVS || EMU_SYSTEM == NCDZ)
-	Cz80_Set_Fetch(&CZ80, 0x0000, 0xffff, (uint32_t)memory_region_cpu2);
+	Cz80_Set_Fetch(&CZ80, 0x0000, 0xffff, (uintptr_t)memory_region_cpu2);
 	Cz80_Set_ReadB(&CZ80, &z80_read_memory_8);
 	Cz80_Set_WriteB(&CZ80, &z80_write_memory_8);
 	Cz80_Set_INPort(&CZ80, &neogeo_z80_port_r);
@@ -85,7 +85,7 @@ void z80_set_irq_line(int irqline, int state)
 	割り込みコールバック関数設定
 --------------------------------------------------------*/
 
-void z80_set_irq_callback(int (*callback)(int line))
+void z80_set_irq_callback(int32_t (*callback)(int32_t irqline))
 {
 	Cz80_Set_IRQ_Callback(&CZ80, callback);
 }
@@ -101,13 +101,13 @@ uint32_t z80_get_reg(int regnum)
 	{
 	case Z80_PC:   return Cz80_Get_Reg(&CZ80, CZ80_PC);
 	case Z80_SP:   return Cz80_Get_Reg(&CZ80, CZ80_SP);
-	case Z80_AF:   return Cz80_Get_Reg(&CZ80, CZ80_AF);
+	case Z80_AF:   return Cz80_Get_Reg(&CZ80, CZ80_FA);
 	case Z80_BC:   return Cz80_Get_Reg(&CZ80, CZ80_BC);
 	case Z80_DE:   return Cz80_Get_Reg(&CZ80, CZ80_DE);
 	case Z80_HL:   return Cz80_Get_Reg(&CZ80, CZ80_HL);
 	case Z80_IX:   return Cz80_Get_Reg(&CZ80, CZ80_IX);
 	case Z80_IY:   return Cz80_Get_Reg(&CZ80, CZ80_IY);
-	case Z80_AF2:  return Cz80_Get_Reg(&CZ80, CZ80_AF2);
+	case Z80_AF2:  return Cz80_Get_Reg(&CZ80, CZ80_FA2);
 	case Z80_BC2:  return Cz80_Get_Reg(&CZ80, CZ80_BC2);
 	case Z80_DE2:  return Cz80_Get_Reg(&CZ80, CZ80_DE2);
 	case Z80_HL2:  return Cz80_Get_Reg(&CZ80, CZ80_HL2);
@@ -133,13 +133,13 @@ void z80_set_reg(int regnum, uint32_t val)
 	{
 	case Z80_PC:   Cz80_Set_Reg(&CZ80, CZ80_PC, val); break;
 	case Z80_SP:   Cz80_Set_Reg(&CZ80, CZ80_SP, val); break;
-	case Z80_AF:   Cz80_Set_Reg(&CZ80, CZ80_AF, val); break;
+	case Z80_AF:   Cz80_Set_Reg(&CZ80, CZ80_FA, val); break;
 	case Z80_BC:   Cz80_Set_Reg(&CZ80, CZ80_BC, val); break;
 	case Z80_DE:   Cz80_Set_Reg(&CZ80, CZ80_DE, val); break;
 	case Z80_HL:   Cz80_Set_Reg(&CZ80, CZ80_HL, val); break;
 	case Z80_IX:   Cz80_Set_Reg(&CZ80, CZ80_IX, val); break;
 	case Z80_IY:   Cz80_Set_Reg(&CZ80, CZ80_IY, val); break;
-	case Z80_AF2:  Cz80_Set_Reg(&CZ80, CZ80_AF2, val); break;
+	case Z80_AF2:  Cz80_Set_Reg(&CZ80, CZ80_FA2, val); break;
 	case Z80_BC2:  Cz80_Set_Reg(&CZ80, CZ80_BC2, val); break;
 	case Z80_DE2:  Cz80_Set_Reg(&CZ80, CZ80_DE2, val); break;
 	case Z80_HL2:  Cz80_Set_Reg(&CZ80, CZ80_HL2, val); break;
@@ -168,7 +168,7 @@ STATE_SAVE( z80 )
 	state_save_word(&CZ80.BC.W, 1);
 	state_save_word(&CZ80.DE.W, 1);
 	state_save_word(&CZ80.HL.W, 1);
-	state_save_word(&CZ80.AF.W, 1);
+	state_save_word(&CZ80.FA.W, 1);
 	state_save_word(&CZ80.IX.W, 1);
 	state_save_word(&CZ80.IY.W, 1);
 	state_save_word(&CZ80.SP.W, 1);
@@ -176,12 +176,12 @@ STATE_SAVE( z80 )
 	state_save_word(&CZ80.BC2.W, 1);
 	state_save_word(&CZ80.DE2.W, 1);
 	state_save_word(&CZ80.HL2.W, 1);
-	state_save_word(&CZ80.AF2.W, 1);
+	state_save_word(&CZ80.FA2.W, 1);
 	state_save_word(&CZ80.R.W, 1);
 	state_save_word(&CZ80.IFF.W, 1);
 	state_save_byte(&CZ80.I, 1);
 	state_save_byte(&CZ80.IM, 1);
-	state_save_byte(&CZ80.HaltState, 1);
+	state_save_byte(&CZ80.Status, 1);
 	state_save_long(&CZ80.IRQLine, 1);
 	state_save_long(&CZ80.IRQState, 1);
 }
@@ -193,7 +193,7 @@ STATE_LOAD( z80 )
 	state_load_word(&CZ80.BC.W, 1);
 	state_load_word(&CZ80.DE.W, 1);
 	state_load_word(&CZ80.HL.W, 1);
-	state_load_word(&CZ80.AF.W, 1);
+	state_load_word(&CZ80.FA.W, 1);
 	state_load_word(&CZ80.IX.W, 1);
 	state_load_word(&CZ80.IY.W, 1);
 	state_load_word(&CZ80.SP.W, 1);
@@ -201,12 +201,12 @@ STATE_LOAD( z80 )
 	state_load_word(&CZ80.BC2.W, 1);
 	state_load_word(&CZ80.DE2.W, 1);
 	state_load_word(&CZ80.HL2.W, 1);
-	state_load_word(&CZ80.AF2.W, 1);
+	state_load_word(&CZ80.FA2.W, 1);
 	state_load_word(&CZ80.R.W, 1);
 	state_load_word(&CZ80.IFF.W, 1);
 	state_load_byte(&CZ80.I, 1);
 	state_load_byte(&CZ80.IM, 1);
-	state_load_byte(&CZ80.HaltState, 1);
+	state_load_byte(&CZ80.Status, 1);
 	state_load_long(&CZ80.IRQLine, 1);
 	state_load_long(&CZ80.IRQState, 1);
 
