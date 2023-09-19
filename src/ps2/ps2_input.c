@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <libpad.h>
+#include <libmtap.h>
+#include <ps2_joystick_driver.h>
 #include "common/input_driver.h"
 
 #define PS2_MAX_PORT      2 /* each ps2 has 2 ports */

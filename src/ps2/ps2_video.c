@@ -312,6 +312,7 @@ static void *ps2_frameAddr(void *data, void *frame, int x, int y)
 // 	else
 // #endif
 // 		return (void *)(((uint32_t)frame | 0x44000000) + ((x + (y << 9)) << 1));
+	return NULL;
 }
 
 static void *ps2_workFrame(void *data, enum WorkBuffer buffer)
@@ -330,6 +331,8 @@ static void *ps2_workFrame(void *data, enum WorkBuffer buffer)
 		case TEX_FIX:
 			return ps2->tex_fix->Mem;
 	}
+
+	return NULL;
 }
 
 

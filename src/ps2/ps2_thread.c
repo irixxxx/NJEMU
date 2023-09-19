@@ -6,7 +6,7 @@
 typedef struct ps2_thread {
 	int32_t threadId;
 	void *endfunc;
-	void (*threadFunc)(void *);
+	int32_t (*threadFunc)(uint32_t, void *);
 } ps2_thread_t;
 
 static void FinishThread(ps2_thread_t *ps2)
@@ -27,7 +27,7 @@ static void FinishThread(ps2_thread_t *ps2)
 static int childThread(void *arg)
 {
     ps2_thread_t *ps2 = (ps2_thread_t *)arg;
-    ps2->threadFunc(NULL);
+    ps2->threadFunc(0, NULL);
     SignalSema((int)ps2->endfunc);
     return 0;
 }
@@ -42,7 +42,7 @@ static void ps2_free(void *data) {
 	free(ps2);
 }
 
-static bool ps2_createThread(void *data, const char *name, void (*threadFunc)(void *), uint32_t priority, uint32_t stackSize) {
+static bool ps2_createThread(void *data, const char *name, int32_t (*threadFunc)(uint32_t, void *), uint32_t priority, uint32_t stackSize) {
 	ps2_thread_t *ps2 = (ps2_thread_t*)data;
 
 	ee_thread_t eethread;
