@@ -4,6 +4,7 @@
 #include <psptypes.h>
 #include <time.h>
 #include <psprtc.h>
+#include <pspthreadman.h>
 #include "common/ticker_driver.h"
 
 typedef struct psp_ticker {
