@@ -13,11 +13,11 @@ BUILD_CPS2 = 0
 BUILD_MVS = 0
 BUILD_NCDZ = 0
 
-LARGE_MEMORY = 1
+LARGE_MEMORY = 0
 KERNEL_MODE = 0
-COMMAND_LIST = 1
+COMMAND_LIST = 0
 ADHOC = 0
-NO_GUI = 0
+NO_GUI = 1
 SAVE_STATE = 0
 UI_32BPP = 1
 RELEASE = 0
@@ -211,7 +211,9 @@ endif
 # Compiler Defines
 #------------------------------------------------------------------------------
 
-CDEFS = \
+CDEFS = -DINLINE='static __inline' \
+	-Dinline=__inline \
+	-D__inline__=__inline \
 	-DBUILD_$(TARGET)=1 \
 	-DTARGET_STR='"$(TARGET)"' \
 	-DVERSION_STR='"$(VERSION_STR)"' \
