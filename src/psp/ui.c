@@ -166,14 +166,14 @@ int draw_volume_status(int draw)
 
 		if (readVolumeButtons())
 		{
-			disp_end = ticker_driver->currentMs(ticker_data) + 2 * CLOCKS_PER_SEC;
+			disp_end = ticker_driver->currentUs(ticker_data) + 2 * CLOCKS_PER_SEC;
 			update = UI_FULL_REFRESH;
 			draw = 1;
 		}
 
 		if (disp_end != 0)
 		{
-			if (ticker_driver->currentMs(ticker_data) < disp_end)
+			if (ticker_driver->currentUs(ticker_data) < disp_end)
 			{
 				if (draw)
 					draw_volume(volume);

@@ -236,7 +236,7 @@ void update_screen(void)
 	if (warming_up)
 	{
 		video_driver->waitVsync(video_data);
-		last_skipcount0_time = ticker_driver->currentMs(ticker_data) - (int)((float)FRAMESKIP_LEVELS * TICKS_PER_FRAME);
+		last_skipcount0_time = ticker_driver->currentUs(ticker_data) - (int)((float)FRAMESKIP_LEVELS * TICKS_PER_FRAME);
 		warming_up = 0;
 	}
 
@@ -248,7 +248,7 @@ void update_screen(void)
 
 	if (!skipped_it)
 	{
-		uint64_t curr = ticker_driver->currentMs(ticker_data);
+		uint64_t curr = ticker_driver->currentUs(ticker_data);
 		int flip = 0;
 
 		if (option_speedlimit)
@@ -264,8 +264,8 @@ void update_screen(void)
 				}
 			}
 
-			msSleep(target - curr);
-			curr = ticker_driver->currentMs(ticker_data);
+			usSleep(target - curr);
+			curr = ticker_driver->currentUs(ticker_data);
 		}
 		if (!flip) video_driver->flipScreen(video_data, 0);
 
@@ -273,11 +273,11 @@ void update_screen(void)
 
 		if (frameskip_counter == 0)
 		{
-			float seconds_elapsed = (float)(curr - last_skipcount0_time) * (1.0 / 1000000.0);
+			float seconds_elapsed = (float)(curr - last_skipcount0_time)/ 1000000.0;
 			float frames_per_sec = (float)frames_since_last_fps / seconds_elapsed;
 
-			game_speed_percent = (int)(100.0 * frames_per_sec / REFRESH_RATE + 0.5);
-			frames_per_second = (int)((float)rendered_frames_since_last_fps / seconds_elapsed + 0.5);
+			game_speed_percent = (int)(100.0 * frames_per_sec / (float)REFRESH_RATE);
+			frames_per_second = (int)((float)rendered_frames_since_last_fps / seconds_elapsed);
 
 			last_skipcount0_time = curr;
 			frames_since_last_fps = 0;

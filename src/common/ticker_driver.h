@@ -22,14 +22,14 @@ typedef struct ticker_driver
 	void *(*init)(void);
 	/* Stops and frees driver data. */
    	void (*free)(void *data);
-	uint64_t (*currentMs)(void *data);
+	uint64_t (*currentUs)(void *data);
 
 } ticker_driver_t;
 
-static inline void msSleep(uint64_t ms) {
+static inline void usSleep(uint64_t us) {
 	struct timespec tv = { 0 };
-    tv.tv_sec = ms / 1000;
-    tv.tv_nsec = (ms % 1000) * 1000000;
+    tv.tv_sec = us / 1000000;
+    tv.tv_nsec = (us % 1000000) * 1000;
     nanosleep(&tv, NULL);
 }
 

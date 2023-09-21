@@ -20,7 +20,7 @@ static void psp_free(void *data) {
 	free(psp);
 }
 
-static uint64_t psp_currentMs(void *data) {
+static uint64_t psp_currentUs(void *data) {
 	return sceKernelGetSystemTimeWide();
 }
 
@@ -28,5 +28,5 @@ ticker_driver_t ticker_psp = {
 	"psp",
 	psp_init,
 	psp_free,
-	psp_currentMs,
+	psp_currentUs,
 };
