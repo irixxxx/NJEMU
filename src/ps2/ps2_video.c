@@ -46,55 +46,15 @@
 
 typedef struct ps2_video {
 	GSGLOBAL *gsGlobal;
-    uint64_t drawColor;
-    int32_t vsync_callback_id;
-    uint8_t vsync; /* 0 (Disabled), 1 (Enabled), 2 (Dynamic) */
-	uint8_t pixel_format;
 	GSTEXTURE *scrbitmap;
 	GSTEXTURE *tex_spr0;
 	GSTEXTURE *tex_spr1;
 	GSTEXTURE *tex_spr2;
 	GSTEXTURE *tex_fix;
 	uint32_t offset;
+	uint8_t vsync; /* 0 (Disabled), 1 (Enabled), 2 (Dynamic) */
+	uint8_t pixel_format;
 } ps2_video_t;
-
-static int vsync_sema_id = 0;
-
-/* PRIVATE METHODS */
-static int vsync_handler()
-{
-   iSignalSema(vsync_sema_id);
-
-   ExitHandler();
-   return 0;
-}
-
-/* Copy of gsKit_sync_flip, but without the 'flip' */
-static void gsKit_sync(GSGLOBAL *gsGlobal)
-{
-   if (!gsGlobal->FirstFrame) WaitSema(vsync_sema_id);
-   while (PollSema(vsync_sema_id) >= 0)
-   	;
-}
-
-/* Copy of gsKit_sync_flip, but without the 'sync' */
-static void gsKit_flip(GSGLOBAL *gsGlobal)
-{
-   if (!gsGlobal->FirstFrame)
-   {
-      if (gsGlobal->DoubleBuffering == GS_SETTING_ON)
-      {
-         GS_SET_DISPFB2( gsGlobal->ScreenBuffer[
-               gsGlobal->ActiveBuffer & 1] / 8192,
-               gsGlobal->Width / 64, gsGlobal->PSM, 0, 0 );
-
-         gsGlobal->ActiveBuffer ^= 1;
-      }
-
-   }
-
-   gsKit_setactive(gsGlobal);
-}
 
 /*--------------------------------------------------------
 	ƒrƒfƒIˆ—‰Šú‰»
@@ -140,10 +100,7 @@ static void ps2_start(void *data) {
 
 	gsKit_TexManager_init(gsGlobal);
 
-	ps2->vsync_callback_id = gsKit_add_vsync_handler(vsync_handler);
-
 	gsKit_mode_switch(gsGlobal, GS_ONESHOT);
-
     gsKit_clear(gsGlobal, GS_BLACK);
 	ps2->gsGlobal = gsGlobal;
 
@@ -153,54 +110,6 @@ static void ps2_start(void *data) {
 	ps2->tex_spr1 = initializeTexture();
 	ps2->tex_spr2 = initializeTexture();
 	ps2->tex_fix = initializeTexture();
-
-
-// 	sceGuDisplay(GU_FALSE);
-// 	sceGuInit();
-
-// 	sceGuStart(GU_DIRECT, gulist);
-// 	sceGuDrawBuffer(pixel_format, draw_frame, BUF_WIDTH);
-// 	sceGuDispBuffer(SCR_WIDTH, SCR_HEIGHT, show_frame, BUF_WIDTH);
-// 	sceGuOffset(2048 - (SCR_WIDTH / 2), 2048 - (SCR_HEIGHT / 2));
-// 	sceGuViewport(2048, 2048, SCR_WIDTH, SCR_HEIGHT);
-
-// 	sceGuEnable(GU_SCISSOR_TEST);
-// 	sceGuScissor(0, 0, SCR_WIDTH, SCR_HEIGHT);
-
-// 	sceGuDisable(GU_ALPHA_TEST);
-// 	sceGuAlphaFunc(GU_LEQUAL, 0, 0x01);
-
-// 	sceGuDisable(GU_BLEND);
-// 	sceGuBlendFunc(GU_ADD, GU_SRC_ALPHA, GU_ONE_MINUS_SRC_ALPHA, 0, 0);
-
-// 	sceGuDisable(GU_DEPTH_TEST);
-// 	sceGuDepthRange(65535, 0);
-// 	sceGuDepthFunc(GU_GEQUAL);
-// 	sceGuDepthMask(GU_TRUE);
-
-// 	sceGuEnable(GU_TEXTURE_2D);
-// 	sceGuTexMode(pixel_format, 0, 0, GU_FALSE);
-// 	sceGuTexScale(1.0f / BUF_WIDTH, 1.0f / BUF_WIDTH);
-// 	sceGuTexOffset(0, 0);
-// 	sceGuTexFunc(GU_TFX_REPLACE, GU_TCC_RGBA);
-
-// 	sceGuClutMode(GU_PSM_5551, 0, 0xff, 0);
-
-// 	sceGuSetDither(&dither_matrix);
-// 	sceGuDisable(GU_DITHER);
-
-// 	sceGuClearDepth(0);
-// 	sceGuClearColor(0);
-
-// 	sceGuFinish();
-// 	sceGuSync(0, GU_SYNC_FINISH);
-
-// 	video_driver->clearFrame(data, show_frame);
-// 	video_driver->clearFrame(data, draw_frame);
-// 	video_driver->clearFrame(data, work_frame);
-
-// 	sceDisplayWaitVblankStart();
-// 	sceGuDisplay(GU_TRUE);
 
 	ui_init();
 }
@@ -222,10 +131,6 @@ static void ps2_exit(ps2_video_t *ps2) {
 	gsKit_clear(ps2->gsGlobal, GS_BLACK);
 	gsKit_vram_clear(ps2->gsGlobal);
 	gsKit_deinit_global(ps2->gsGlobal);
-	gsKit_remove_vsync_handler(ps2->vsync_callback_id);
-
-	if (vsync_sema_id >= 0)
-        DeleteSema(vsync_sema_id);
 	
 	free(ps2->scrbitmap->Mem);
 	free(ps2->scrbitmap);
@@ -276,7 +181,9 @@ static void ps2_setMode(void *data, int mode)
 
 static void ps2_waitVsync(void *data)
 {
-	gsKit_vsync_wait();
+	ps2_video_t *ps2 = (ps2_video_t*)data;
+
+	gsKit_sync_flip(ps2->gsGlobal);
 }
 
 
@@ -291,9 +198,8 @@ static void ps2_flipScreen(void *data, bool vsync)
 	gsKit_queue_exec(ps2->gsGlobal);
 	gsKit_finish();
 
-	if (vsync) gsKit_vsync_wait();
+	if (vsync) gsKit_sync_flip(ps2->gsGlobal);
 
-	gsKit_flip(ps2->gsGlobal);
 	gsKit_TexManager_nextFrame(ps2->gsGlobal);
     gsKit_clear(ps2->gsGlobal, GS_BLACK);
 }
