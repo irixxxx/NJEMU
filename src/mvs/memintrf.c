@@ -1222,7 +1222,8 @@ static int load_rom_info(const char *game_name)
 	char path[MAX_PATH];
 	char *buf;
 	char linebuf[256];
-	int i, size;
+	int i;
+    off_t size;
 	int rom_start = 0;
 	int region = 0;
 

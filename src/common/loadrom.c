@@ -121,7 +121,7 @@ void file_close(void)
 	ファイルから指定バイト読み込む
 --------------------------------------------------------*/
 
-int file_read(void *buf, size_t length)
+size_t file_read(void *buf, size_t length)
 {
 	if (rom_fd != -1)
 		return zread(rom_fd, buf, length);

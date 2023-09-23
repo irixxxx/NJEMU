@@ -112,7 +112,7 @@ volatile int Sleep;
 
 static void show_fps(void)
 {
-	int sx;
+	size_t sx;
 	char buf[32];
 
 	sprintf(buf, "%s%2d %3d%% %2dfps",
@@ -122,7 +122,8 @@ static void show_fps(void)
 		frames_per_second);
 
 	sx = SCR_WIDTH - (strlen(buf) << 3);
-	small_font_print(sx, 0, buf, 1);
+	printf("%s\n", buf);
+	small_font_print((int)sx, 0, buf, 1);
 }
 
 
