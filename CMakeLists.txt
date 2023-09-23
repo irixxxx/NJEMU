@@ -185,7 +185,7 @@ if (${TARGET} STREQUAL "MVS")
         mvs/pd4990a.c
         mvs/neocrypt.c
         mvs/biosmenu.c
-        sound/2610intf.o 
+        sound/2610intf.c
         sound/ym2610.c
     )
 endif()
