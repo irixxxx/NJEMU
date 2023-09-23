@@ -205,3 +205,15 @@ target_compile_options(${TARGET} PUBLIC ${WARNING_OPTIONS})
 target_link_libraries(${TARGET} PUBLIC
     z
 )
+
+# Add platform specific libraries
+if (PLATFORM STREQUAL "X86_64")
+    find_package(SDL2 REQUIRED)
+    target_include_directories(${TARGET} PUBLIC 
+        ${SDL2_INCLUDE_DIRS}
+    )
+    target_link_libraries(${TARGET} PUBLIC
+        SDL2::SDL2-static
+    )
+endif()
+        
