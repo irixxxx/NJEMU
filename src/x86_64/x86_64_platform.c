@@ -2,7 +2,6 @@
 #include <SDL.h>
 
 typedef struct x86_64_platform {
-	SDL_Window* window;
 } x86_64_platform_t;
 
 static void *x86_64_init(void) {
@@ -11,20 +10,9 @@ static void *x86_64_init(void) {
 	// Initialize SDL for video, audio, and controller subsystems
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) < 0) {
         printf("SDL initialization failed: %s\n", SDL_GetError());
+		free(x86_64);
         return NULL;
     }
-
-	// Create a window (width, height, window title)
-    SDL_Window* window = SDL_CreateWindow("SDL Window", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_SHOWN);
-
-	// Check that the window was successfully created
-	if (window == NULL) {
-		// In the case that the window could not be made...
-		printf("Could not create window: %s\n", SDL_GetError());
-		return NULL;
-	}
-
-	x86_64->window = window;
 
 	return x86_64;
 }
@@ -32,8 +20,6 @@ static void *x86_64_init(void) {
 static void x86_64_free(void *data) {
 	x86_64_platform_t *x86_64 = (x86_64_platform_t*)data;
 
-	// Clean up and quit
-    SDL_DestroyWindow(x86_64->window);
     SDL_Quit();
 
 	free(x86_64);
