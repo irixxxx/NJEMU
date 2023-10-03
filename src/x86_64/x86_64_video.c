@@ -79,7 +79,9 @@ static void *x86_64_init(void)
 	x86_64_video_t *x86_64 = (x86_64_video_t*)calloc(1, sizeof(x86_64_video_t));
 
 	// Create a window (width, height, window title)
-    SDL_Window* window = SDL_CreateWindow("SDL Window", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_SHOWN);
+	char title[256];
+	sprintf(title, "%s %s", APPNAME_STR, VERSION_STR);
+    SDL_Window* window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCR_WIDTH, SCR_HEIGHT, SDL_WINDOW_SHOWN);
 
 	// Check that the window was successfully created
 	if (window == NULL) {
