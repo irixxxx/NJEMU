@@ -43,29 +43,29 @@ static void x86_64_start(void *data) {
 	x86_64->tex_fix = (uint8_t*)malloc(textureSize);
 
 	// Create SDL textures
-	x86_64->sdl_texture_scrbitmap = SDL_CreateTexture(x86_64->renderer, SDL_PIXELFORMAT_ABGR1555, SDL_TEXTUREACCESS_STREAMING, BUF_WIDTH, SCR_HEIGHT);
+	x86_64->sdl_texture_scrbitmap = SDL_CreateTexture(x86_64->renderer, SDL_PIXELFORMAT_BGRA5551, SDL_TEXTUREACCESS_STREAMING, BUF_WIDTH, SCR_HEIGHT);
 	if (x86_64->sdl_texture_scrbitmap == NULL) {
 		printf("Could not create sdl_texture_scrbitmap: %s\n", SDL_GetError());
 		return;
 	}	
-	x86_64->sdl_texture_tex_spr0 = SDL_CreateTexture(x86_64->renderer, SDL_PIXELFORMAT_ABGR1555, SDL_TEXTUREACCESS_STREAMING, BUF_WIDTH, SCR_HEIGHT);
+	x86_64->sdl_texture_tex_spr0 = SDL_CreateTexture(x86_64->renderer, SDL_PIXELFORMAT_BGRA5551, SDL_TEXTUREACCESS_STREAMING, BUF_WIDTH, SCR_HEIGHT);
 	if (x86_64->sdl_texture_tex_spr0 == NULL) {
 		printf("Could not create sdl_texture_tex_spr0: %s\n", SDL_GetError());
 		return;
 	}
-	x86_64->sdl_texture_tex_spr1 = SDL_CreateTexture(x86_64->renderer, SDL_PIXELFORMAT_ABGR1555, SDL_TEXTUREACCESS_STREAMING, BUF_WIDTH, SCR_HEIGHT);
+	x86_64->sdl_texture_tex_spr1 = SDL_CreateTexture(x86_64->renderer, SDL_PIXELFORMAT_BGRA5551, SDL_TEXTUREACCESS_STREAMING, BUF_WIDTH, SCR_HEIGHT);
 	if (x86_64->sdl_texture_tex_spr1 == NULL) {
 		printf("Could not create sdl_texture_tex_spr1: %s\n", SDL_GetError());
 		return;
 	}
 
-	x86_64->sdl_texture_tex_spr2 = SDL_CreateTexture(x86_64->renderer, SDL_PIXELFORMAT_ABGR1555, SDL_TEXTUREACCESS_STREAMING, BUF_WIDTH, SCR_HEIGHT);
+	x86_64->sdl_texture_tex_spr2 = SDL_CreateTexture(x86_64->renderer, SDL_PIXELFORMAT_BGRA5551, SDL_TEXTUREACCESS_STREAMING, BUF_WIDTH, SCR_HEIGHT);
 	if (x86_64->sdl_texture_tex_spr2 == NULL) {
 		printf("Could not create sdl_texture_tex_spr2: %s\n", SDL_GetError());
 		return;
 	}
 
-	x86_64->sdl_texture_tex_fix = SDL_CreateTexture(x86_64->renderer, SDL_PIXELFORMAT_ABGR1555, SDL_TEXTUREACCESS_STREAMING, BUF_WIDTH, SCR_HEIGHT);
+	x86_64->sdl_texture_tex_fix = SDL_CreateTexture(x86_64->renderer, SDL_PIXELFORMAT_BGRA5551, SDL_TEXTUREACCESS_STREAMING, BUF_WIDTH, SCR_HEIGHT);
 	if (x86_64->sdl_texture_tex_fix == NULL) {
 		printf("Could not create sdl_texture_tex_fix: %s\n", SDL_GetError());
 		return;
@@ -81,7 +81,7 @@ static void *x86_64_init(void)
 	// Create a window (width, height, window title)
 	char title[256];
 	sprintf(title, "%s %s", APPNAME_STR, VERSION_STR);
-    SDL_Window* window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCR_WIDTH, SCR_HEIGHT, SDL_WINDOW_SHOWN);
+    SDL_Window* window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 344, 256, SDL_WINDOW_SHOWN);
 
 	// Check that the window was successfully created
 	if (window == NULL) {
@@ -94,7 +94,7 @@ static void *x86_64_init(void)
 	x86_64->window = window;
 
 	// Create a renderer
-	SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+	SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
 	// Check that the renderer was successfully created
 	if (renderer == NULL) {
@@ -374,8 +374,57 @@ static void x86_64_blitFinishFix(void *data, enum WorkBuffer buffer, void *clut,
 	// Unlock texture
 	SDL_UnlockTexture(texture);
 
-	// Render Geomertry
-	SDL_RenderGeometry(x86_64->renderer, texture, vertexs, vertices_count, NULL, 0);
+	// Render Geometry expect to receive a SDL_Vertex array and it is using triangles
+	// however x86_64_blitFinishFix receives a SDL_Vertex array and it is using quads
+	// so we need to convert the SDL_Vertex array into a SDL_Vertex array
+	int vertices_count_triangles = vertices_count * 3;
+	SDL_Vertex *vertex_triangles = (SDL_Vertex *)malloc(sizeof(SDL_Vertex) * vertices_count_triangles);
+	for (int i = 0; i < vertices_count; i += 2) {
+		SDL_Vertex start_vertex = vertexs[i];
+		SDL_Vertex end_vertex = vertexs[i + 1];
+		
+		// First triangle
+		vertex_triangles[i * 3].position.x = start_vertex.position.x;
+		vertex_triangles[i * 3].position.y = start_vertex.position.y;
+		vertex_triangles[i * 3].tex_coord.x = start_vertex.tex_coord.x;
+		vertex_triangles[i * 3].tex_coord.y = start_vertex.tex_coord.y;
+		vertex_triangles[i * 3].color = start_vertex.color;
+
+		vertex_triangles[i * 3 + 1].position.x = end_vertex.position.x;
+		vertex_triangles[i * 3 + 1].position.y = start_vertex.position.y;
+		vertex_triangles[i * 3 + 1].tex_coord.x = end_vertex.tex_coord.x;
+		vertex_triangles[i * 3 + 1].tex_coord.y = start_vertex.tex_coord.y;
+		vertex_triangles[i * 3 + 1].color = start_vertex.color;
+
+		vertex_triangles[i * 3 + 2].position.x = start_vertex.position.x;
+		vertex_triangles[i * 3 + 2].position.y = end_vertex.position.y;
+		vertex_triangles[i * 3 + 2].tex_coord.x = start_vertex.tex_coord.x;
+		vertex_triangles[i * 3 + 2].tex_coord.y = end_vertex.tex_coord.y;
+		vertex_triangles[i * 3 + 2].color = start_vertex.color;
+
+		// Second trinagle
+		vertex_triangles[i * 3 + 3].position.x = end_vertex.position.x;
+		vertex_triangles[i * 3 + 3].position.y = start_vertex.position.y;
+		vertex_triangles[i * 3 + 3].tex_coord.x = end_vertex.tex_coord.x;
+		vertex_triangles[i * 3 + 3].tex_coord.y = start_vertex.tex_coord.y;
+		vertex_triangles[i * 3 + 3].color = start_vertex.color;
+
+		vertex_triangles[i * 3 + 4].position.x = end_vertex.position.x;
+		vertex_triangles[i * 3 + 4].position.y = end_vertex.position.y;
+		vertex_triangles[i * 3 + 4].tex_coord.x = end_vertex.tex_coord.x;
+		vertex_triangles[i * 3 + 4].tex_coord.y = end_vertex.tex_coord.y;
+		vertex_triangles[i * 3 + 4].color = start_vertex.color;
+
+		vertex_triangles[i * 3 + 5].position.x = start_vertex.position.x;
+		vertex_triangles[i * 3 + 5].position.y = end_vertex.position.y;
+		vertex_triangles[i * 3 + 5].tex_coord.x = start_vertex.tex_coord.x;
+		vertex_triangles[i * 3 + 5].tex_coord.y = end_vertex.tex_coord.y;
+		vertex_triangles[i * 3 + 5].color = start_vertex.color;
+	}
+	
+
+	SDL_RenderGeometry(x86_64->renderer, texture, vertex_triangles, vertices_count_triangles, NULL, 0);
+	free(vertex_triangles);
 }
 
 
