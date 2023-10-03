@@ -338,11 +338,21 @@ static SDL_Texture *x86_64_getTexture(void *data, enum WorkBuffer buffer) {
 
 static void x86_64_blitFinishFix(void *data, enum WorkBuffer buffer, void *clut, uint32_t vertices_count, void *vertices) {
 	// We need to transform the texutres saved that uses clut into a SDL texture compatible format
-	x86_64_video_t *x86_64 = (x86_64_video_t*)data;
-	SDL_Vertex *vertexs = (SDL_Vertex*)vertices;
-	uint16_t*clut_texture = (uint16_t*)clut;
+	x86_64_video_t *x86_64 = (x86_64_video_t *)data;
+	SDL_Vertex *vertexs = (SDL_Vertex *)vertices;
+	uint16_t *clut_texture = (uint16_t *)clut;
 	uint8_t *tex_fix = x86_64_workFrame(data, buffer);
 	SDL_Texture *texture = x86_64_getTexture(data, buffer);
+
+	// print whole clut_texture content in hex
+	printf("****************** clut_texture:\n");
+	for (int i = 0; i < 256; ++i) {
+		if (i % 16 == 0 && i != 0) {
+			printf("\n");
+		}
+		printf("0x%04x ", clut_texture[i]);
+	}
+	printf("\n *********************** \n");
 
 	// Lock texture
 	void *pixels;
