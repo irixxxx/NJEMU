@@ -20,6 +20,12 @@ typedef struct x86_64_video {
 	uint8_t *tex_spr1;
 	uint8_t *tex_spr2;
 	uint8_t *tex_fix;
+
+	SDL_Texture *sdl_texture_scrbitmap;
+	SDL_Texture *sdl_texture_tex_spr0;
+	SDL_Texture *sdl_texture_tex_spr1;
+	SDL_Texture *sdl_texture_tex_spr2;
+	SDL_Texture *sdl_texture_tex_fix;
 } x86_64_video_t;
 
 /******************************************************************************
@@ -35,6 +41,35 @@ static void x86_64_start(void *data) {
 	x86_64->tex_spr1 = (uint8_t*)malloc(textureSize);
 	x86_64->tex_spr2 = (uint8_t*)malloc(textureSize);
 	x86_64->tex_fix = (uint8_t*)malloc(textureSize);
+
+	// Create SDL textures
+	x86_64->sdl_texture_scrbitmap = SDL_CreateTexture(x86_64->renderer, SDL_PIXELFORMAT_ABGR1555, SDL_TEXTUREACCESS_STREAMING, BUF_WIDTH, SCR_HEIGHT);
+	if (x86_64->sdl_texture_scrbitmap == NULL) {
+		printf("Could not create sdl_texture_scrbitmap: %s\n", SDL_GetError());
+		return;
+	}	
+	x86_64->sdl_texture_tex_spr0 = SDL_CreateTexture(x86_64->renderer, SDL_PIXELFORMAT_ABGR1555, SDL_TEXTUREACCESS_STREAMING, BUF_WIDTH, SCR_HEIGHT);
+	if (x86_64->sdl_texture_tex_spr0 == NULL) {
+		printf("Could not create sdl_texture_tex_spr0: %s\n", SDL_GetError());
+		return;
+	}
+	x86_64->sdl_texture_tex_spr1 = SDL_CreateTexture(x86_64->renderer, SDL_PIXELFORMAT_ABGR1555, SDL_TEXTUREACCESS_STREAMING, BUF_WIDTH, SCR_HEIGHT);
+	if (x86_64->sdl_texture_tex_spr1 == NULL) {
+		printf("Could not create sdl_texture_tex_spr1: %s\n", SDL_GetError());
+		return;
+	}
+
+	x86_64->sdl_texture_tex_spr2 = SDL_CreateTexture(x86_64->renderer, SDL_PIXELFORMAT_ABGR1555, SDL_TEXTUREACCESS_STREAMING, BUF_WIDTH, SCR_HEIGHT);
+	if (x86_64->sdl_texture_tex_spr2 == NULL) {
+		printf("Could not create sdl_texture_tex_spr2: %s\n", SDL_GetError());
+		return;
+	}
+
+	x86_64->sdl_texture_tex_fix = SDL_CreateTexture(x86_64->renderer, SDL_PIXELFORMAT_ABGR1555, SDL_TEXTUREACCESS_STREAMING, BUF_WIDTH, SCR_HEIGHT);
+	if (x86_64->sdl_texture_tex_fix == NULL) {
+		printf("Could not create sdl_texture_tex_fix: %s\n", SDL_GetError());
+		return;
+	}
 
 	ui_init();
 }
@@ -80,6 +115,31 @@ static void *x86_64_init(void)
 --------------------------------------------------------*/
 
 static void x86_64_exit(x86_64_video_t *x86_64) {
+	if (x86_64->sdl_texture_scrbitmap) {
+		SDL_DestroyTexture(x86_64->sdl_texture_scrbitmap);
+		x86_64->sdl_texture_scrbitmap = NULL;
+	}
+
+	if (x86_64->sdl_texture_tex_spr0) {
+		SDL_DestroyTexture(x86_64->sdl_texture_tex_spr0);
+		x86_64->sdl_texture_tex_spr0 = NULL;
+	}
+
+	if (x86_64->sdl_texture_tex_spr1) {
+		SDL_DestroyTexture(x86_64->sdl_texture_tex_spr1);
+		x86_64->sdl_texture_tex_spr1 = NULL;
+	}
+
+	if (x86_64->sdl_texture_tex_spr2) {
+		SDL_DestroyTexture(x86_64->sdl_texture_tex_spr2);
+		x86_64->sdl_texture_tex_spr2 = NULL;
+	}
+
+	if (x86_64->sdl_texture_tex_fix) {
+		SDL_DestroyTexture(x86_64->sdl_texture_tex_fix);
+		x86_64->sdl_texture_tex_fix = NULL;
+	}
+
 	if (x86_64->scrbitmap) {
 		free(x86_64->scrbitmap);
 		x86_64->scrbitmap = NULL;
@@ -151,6 +211,8 @@ static void x86_64_waitVsync(void *data)
 
 static void x86_64_flipScreen(void *data, bool vsync)
 {
+	x86_64_video_t *x86_64 = (x86_64_video_t*)data;
+	SDL_RenderPresent(x86_64->renderer);
 }
 
 
@@ -165,7 +227,21 @@ static void *x86_64_frameAddr(void *data, void *frame, int x, int y)
 
 static void *x86_64_workFrame(void *data, enum WorkBuffer buffer)
 {
-	return NULL;
+	x86_64_video_t *x86_64 = (x86_64_video_t*)data;
+	switch (buffer) {
+		case SCRBITMAP:
+			return x86_64->scrbitmap;
+		case TEX_SPR0:
+			return x86_64->tex_spr0;
+		case TEX_SPR1:
+			return x86_64->tex_spr1;
+		case TEX_SPR2:
+			return x86_64->tex_spr2;
+		case TEX_FIX:
+			return x86_64->tex_fix;
+		default:
+			return NULL;
+	}
 }
 
 
@@ -175,6 +251,8 @@ static void *x86_64_workFrame(void *data, enum WorkBuffer buffer)
 
 static void x86_64_clearScreen(void *data)
 {
+	x86_64_video_t *x86_64 = (x86_64_video_t*)data;
+	SDL_RenderClear(x86_64->renderer);
 }
 
 /*--------------------------------------------------------
@@ -238,19 +316,19 @@ static void *x86_64_getNativeObjects(void *data, int index) {
 	return NULL;
 }
 
-static uint8_t *x86_64_getTexture(void *data, enum WorkBuffer buffer) {
+static SDL_Texture *x86_64_getTexture(void *data, enum WorkBuffer buffer) {
 	x86_64_video_t *x86_64 = (x86_64_video_t*)data;
 	switch (buffer) {
 		case SCRBITMAP:
-			return x86_64->scrbitmap;
+			return x86_64->sdl_texture_scrbitmap;
 		case TEX_SPR0:
-			return x86_64->tex_spr0;
+			return x86_64->sdl_texture_tex_spr0;
 		case TEX_SPR1:
-			return x86_64->tex_spr1;
+			return x86_64->sdl_texture_tex_spr1;
 		case TEX_SPR2:
-			return x86_64->tex_spr2;
+			return x86_64->sdl_texture_tex_spr2;
 		case TEX_FIX:
-			return x86_64->tex_fix;
+			return x86_64->sdl_texture_tex_fix;
 		default:
 			return NULL;
 	}
@@ -259,10 +337,33 @@ static uint8_t *x86_64_getTexture(void *data, enum WorkBuffer buffer) {
 static void x86_64_blitFinishFix(void *data, enum WorkBuffer buffer, void *clut, uint32_t vertices_count, void *vertices) {
 	// We need to transform the texutres saved that uses clut into a SDL texture compatible format
 	x86_64_video_t *x86_64 = (x86_64_video_t*)data;
-	uint8_t *tex_fix = x86_64_getTexture(data, buffer);
+	SDL_Vertex *vertexs = (SDL_Vertex*)vertices;
+	uint16_t*clut_texture = (uint16_t*)clut;
+	uint8_t *tex_fix = x86_64_workFrame(data, buffer);
+	SDL_Texture *texture = x86_64_getTexture(data, buffer);
 
-	// Create SDL texture
-	SDL_Texture *texture = SDL_CreateTexture(x86_64->renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, BUF_WIDTH, SCR_HEIGHT);
+	// Lock texture
+	void *pixels;
+	int pitch;
+	SDL_LockTexture(texture, NULL, &pixels, &pitch);
+
+	// Obtain the color from the clut using the index and copy it to the pixels array
+	for (int i = 0; i < SCR_HEIGHT; ++i) {
+		for (int j = 0; j < BUF_WIDTH; ++j) {
+			int index = i * BUF_WIDTH + j;
+			uint8_t pixelValue = tex_fix[index];
+			uint16_t color = clut_texture[pixelValue];
+
+			uint16_t *pixel = (uint16_t*)pixels + index;
+			*pixel = color;
+		}
+	}
+
+	// Unlock texture
+	SDL_UnlockTexture(texture);
+
+	// Render Geomertry
+	SDL_RenderGeometry(x86_64->renderer, texture, vertexs, vertices_count, NULL, 0);
 }
 
 
