@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <SDL.h>
 #include "common/input_driver.h"
 
 typedef struct x86_64_input {
@@ -15,7 +16,26 @@ static void x86_64_free(void *data) {
 }
 
 static uint32_t x86_64_poll(void *data) {
-	uint32_t btnsData = 1;
+	uint32_t btnsData = 0;
+	SDL_Event event;
+	SDL_PollEvent(&event);
+
+	btnsData |= (event.key.keysym.sym == SDLK_UP) ? PLATFORM_PAD_UP : 0;
+	btnsData |= (event.key.keysym.sym == SDLK_DOWN) ? PLATFORM_PAD_DOWN : 0;
+	btnsData |= (event.key.keysym.sym == SDLK_LEFT) ? PLATFORM_PAD_LEFT : 0;
+	btnsData |= (event.key.keysym.sym == SDLK_RIGHT) ? PLATFORM_PAD_RIGHT : 0;
+
+	btnsData |= (event.key.keysym.sym == SDLK_z) ? PLATFORM_PAD_B1 : 0;
+	btnsData |= (event.key.keysym.sym == SDLK_x) ? PLATFORM_PAD_B2 : 0;
+	btnsData |= (event.key.keysym.sym == SDLK_c) ? PLATFORM_PAD_B3 : 0;
+	btnsData |= (event.key.keysym.sym == SDLK_s) ? PLATFORM_PAD_B4 : 0;
+
+	btnsData |= (event.key.keysym.sym == SDLK_a) ? PLATFORM_PAD_L : 0;
+	btnsData |= (event.key.keysym.sym == SDLK_d) ? PLATFORM_PAD_R : 0;
+
+	btnsData |= (event.key.keysym.sym == SDLK_RETURN) ? PLATFORM_PAD_START : 0;
+	btnsData |= (event.key.keysym.sym == SDLK_SPACE) ? PLATFORM_PAD_SELECT : 0;
+
 	return btnsData;
 }
 
