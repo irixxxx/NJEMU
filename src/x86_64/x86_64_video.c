@@ -43,29 +43,29 @@ static void x86_64_start(void *data) {
 	x86_64->tex_fix = (uint8_t*)malloc(textureSize);
 
 	// Create SDL textures
-	x86_64->sdl_texture_scrbitmap = SDL_CreateTexture(x86_64->renderer, SDL_PIXELFORMAT_BGRA5551, SDL_TEXTUREACCESS_STREAMING, BUF_WIDTH, SCR_HEIGHT);
+	x86_64->sdl_texture_scrbitmap = SDL_CreateTexture(x86_64->renderer, SDL_PIXELFORMAT_ABGR1555, SDL_TEXTUREACCESS_STREAMING, BUF_WIDTH, SCR_HEIGHT);
 	if (x86_64->sdl_texture_scrbitmap == NULL) {
 		printf("Could not create sdl_texture_scrbitmap: %s\n", SDL_GetError());
 		return;
 	}	
-	x86_64->sdl_texture_tex_spr0 = SDL_CreateTexture(x86_64->renderer, SDL_PIXELFORMAT_BGRA5551, SDL_TEXTUREACCESS_STREAMING, BUF_WIDTH, SCR_HEIGHT);
+	x86_64->sdl_texture_tex_spr0 = SDL_CreateTexture(x86_64->renderer, SDL_PIXELFORMAT_ABGR1555, SDL_TEXTUREACCESS_STREAMING, BUF_WIDTH, SCR_HEIGHT);
 	if (x86_64->sdl_texture_tex_spr0 == NULL) {
 		printf("Could not create sdl_texture_tex_spr0: %s\n", SDL_GetError());
 		return;
 	}
-	x86_64->sdl_texture_tex_spr1 = SDL_CreateTexture(x86_64->renderer, SDL_PIXELFORMAT_BGRA5551, SDL_TEXTUREACCESS_STREAMING, BUF_WIDTH, SCR_HEIGHT);
+	x86_64->sdl_texture_tex_spr1 = SDL_CreateTexture(x86_64->renderer, SDL_PIXELFORMAT_ABGR1555, SDL_TEXTUREACCESS_STREAMING, BUF_WIDTH, SCR_HEIGHT);
 	if (x86_64->sdl_texture_tex_spr1 == NULL) {
 		printf("Could not create sdl_texture_tex_spr1: %s\n", SDL_GetError());
 		return;
 	}
 
-	x86_64->sdl_texture_tex_spr2 = SDL_CreateTexture(x86_64->renderer, SDL_PIXELFORMAT_BGRA5551, SDL_TEXTUREACCESS_STREAMING, BUF_WIDTH, SCR_HEIGHT);
+	x86_64->sdl_texture_tex_spr2 = SDL_CreateTexture(x86_64->renderer, SDL_PIXELFORMAT_ABGR1555, SDL_TEXTUREACCESS_STREAMING, BUF_WIDTH, SCR_HEIGHT);
 	if (x86_64->sdl_texture_tex_spr2 == NULL) {
 		printf("Could not create sdl_texture_tex_spr2: %s\n", SDL_GetError());
 		return;
 	}
 
-	x86_64->sdl_texture_tex_fix = SDL_CreateTexture(x86_64->renderer, SDL_PIXELFORMAT_BGRA5551, SDL_TEXTUREACCESS_STREAMING, BUF_WIDTH, SCR_HEIGHT);
+	x86_64->sdl_texture_tex_fix = SDL_CreateTexture(x86_64->renderer, SDL_PIXELFORMAT_ABGR1555, SDL_TEXTUREACCESS_STREAMING, BUF_WIDTH, SCR_HEIGHT);
 	if (x86_64->sdl_texture_tex_fix == NULL) {
 		printf("Could not create sdl_texture_tex_fix: %s\n", SDL_GetError());
 		return;
