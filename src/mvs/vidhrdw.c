@@ -183,8 +183,6 @@ static void draw_sprites_hardware(int min_y, int max_y)
 	const uint8_t *skip = NULL;
 	const uint8_t *tile = NULL;
 
-	printf("max_sprite_number: %d\n", max_sprite_number);
-	if (max_sprite_number > 0) exit(1);
 	do
 	{
 		for (;sprite_number < max_sprite_number; sprite_number++)

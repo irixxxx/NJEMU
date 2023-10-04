@@ -339,20 +339,10 @@ static SDL_Texture *x86_64_getTexture(void *data, enum WorkBuffer buffer) {
 static void x86_64_blitFinishFix(void *data, enum WorkBuffer buffer, void *clut, uint32_t vertices_count, void *vertices) {
 	// We need to transform the texutres saved that uses clut into a SDL texture compatible format
 	x86_64_video_t *x86_64 = (x86_64_video_t *)data;
-	SDL_Vertex *vertexs = (SDL_Vertex *)vertices;
+	struct Vertex *vertexs = (struct Vertex *)vertices;
 	uint16_t *clut_texture = (uint16_t *)clut;
 	uint8_t *tex_fix = x86_64_workFrame(data, buffer);
 	SDL_Texture *texture = x86_64_getTexture(data, buffer);
-
-	// print whole clut_texture content in hex
-	printf("****************** clut_texture:\n");
-	for (int i = 0; i < 256; ++i) {
-		if (i % 16 == 0 && i != 0) {
-			printf("\n");
-		}
-		printf("0x%04x ", clut_texture[i]);
-	}
-	printf("\n *********************** \n");
 
 	// Lock texture
 	void *pixels;
@@ -375,56 +365,28 @@ static void x86_64_blitFinishFix(void *data, enum WorkBuffer buffer, void *clut,
 	SDL_UnlockTexture(texture);
 
 	// Render Geometry expect to receive a SDL_Vertex array and it is using triangles
-	// however x86_64_blitFinishFix receives a SDL_Vertex array and it is using quads
-	// so we need to convert the SDL_Vertex array into a SDL_Vertex array
-	int vertices_count_triangles = vertices_count * 3;
-	SDL_Vertex *vertex_triangles = (SDL_Vertex *)malloc(sizeof(SDL_Vertex) * vertices_count_triangles);
+	// however x86_64_blitFinishFix receives a SDL_Vertex array using 2 vertex per sprite
+	// so we are going to use SDL_RenderCopy to render all the sprites
 	for (int i = 0; i < vertices_count; i += 2) {
-		SDL_Vertex start_vertex = vertexs[i];
-		SDL_Vertex end_vertex = vertexs[i + 1];
-		
-		// First triangle
-		vertex_triangles[i * 3].position.x = start_vertex.position.x;
-		vertex_triangles[i * 3].position.y = start_vertex.position.y;
-		vertex_triangles[i * 3].tex_coord.x = start_vertex.tex_coord.x;
-		vertex_triangles[i * 3].tex_coord.y = start_vertex.tex_coord.y;
-		vertex_triangles[i * 3].color = start_vertex.color;
+		struct Vertex *vertex1 = &vertexs[i];
+		struct Vertex *vertex2 = &vertexs[i + 1];
 
-		vertex_triangles[i * 3 + 1].position.x = end_vertex.position.x;
-		vertex_triangles[i * 3 + 1].position.y = start_vertex.position.y;
-		vertex_triangles[i * 3 + 1].tex_coord.x = end_vertex.tex_coord.x;
-		vertex_triangles[i * 3 + 1].tex_coord.y = start_vertex.tex_coord.y;
-		vertex_triangles[i * 3 + 1].color = start_vertex.color;
+		SDL_Rect dst_rect = { 
+			vertex1->x,
+			vertex1->y,
+			vertex2->x - vertex1->x,
+			vertex2->y - vertex1->y
+		};
+		SDL_Rect src_rect = { 
+			vertex1->u,
+			vertex1->v,
+			vertex2->u - vertex1->u,
+			vertex2->v - vertex1->v
+		};
 
-		vertex_triangles[i * 3 + 2].position.x = start_vertex.position.x;
-		vertex_triangles[i * 3 + 2].position.y = end_vertex.position.y;
-		vertex_triangles[i * 3 + 2].tex_coord.x = start_vertex.tex_coord.x;
-		vertex_triangles[i * 3 + 2].tex_coord.y = end_vertex.tex_coord.y;
-		vertex_triangles[i * 3 + 2].color = start_vertex.color;
-
-		// Second trinagle
-		vertex_triangles[i * 3 + 3].position.x = end_vertex.position.x;
-		vertex_triangles[i * 3 + 3].position.y = start_vertex.position.y;
-		vertex_triangles[i * 3 + 3].tex_coord.x = end_vertex.tex_coord.x;
-		vertex_triangles[i * 3 + 3].tex_coord.y = start_vertex.tex_coord.y;
-		vertex_triangles[i * 3 + 3].color = start_vertex.color;
-
-		vertex_triangles[i * 3 + 4].position.x = end_vertex.position.x;
-		vertex_triangles[i * 3 + 4].position.y = end_vertex.position.y;
-		vertex_triangles[i * 3 + 4].tex_coord.x = end_vertex.tex_coord.x;
-		vertex_triangles[i * 3 + 4].tex_coord.y = end_vertex.tex_coord.y;
-		vertex_triangles[i * 3 + 4].color = start_vertex.color;
-
-		vertex_triangles[i * 3 + 5].position.x = start_vertex.position.x;
-		vertex_triangles[i * 3 + 5].position.y = end_vertex.position.y;
-		vertex_triangles[i * 3 + 5].tex_coord.x = start_vertex.tex_coord.x;
-		vertex_triangles[i * 3 + 5].tex_coord.y = end_vertex.tex_coord.y;
-		vertex_triangles[i * 3 + 5].color = start_vertex.color;
+		// Render the sprite
+		SDL_RenderCopy(x86_64->renderer, texture, &src_rect, &dst_rect);
 	}
-	
-
-	SDL_RenderGeometry(x86_64->renderer, texture, vertex_triangles, vertices_count_triangles, NULL, 0);
-	free(vertex_triangles);
 }
 
 

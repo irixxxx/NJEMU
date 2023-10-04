@@ -8,7 +8,6 @@
 
 #include "mvs.h"
 
-#include <SDL.h>
 
 /******************************************************************************
 	??/????
@@ -60,13 +59,15 @@ static uint16_t *scrbitmap;
 #define FIX_HASH_MASK		0x1ff
 #define FIX_HASH_SIZE		0x200
 #define FIX_MAX_SPRITES		((320/8) * (240/8))
+#define TILE_8x8_PER_LINE	(BUF_WIDTH/8)
+#define TILE_16x16_PER_LINE	(BUF_WIDTH/16)
 
 static SPRITE ALIGN_DATA *fix_head[FIX_HASH_SIZE];
 static SPRITE ALIGN_DATA fix_data[FIX_TEXTURE_SIZE];
 static SPRITE *fix_free_head;
 
 static uint8_t *tex_fix;
-static SDL_Vertex ALIGN_DATA vertices_fix[FIX_MAX_SPRITES * 2];
+static struct Vertex ALIGN_DATA vertices_fix[FIX_MAX_SPRITES * 2];
 static uint16_t fix_num;
 static uint16_t fix_texture_num;
 
@@ -85,7 +86,7 @@ static SPRITE ALIGN_DATA spr_data[SPR_TEXTURE_SIZE];
 static SPRITE *spr_free_head;
 
 static uint8_t *tex_spr[3];
-static SDL_Vertex ALIGN_DATA vertices_spr[SPR_MAX_SPRITES * 2];
+static struct Vertex ALIGN_DATA vertices_spr[SPR_MAX_SPRITES * 2];
 static uint16_t ALIGN_DATA spr_flags[SPR_MAX_SPRITES];
 static uint16_t spr_num;
 static uint16_t spr_texture_num;
@@ -105,17 +106,6 @@ static const uint32_t ALIGN_DATA color_table[16] =
 	0x40404040, 0x50505050, 0x60606060, 0x70707070,
 	0x80808080, 0x90909090, 0xa0a0a0a0, 0xb0b0b0b0,
 	0xc0c0c0c0, 0xd0d0d0d0, 0xe0e0e0e0, 0xf0f0f0f0
-};
-
-
-/*------------------------------------------------------------------------
-	'swizzle'???????????????
-------------------------------------------------------------------------*/
-
-static const int ALIGN_DATA swizzle_table_8bit[16] =
-{
-	   0, 16, 16, 16, 16, 16, 16, 16,
-	3984, 16, 16, 16, 16, 16, 16, 16
 };
 
 
@@ -440,7 +430,6 @@ void blit_reset(void)
 
 void blit_start(int start, int end)
 {
-	// printf("blit_start(%d, %d)\n", start, end);
 	clip_min_y = start;
 	clip_max_y = end + 1;
 
@@ -488,7 +477,6 @@ void blit_start(int start, int end)
 
 void blit_finish(void)
 {
-	// printf("blit_finish\n");
 	video_driver->transferWorkFrame(video_data, &mvs_src_clip, &mvs_clip[option_stretch]);
 }
 
@@ -500,59 +488,45 @@ void blit_finish(void)
 void blit_draw_fix(int x, int y, uint32_t code, uint16_t attr)
 {
 	int16_t idx;
-	SDL_Vertex *vertices;
+	struct Vertex *vertices;
 	uint32_t key = MAKE_FIX_KEY(code, attr);
-	SDL_Color color = { 255, 255, 255, 255 };
 
 	if ((idx = fix_get_sprite(key)) < 0)
 	{
 		uint32_t col, tile;
-		uint8_t *src, *dst, lines = 8;
+		uint8_t *src, *dst, lines, row, column;
 
 		if (fix_texture_num == FIX_TEXTURE_SIZE - 1)
 			fix_delete_sprite();
 
 		idx = fix_insert_sprite(key);
-		dst = SWIZZLED8_8x8(tex_fix, idx);
 		src = &fix_memory[code << 5];
 		col = color_table[attr];
 
-		while (lines--)
+		row = idx / TILE_8x8_PER_LINE;
+		column = idx % TILE_8x8_PER_LINE;
+		for (lines = 0; lines < 8; lines++)
 		{
+			dst = &tex_fix[((row * 8) + lines) * BUF_WIDTH + (column * 8)];
 			tile = *(uint32_t *)(src + 0);
 			*(uint32_t *)(dst +  0) = ((tile >> 0) & 0x0f0f0f0f) | col;
 			*(uint32_t *)(dst +  4) = ((tile >> 4) & 0x0f0f0f0f) | col;
 			src += 4;
-			dst += 16;
 		}
 	}
 
-	// GSGLOBAL *gsGlobal = video_driver->getNativeObjects(video_data, 0);
-	// GSTEXTURE *atlas = video_driver->getNativeObjects(video_data, 5);
 	vertices = &vertices_fix[fix_num];
 	fix_num += 2;
 
-	uint32_t x0 = x;
-	uint32_t y0 = y;
-	uint32_t u0 = (idx & 0x003f) << 3;
-	uint32_t v0 = (idx & 0x0fc0) >> 3;
-	uint32_t x1 = x + 8;
-	uint32_t y1 = y + 8;
-	uint32_t u1 = u0 + 8;
-	uint32_t v1 = v0 + 8;
+	vertices[0].x = vertices[1].x = x;
+	vertices[0].y = vertices[1].y = y;
+	vertices[0].u = vertices[1].u = (idx & 0x003f) << 3;
+	vertices[0].v = vertices[1].v = (idx & 0x0fc0) >> 3;
 
-
-	vertices[0].position.x = x0;
-	vertices[0].position.y = y0;
-	vertices[0].tex_coord.x = (float) u0 / (float) BUF_WIDTH;
-	vertices[0].tex_coord.y = (float) v0 / (float) SCR_HEIGHT;
-	vertices[0].color = color;
-
-	vertices[1].position.x = x1;
-	vertices[1].position.y = y1;
-	vertices[1].tex_coord.x = (float) u1 / (float) BUF_WIDTH;
-	vertices[1].tex_coord.y = (float) v1 / (float) SCR_HEIGHT;
-	vertices[1].color = color;
+	vertices[1].x += 8;
+	vertices[1].y += 8;
+	vertices[1].u += 8;
+	vertices[1].v += 8;
 }
 
 
@@ -562,10 +536,7 @@ void blit_draw_fix(int x, int y, uint32_t code, uint16_t attr)
 
 void blit_finish_fix(void)
 {
-	// printf("blit_finish_fix %i\n", fix_num);
-
 	if (!fix_num) return;
-
 	video_driver->blitFinishFix(video_data, TEX_FIX, clut, fix_num, vertices_fix);
 }
 
@@ -576,10 +547,8 @@ void blit_finish_fix(void)
 
 void blit_draw_spr(int x, int y, int w, int h, uint32_t code, uint16_t attr)
 {
-	// printf("blit_draw_spr(%i, %i, %i, %i, %i, %i)\n", x, y, w, h, code, attr);
 	int16_t idx;
-	SDL_Vertex *vertices;
-	SDL_Color color = { 255, 255, 255, 255 };
+	struct Vertex *vertices;
 	uint32_t key;
 
 	if (spr_disable) return;
@@ -589,7 +558,7 @@ void blit_draw_spr(int x, int y, int w, int h, uint32_t code, uint16_t attr)
 	if ((idx = spr_get_sprite(key)) < 0)
 	{
 		uint32_t col, tile;
-		uint8_t *src, *dst, lines = 16;
+		uint8_t *src, *dst, lines, row, column;
 
 		if (spr_texture_num == SPR_TEXTURE_SIZE - 1)
 		{
@@ -603,12 +572,14 @@ void blit_draw_spr(int x, int y, int w, int h, uint32_t code, uint16_t attr)
 		}
 
 		idx = spr_insert_sprite(key);
-		dst = SWIZZLED8_16x16(tex_spr[0], idx);
 		src = &memory_region_gfx3[(*read_cache)(code << 7)];
 		col = color_table[(attr >> 8) & 0x0f];
 
-		while (lines--)
+		row = idx / TILE_16x16_PER_LINE;
+		column = idx % TILE_16x16_PER_LINE;
+		for (lines = 0; lines < 16; lines++)
 		{
+			dst = &tex_spr[0][((row * 16) + lines) * BUF_WIDTH + (column * 16)];
 			tile = *(uint32_t *)(src + 0);
 			*(uint32_t *)(dst +  0) = ((tile >> 0) & 0x0f0f0f0f) | col;
 			*(uint32_t *)(dst +  4) = ((tile >> 4) & 0x0f0f0f0f) | col;
@@ -616,7 +587,6 @@ void blit_draw_spr(int x, int y, int w, int h, uint32_t code, uint16_t attr)
 			*(uint32_t *)(dst +  8) = ((tile >> 0) & 0x0f0f0f0f) | col;
 			*(uint32_t *)(dst + 12) = ((tile >> 4) & 0x0f0f0f0f) | col;
 			src += 8;
-			dst += swizzle_table_8bit[lines];
 		}
 	}
 
@@ -641,20 +611,15 @@ void blit_draw_spr(int x, int y, int w, int h, uint32_t code, uint16_t attr)
 	u1 = (index_u ? u1 : u0) + 16;
 	v1 = (index_v ? v1 : v0) + 16;
 
-	// GSGLOBAL *gsGlobal = video_driver->getNativeObjects(video_data, 0);
-	// GSTEXTURE *atlas = video_driver->getNativeObjects(video_data, 2);
+	vertices[0].x = x0;
+	vertices[0].y = y0;
+	vertices[0].u = u0;
+	vertices[0].v = v0;
 
-	vertices[0].position.x = x0;
-	vertices[0].position.y = y0;
-	vertices[0].tex_coord.x = (float) u0 / (float) BUF_WIDTH;
-	vertices[0].tex_coord.y = (float) v0 / (float) SCR_HEIGHT;
-	vertices[0].color = color;
-
-	vertices[1].position.x = x1;
-	vertices[1].position.y = y1;
-	vertices[1].tex_coord.x = (float) u1 / (float) BUF_WIDTH;
-	vertices[1].tex_coord.y = (float) v1 / (float) SCR_HEIGHT;
-	vertices[1].color = color;
+	vertices[1].x = x1;
+	vertices[1].y = y1;
+	vertices[1].u = u1;
+	vertices[1].v = v1;
 }
 
 
@@ -681,23 +646,16 @@ void blit_finish_spr(void)
 	// printf("blit_finish_spr\n");
 	int i, total_sprites = 0;
 	uint16_t flags, *pflags = spr_flags;
-	SDL_Vertex *vertices, *vertices_tmp;
+	struct Vertex *vertices, *vertices_tmp;
 	uint16_t *clut_tmp;
 	enum WorkBuffer workBuffer;
 
 	if (!spr_index) return;
 	// printf("blit_finish_spr has spr_index\n");
 
-	SDL_Vertex vertex_buffer[spr_num];
+	struct Vertex vertex_buffer[spr_num];
 
 	flags = *pflags;
-
-	// sceGuStart(GU_DIRECT, gulist);
-	// sceGuDrawBufferList(GU_PSM_5551, work_frame, BUF_WIDTH);
-	// sceGuScissor(24, clip_min_y, 336, clip_max_y);
-	// sceGuTexImage(0, 512, 512, BUF_WIDTH, tex_spr[flags & 3]);
-	// sceGuClutLoad(256/8, &clut[flags & 0xf00]);
-
 	workBuffer = getWorkBufferForSPR(flags & 3);
 	clut_tmp = &clut[flags & 0xf00];
 
@@ -709,7 +667,6 @@ void blit_finish_spr(void)
 		{
 			if (total_sprites)
 			{
-				// sceGuDrawArray(GU_SPRITES, TEXTURE_FLAGS, total_sprites, NULL, vertices);
 				video_driver->blitFinishFix(video_data, workBuffer, clut_tmp, total_sprites, vertices);
 				total_sprites = 0;
 				vertices = vertices_tmp;
@@ -718,8 +675,6 @@ void blit_finish_spr(void)
 			flags = *pflags;
 			workBuffer = getWorkBufferForSPR(flags & 3);
 			clut_tmp = &clut[flags & 0xf00];
-			// sceGuTexImage(0, 512, 512, BUF_WIDTH, tex_spr[flags & 3]);
-			// sceGuClutLoad(256/8, &clut[flags & 0xf00]);
 		}
 
 		vertices_tmp[0] = vertices_spr[i + 0];
@@ -732,10 +687,6 @@ void blit_finish_spr(void)
 
 	if (total_sprites)
 		video_driver->blitFinishFix(video_data, workBuffer, clut_tmp, total_sprites, vertices);
-	// 	sceGuDrawArray(GU_SPRITES, TEXTURE_FLAGS, total_sprites, NULL, vertices);
-
-	// sceGuFinish();
-	// sceGuSync(0, GU_SYNC_FINISH);
 }
 
 
