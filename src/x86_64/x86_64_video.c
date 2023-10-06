@@ -16,6 +16,7 @@ typedef struct x86_64_video {
 	SDL_Renderer* renderer;
 
 	uint8_t *scrbitmap;
+	uint8_t *tex_spr;
 	uint8_t *tex_spr0;
 	uint8_t *tex_spr1;
 	uint8_t *tex_spr2;
@@ -37,9 +38,10 @@ static void x86_64_start(void *data) {
 
 	size_t textureSize = BUF_WIDTH * SCR_HEIGHT;
 	x86_64->scrbitmap = (uint8_t*)malloc(textureSize);
-	x86_64->tex_spr0 = (uint8_t*)malloc(textureSize);
-	x86_64->tex_spr1 = (uint8_t*)malloc(textureSize);
-	x86_64->tex_spr2 = (uint8_t*)malloc(textureSize);
+	uint8_t *tex_spr = (uint8_t*)malloc(textureSize * 3);
+	x86_64->tex_spr0 = tex_spr;
+	x86_64->tex_spr1 = tex_spr + textureSize;
+	x86_64->tex_spr2 = tex_spr + textureSize * 2;
 	x86_64->tex_fix = (uint8_t*)malloc(textureSize);
 
 	// Create SDL textures
@@ -147,18 +149,11 @@ static void x86_64_exit(x86_64_video_t *x86_64) {
 		x86_64->scrbitmap = NULL;
 	}
 
-	if (x86_64->tex_spr0) {
-		free(x86_64->tex_spr0);
+	if (x86_64->tex_spr) {
+		free(x86_64->tex_spr);
+		x86_64->tex_spr = NULL;
 		x86_64->tex_spr0 = NULL;
-	}
-
-	if (x86_64->tex_spr1) {
-		free(x86_64->tex_spr1);
 		x86_64->tex_spr1 = NULL;
-	}
-
-	if (x86_64->tex_spr2) {
-		free(x86_64->tex_spr2);
 		x86_64->tex_spr2 = NULL;
 	}
 

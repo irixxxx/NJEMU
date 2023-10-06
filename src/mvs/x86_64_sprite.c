@@ -447,26 +447,6 @@ void blit_start(int start, int end)
 		if (clear_fix_texture) blit_clear_fix_sprite();
 
 		video_driver->clearScreen(video_data);
-
-		// sceGuStart(GU_DIRECT, gulist);
-	// 	sceGuDrawBufferList(GU_PSM_5551, draw_frame, BUF_WIDTH);
-	// 	sceGuScissor(0, 0, BUF_WIDTH, SCR_WIDTH);
-	// 	sceGuClear(GU_COLOR_BUFFER_BIT | GU_FAST_CLEAR_BIT);
-
-	// 	sceGuDrawBufferList(GU_PSM_5551, work_frame, BUF_WIDTH);
-	// 	sceGuClear(GU_COLOR_BUFFER_BIT | GU_FAST_CLEAR_BIT);
-
-	// 	sceGuScissor(24, 16, 336, 240);
-	// 	sceGuClearColor(CNVCOL15TO32(video_palette[4095]));
-	// 	sceGuClear(GU_COLOR_BUFFER_BIT | GU_FAST_CLEAR_BIT);
-
-	// 	sceGuClearColor(0);
-	// 	sceGuEnable(GU_ALPHA_TEST);
-	// 	sceGuTexMode(GU_PSM_T8, 0, 0, GU_TRUE);
-	// 	sceGuTexFilter(GU_NEAREST, GU_NEAREST);
-
-	// 	sceGuFinish();
-	// 	sceGuSync(0, GU_SYNC_FINISH);
 	}
 }
 
@@ -557,7 +537,7 @@ void blit_draw_spr(int x, int y, int w, int h, uint32_t code, uint16_t attr)
 
 	if ((idx = spr_get_sprite(key)) < 0)
 	{
-		uint32_t col, tile;
+		uint32_t col, tile, offset;
 		uint8_t *src, *dst, lines, row, column;
 
 		if (spr_texture_num == SPR_TEXTURE_SIZE - 1)
@@ -579,7 +559,8 @@ void blit_draw_spr(int x, int y, int w, int h, uint32_t code, uint16_t attr)
 		column = idx % TILE_16x16_PER_LINE;
 		for (lines = 0; lines < 16; lines++)
 		{
-			dst = &tex_spr[0][((row * 16) + lines) * BUF_WIDTH + (column * 16)];
+			offset = ((row * 16) + lines) * BUF_WIDTH + (column * 16);
+			dst = &tex_spr[0][offset];
 			tile = *(uint32_t *)(src + 0);
 			*(uint32_t *)(dst +  0) = ((tile >> 0) & 0x0f0f0f0f) | col;
 			*(uint32_t *)(dst +  4) = ((tile >> 4) & 0x0f0f0f0f) | col;
@@ -596,30 +577,17 @@ void blit_draw_spr(int x, int y, int w, int h, uint32_t code, uint16_t attr)
 	spr_flags[spr_index] = (idx >> 10) | ((attr & 0xf000) >> 4);
 	spr_index++;
 
-	uint32_t x0 = x;
-	uint32_t y0 = y;
-	uint32_t u0 = (idx & 0x001f) << 4;
-	uint32_t v0 = (idx & 0x03e0) >> 1;
-	uint32_t x1 = x0 + w;
-	uint32_t y1 = y0 + h;
-	uint32_t u1 = u0;
-	uint32_t v1 = v0;
+	vertices[0].x = vertices[1].x = x;
+	vertices[0].y = vertices[1].y = y;
+	vertices[0].u = vertices[1].u = (idx & 0x001f) << 4;
+	vertices[0].v = vertices[1].v = (idx & 0x03e0) >> 1;
 
 	attr ^= 0x03;
-	uint32_t index_u = (attr & 0x01) >> 0;
-	uint32_t index_v = (attr & 0x02) >> 1;
-	u1 = (index_u ? u1 : u0) + 16;
-	v1 = (index_v ? v1 : v0) + 16;
+	vertices[(attr & 0x01) >> 0].u += 16;
+	vertices[(attr & 0x02) >> 1].v += 16;
 
-	vertices[0].x = x0;
-	vertices[0].y = y0;
-	vertices[0].u = u0;
-	vertices[0].v = v0;
-
-	vertices[1].x = x1;
-	vertices[1].y = y1;
-	vertices[1].u = u1;
-	vertices[1].v = v1;
+	vertices[1].x += w;
+	vertices[1].y += h;
 }
 
 
@@ -643,7 +611,7 @@ static enum WorkBuffer getWorkBufferForSPR(uint8_t index) {
 
 void blit_finish_spr(void)
 {
-	// printf("blit_finish_spr\n");
+	// // printf("blit_finish_spr\n");
 	int i, total_sprites = 0;
 	uint16_t flags, *pflags = spr_flags;
 	struct Vertex *vertices, *vertices_tmp;
@@ -958,12 +926,12 @@ static void drawgfxline_fixed_flip_opaque(uint32_t *src, uint16_t *dst, uint16_t
 
 void blit_draw_spr_line(int x, int y, int zoom_x, int sprite_y, uint32_t code, uint16_t attr, uint8_t opaque)
 {
-	uint32_t src = (*read_cache)(code << 7);
-	uint32_t dst = (y << 9) + x;
-	uint8_t flag = (attr & 1) | (opaque & SPRITE_OPAQUE) | ((zoom_x & 0x10) >> 2);
+	// uint32_t src = (*read_cache)(code << 7);
+	// uint32_t dst = (y << 9) + x;
+	// uint8_t flag = (attr & 1) | (opaque & SPRITE_OPAQUE) | ((zoom_x & 0x10) >> 2);
 
-	if (attr & 0x0002) sprite_y ^= 0x0f;
-	src += sprite_y << 3;
+	// if (attr & 0x0002) sprite_y ^= 0x0f;
+	// src += sprite_y << 3;
 
-	(*drawgfxline[flag])((uint32_t *)&memory_region_gfx3[src], &scrbitmap[dst], &video_palette[(attr >> 8) << 4], zoom_x);
+	// (*drawgfxline[flag])((uint32_t *)&memory_region_gfx3[src], &scrbitmap[dst], &video_palette[(attr >> 8) << 4], zoom_x);
 }
