@@ -50,18 +50,18 @@ static void x86_64_start(void *data) {
 		printf("Could not create sdl_texture_scrbitmap: %s\n", SDL_GetError());
 		return;
 	}	
-	x86_64->sdl_texture_tex_spr0 = SDL_CreateTexture(x86_64->renderer, SDL_PIXELFORMAT_ABGR1555, SDL_TEXTUREACCESS_STREAMING, BUF_WIDTH, SCR_HEIGHT);
+	x86_64->sdl_texture_tex_spr0 = SDL_CreateTexture(x86_64->renderer, SDL_PIXELFORMAT_ABGR1555, SDL_TEXTUREACCESS_STREAMING, BUF_WIDTH, TEXTURE_HEIGHT);
 	if (x86_64->sdl_texture_tex_spr0 == NULL) {
 		printf("Could not create sdl_texture_tex_spr0: %s\n", SDL_GetError());
 		return;
 	}
-	x86_64->sdl_texture_tex_spr1 = SDL_CreateTexture(x86_64->renderer, SDL_PIXELFORMAT_ABGR1555, SDL_TEXTUREACCESS_STREAMING, BUF_WIDTH, SCR_HEIGHT);
+	x86_64->sdl_texture_tex_spr1 = SDL_CreateTexture(x86_64->renderer, SDL_PIXELFORMAT_ABGR1555, SDL_TEXTUREACCESS_STREAMING, BUF_WIDTH, TEXTURE_HEIGHT);
 	if (x86_64->sdl_texture_tex_spr1 == NULL) {
 		printf("Could not create sdl_texture_tex_spr1: %s\n", SDL_GetError());
 		return;
 	}
 
-	x86_64->sdl_texture_tex_spr2 = SDL_CreateTexture(x86_64->renderer, SDL_PIXELFORMAT_ABGR1555, SDL_TEXTUREACCESS_STREAMING, BUF_WIDTH, SCR_HEIGHT);
+	x86_64->sdl_texture_tex_spr2 = SDL_CreateTexture(x86_64->renderer, SDL_PIXELFORMAT_ABGR1555, SDL_TEXTUREACCESS_STREAMING, BUF_WIDTH, TEXTURE_HEIGHT);
 	if (x86_64->sdl_texture_tex_spr2 == NULL) {
 		printf("Could not create sdl_texture_tex_spr2: %s\n", SDL_GetError());
 		return;
@@ -333,11 +333,13 @@ static SDL_Texture *x86_64_getTexture(void *data, enum WorkBuffer buffer) {
 
 static void x86_64_blitFinishFix(void *data, enum WorkBuffer buffer, void *clut, uint32_t vertices_count, void *vertices) {
 	// We need to transform the texutres saved that uses clut into a SDL texture compatible format
+	SDL_Point size;
 	x86_64_video_t *x86_64 = (x86_64_video_t *)data;
 	struct Vertex *vertexs = (struct Vertex *)vertices;
 	uint16_t *clut_texture = (uint16_t *)clut;
 	uint8_t *tex_fix = x86_64_workFrame(data, buffer);
 	SDL_Texture *texture = x86_64_getTexture(data, buffer);
+	SDL_QueryTexture(texture, NULL, NULL, &size.x, &size.y);
 
 	// Lock texture
 	void *pixels;
@@ -345,9 +347,9 @@ static void x86_64_blitFinishFix(void *data, enum WorkBuffer buffer, void *clut,
 	SDL_LockTexture(texture, NULL, &pixels, &pitch);
 
 	// Obtain the color from the clut using the index and copy it to the pixels array
-	for (int i = 0; i < SCR_HEIGHT; ++i) {
-		for (int j = 0; j < BUF_WIDTH; ++j) {
-			int index = i * BUF_WIDTH + j;
+	for (int i = 0; i < size.y; ++i) {
+		for (int j = 0; j < size.x; ++j) {
+			int index = i * size.x + j;
 			uint8_t pixelValue = tex_fix[index];
 			uint16_t color = clut_texture[pixelValue];
 

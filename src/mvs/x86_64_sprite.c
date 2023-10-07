@@ -926,12 +926,12 @@ static void drawgfxline_fixed_flip_opaque(uint32_t *src, uint16_t *dst, uint16_t
 
 void blit_draw_spr_line(int x, int y, int zoom_x, int sprite_y, uint32_t code, uint16_t attr, uint8_t opaque)
 {
-	// uint32_t src = (*read_cache)(code << 7);
-	// uint32_t dst = (y << 9) + x;
-	// uint8_t flag = (attr & 1) | (opaque & SPRITE_OPAQUE) | ((zoom_x & 0x10) >> 2);
+	uint32_t src = (*read_cache)(code << 7);
+	uint32_t dst = (y << 9) + x;
+	uint8_t flag = (attr & 1) | (opaque & SPRITE_OPAQUE) | ((zoom_x & 0x10) >> 2);
 
-	// if (attr & 0x0002) sprite_y ^= 0x0f;
-	// src += sprite_y << 3;
+	if (attr & 0x0002) sprite_y ^= 0x0f;
+	src += sprite_y << 3;
 
-	// (*drawgfxline[flag])((uint32_t *)&memory_region_gfx3[src], &scrbitmap[dst], &video_palette[(attr >> 8) << 4], zoom_x);
+	(*drawgfxline[flag])((uint32_t *)&memory_region_gfx3[src], &scrbitmap[dst], &video_palette[(attr >> 8) << 4], zoom_x);
 }
