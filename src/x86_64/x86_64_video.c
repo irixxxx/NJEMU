@@ -36,8 +36,9 @@ typedef struct x86_64_video {
 static void x86_64_start(void *data) {
 	x86_64_video_t *x86_64 = (x86_64_video_t*)data;
 
-	size_t textureSize = BUF_WIDTH * SCR_HEIGHT;
-	x86_64->scrbitmap = (uint8_t*)malloc(textureSize);
+	size_t scrbitmapSize = BUF_WIDTH * SCR_HEIGHT;
+	size_t textureSize = BUF_WIDTH * TEXTURE_HEIGHT;
+	x86_64->scrbitmap = (uint8_t*)malloc(scrbitmapSize);
 	uint8_t *tex_spr = (uint8_t*)malloc(textureSize * 3);
 	x86_64->tex_spr0 = tex_spr;
 	x86_64->tex_spr1 = tex_spr + textureSize;
@@ -78,12 +79,20 @@ static void x86_64_start(void *data) {
 
 static void *x86_64_init(void)
 {
+	uint32_t windows_width, windows_height;
 	x86_64_video_t *x86_64 = (x86_64_video_t*)calloc(1, sizeof(x86_64_video_t));
 
 	// Create a window (width, height, window title)
 	char title[256];
 	sprintf(title, "%s %s", APPNAME_STR, VERSION_STR);
-    SDL_Window* window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 344, 256, SDL_WINDOW_SHOWN);
+	// windows_width = 344;
+	// windows_height = 256;
+
+	windows_width = BUF_WIDTH * 2;
+	windows_height = TEXTURE_HEIGHT * 2;
+
+
+    SDL_Window* window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, windows_width, windows_height, SDL_WINDOW_SHOWN);
 
 	// Check that the window was successfully created
 	if (window == NULL) {
@@ -276,6 +285,20 @@ static void x86_64_fillFrame(void *data, void *frame, uint32_t color)
 
 static void x86_64_transferWorkFrame(void *data, RECT *src_rect, RECT *dst_rect)
 {
+	x86_64_video_t *x86_64 = (x86_64_video_t*)data;
+
+	// Let's print the SPR0, SPR1 and SPR2, in the empty space of the screen
+	SDL_Rect dst_rect_spr0 = { BUF_WIDTH, 0, BUF_WIDTH, TEXTURE_HEIGHT };
+	SDL_Rect dst_rect_spr1 = { 0, TEXTURE_HEIGHT, BUF_WIDTH, TEXTURE_HEIGHT };
+	SDL_Rect dst_rect_spr2 = { BUF_WIDTH, TEXTURE_HEIGHT, BUF_WIDTH, TEXTURE_HEIGHT };
+
+	SDL_RenderCopy(x86_64->renderer, x86_64->sdl_texture_tex_spr0, NULL, &dst_rect_spr0);
+	SDL_RenderCopy(x86_64->renderer, x86_64->sdl_texture_tex_spr1, NULL, &dst_rect_spr1);
+	SDL_RenderCopy(x86_64->renderer, x86_64->sdl_texture_tex_spr2, NULL, &dst_rect_spr2);
+
+	// Let's print the FIX, in the empty space of the screen
+	// SDL_Rect dst_rect_fix = { BUF_WIDTH, SCR_HEIGHT, BUF_WIDTH, SCR_HEIGHT };
+	// SDL_RenderCopy(x86_64->renderer, x86_64->sdl_texture_tex_fix, NULL, &dst_rect_fix);
 }
 
 static void x86_64_copyRect(void *data, void *src, void *dst, RECT *src_rect, RECT *dst_rect)
