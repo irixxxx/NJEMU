@@ -27,6 +27,8 @@ typedef struct x86_64_video {
 	SDL_Texture *sdl_texture_tex_spr1;
 	SDL_Texture *sdl_texture_tex_spr2;
 	SDL_Texture *sdl_texture_tex_fix;
+
+	bool draw_extra_info;
 } x86_64_video_t;
 
 /******************************************************************************
@@ -44,6 +46,7 @@ static void x86_64_start(void *data) {
 	x86_64->tex_spr1 = tex_spr + textureSize;
 	x86_64->tex_spr2 = tex_spr + textureSize * 2;
 	x86_64->tex_fix = (uint8_t*)malloc(textureSize);
+	x86_64->draw_extra_info = false;
 
 	// Create SDL textures
 	x86_64->sdl_texture_scrbitmap = SDL_CreateTexture(x86_64->renderer, SDL_PIXELFORMAT_ABGR1555, SDL_TEXTUREACCESS_STREAMING, BUF_WIDTH, SCR_HEIGHT);
@@ -85,11 +88,8 @@ static void *x86_64_init(void)
 	// Create a window (width, height, window title)
 	char title[256];
 	sprintf(title, "%s %s", APPNAME_STR, VERSION_STR);
-	// windows_width = 344;
-	// windows_height = 256;
-
-	windows_width = BUF_WIDTH * 2;
-	windows_height = TEXTURE_HEIGHT * 2;
+	windows_width = x86_64->draw_extra_info ? BUF_WIDTH * 2 : 344;
+	windows_height = x86_64->draw_extra_info ? TEXTURE_HEIGHT * 2 : 256;
 
 
     SDL_Window* window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, windows_width, windows_height, SDL_WINDOW_SHOWN);
