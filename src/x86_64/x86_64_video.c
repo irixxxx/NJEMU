@@ -77,6 +77,20 @@ static void x86_64_start(void *data) {
 		return;
 	}
 
+	SDL_BlendMode blendMode = SDL_ComposeCustomBlendMode(
+		SDL_BLENDFACTOR_ONE_MINUS_SRC_ALPHA, 
+		SDL_BLENDFACTOR_SRC_ALPHA, 
+		SDL_BLENDOPERATION_ADD, 
+		SDL_BLENDFACTOR_ZERO, 
+		SDL_BLENDFACTOR_ZERO, 
+		SDL_BLENDOPERATION_ADD
+	);
+	SDL_SetTextureBlendMode(x86_64->sdl_texture_scrbitmap, blendMode);
+	SDL_SetTextureBlendMode(x86_64->sdl_texture_tex_spr0, blendMode);
+	SDL_SetTextureBlendMode(x86_64->sdl_texture_tex_spr1, blendMode);
+	SDL_SetTextureBlendMode(x86_64->sdl_texture_tex_spr2, blendMode);
+	SDL_SetTextureBlendMode(x86_64->sdl_texture_tex_fix, blendMode);
+
 	ui_init();
 }
 
