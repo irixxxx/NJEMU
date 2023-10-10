@@ -551,7 +551,7 @@ void blit_finish_fix(void)
 
 	vertices = (struct Vertex *)sceGuGetMemory(fix_num * sizeof(struct Vertex));
 	memcpy(vertices, vertices_fix, fix_num * sizeof(struct Vertex));
-	video_driver->blitFinishFix(video_data, TEX_FIX, clut, fix_num, vertices);
+	video_driver->blitTexture(video_data, TEX_FIX, clut, fix_num, vertices);
 }
 
 

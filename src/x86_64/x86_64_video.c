@@ -375,7 +375,7 @@ static SDL_Texture *x86_64_getTexture(void *data, enum WorkBuffer buffer) {
 	}
 }
 
-static void x86_64_blitFinishFix(void *data, enum WorkBuffer buffer, void *clut, uint32_t vertices_count, void *vertices) {
+static void x86_64_blitTexture(void *data, enum WorkBuffer buffer, void *clut, uint32_t vertices_count, void *vertices) {
 	// We need to transform the texutres saved that uses clut into a SDL texture compatible format
 	SDL_Point size;
 	x86_64_video_t *x86_64 = (x86_64_video_t *)data;
@@ -406,7 +406,7 @@ static void x86_64_blitFinishFix(void *data, enum WorkBuffer buffer, void *clut,
 	SDL_UnlockTexture(texture);
 
 	// Render Geometry expect to receive a SDL_Vertex array and it is using triangles
-	// however x86_64_blitFinishFix receives a SDL_Vertex array using 2 vertex per sprite
+	// however x86_64_blitTexture receives a SDL_Vertex array using 2 vertex per sprite
 	// so we are going to use SDL_RenderCopy to render all the sprites
 	for (int i = 0; i < vertices_count; i += 2) {
 		struct Vertex *vertex1 = &vertexs[i];
@@ -449,5 +449,5 @@ video_driver_t video_x86_64 = {
 	x86_64_copyRectRotate,
 	x86_64_drawTexture,
 	x86_64_getNativeObjects,
-	x86_64_blitFinishFix,
+	x86_64_blitTexture,
 };

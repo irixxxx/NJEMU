@@ -17,19 +17,6 @@
 
 #include <gsInline.h>
 
-/******************************************************************************
-	ローカル変数/構造体
-******************************************************************************/
-
-// static const ScePs2IMatrix4 dither_matrix =
-// {
-// 	// Bayer dither
-// 	{  0,  8,  2, 10 },
-// 	{ 12,  4, 14,  6 },
-// 	{  3, 11,  1,  9 },
-// 	{ 15,  7, 13,  5 }
-// };
-
 
 /******************************************************************************
 	グローバル関数
@@ -46,6 +33,16 @@
 
 typedef struct ps2_video {
 	GSGLOBAL *gsGlobal;
+
+	// Original buffers containing clut indexes
+	uint8_t *screen;
+	uint8_t *spr;
+	uint8_t *spr0;
+	uint8_t *spr1;
+	uint8_t *spr2;
+	uint8_t *fix;
+
+
 	GSTEXTURE *scrbitmap;
 	GSTEXTURE *tex_spr0;
 	GSTEXTURE *tex_spr1;
@@ -59,13 +56,13 @@ typedef struct ps2_video {
 /*--------------------------------------------------------
 	ビデオ処理初期化
 --------------------------------------------------------*/
-static GSTEXTURE *initializeTexture() {
+static GSTEXTURE *initializeTexture(int width, int height, void *mem) {
 	GSTEXTURE *tex = (GSTEXTURE *)calloc(1, sizeof(GSTEXTURE));
-	tex->Width = BUF_WIDTH;
-	tex->Height = SCR_HEIGHT;
+	tex->Width = width;
+	tex->Height = height;
 	tex->PSM = GS_PSM_T8;
 	tex->ClutPSM = GS_PSM_CT16;
-	tex->Mem = memalign(128, gsKit_texture_size_ee(tex->Width, tex->Height, tex->PSM));
+	tex->Mem = mem;
 
 	return tex;
 }
@@ -104,12 +101,23 @@ static void ps2_start(void *data) {
     gsKit_clear(gsGlobal, GS_BLACK);
 	ps2->gsGlobal = gsGlobal;
 
+	// Original buffers containing clut indexes
+	size_t scrbitmapSize = BUF_WIDTH * SCR_HEIGHT;
+	size_t textureSize = BUF_WIDTH * TEXTURE_HEIGHT;
+	ps2->screen = (uint8_t*)malloc(scrbitmapSize);
+	uint8_t *spr = (uint8_t*)malloc(textureSize * 3);
+	ps2->spr = spr;
+	ps2->spr0 = spr;
+	ps2->spr1 = spr + textureSize;
+	ps2->spr2 = spr + textureSize * 2;
+	ps2->fix = (uint8_t*)malloc(textureSize);
+
 	// Initialize textures
-	ps2->scrbitmap = initializeTexture();
-	ps2->tex_spr0 = initializeTexture();
-	ps2->tex_spr1 = initializeTexture();
-	ps2->tex_spr2 = initializeTexture();
-	ps2->tex_fix = initializeTexture();
+	ps2->scrbitmap = initializeTexture(BUF_WIDTH, SCR_HEIGHT, ps2->screen);
+	ps2->tex_spr0 = initializeTexture(BUF_WIDTH, TEXTURE_HEIGHT, ps2->spr0);
+	ps2->tex_spr1 = initializeTexture(BUF_WIDTH, TEXTURE_HEIGHT, ps2->spr1);
+	ps2->tex_spr2 = initializeTexture(BUF_WIDTH, TEXTURE_HEIGHT, ps2->spr2);
+	ps2->tex_fix = initializeTexture(BUF_WIDTH, TEXTURE_HEIGHT, ps2->fix);
 
 	ui_init();
 }
@@ -132,20 +140,26 @@ static void ps2_exit(ps2_video_t *ps2) {
 	gsKit_vram_clear(ps2->gsGlobal);
 	gsKit_deinit_global(ps2->gsGlobal);
 	
-	free(ps2->scrbitmap->Mem);
 	free(ps2->scrbitmap);
-
-	free(ps2->tex_spr0->Mem);
+	ps2->scrbitmap = NULL;
 	free(ps2->tex_spr0);
-
-	free(ps2->tex_spr1->Mem);
+	ps2->tex_spr0 = NULL;
 	free(ps2->tex_spr1);
-
-	free(ps2->tex_spr2->Mem);
+	ps2->tex_spr1 = NULL;
 	free(ps2->tex_spr2);
-
-	free(ps2->tex_fix->Mem);
+	ps2->tex_spr2 = NULL;
 	free(ps2->tex_fix);
+	ps2->tex_fix = NULL;
+
+	free(ps2->screen);
+	ps2->screen = NULL;
+	free(ps2->spr);
+	ps2->spr = NULL;
+	ps2->spr0 = NULL;
+	ps2->spr1 = NULL;
+	ps2->spr2 = NULL;
+	free(ps2->fix);
+	ps2->fix = NULL;
 }
 
 static void ps2_free(void *data)
@@ -227,15 +241,15 @@ static void *ps2_workFrame(void *data, enum WorkBuffer buffer)
 	switch (buffer)
 	{
 		case SCRBITMAP:
-			return ps2->scrbitmap->Mem;
+			return ps2->screen;
 		case TEX_SPR0:
-			return ps2->tex_spr0->Mem;
+			return ps2->spr0;
 		case TEX_SPR1:
-			return ps2->tex_spr1->Mem;
+			return ps2->spr1;
 		case TEX_SPR2:
-			return ps2->tex_spr2->Mem;
+			return ps2->spr2;
 		case TEX_FIX:
-			return ps2->tex_fix->Mem;
+			return ps2->fix;
 	}
 
 	return NULL;
@@ -620,16 +634,16 @@ static GSTEXTURE *ps2_getTexture(void *data, enum WorkBuffer buffer) {
 	}
 }
 
-static void ps2_blitFinishFix(void *data, enum WorkBuffer buffer, void *clut, uint32_t vertices_count, void *vertices) {
-	// printf("ps2_blitFinishFix buffer: %d, vertices_count: %d\n", buffer, vertices_count);
+static void ps2_blitTexture(void *data, enum WorkBuffer buffer, void *clut, uint32_t vertices_count, void *vertices) {
+	// printf("ps2_blitTexture buffer: %d, vertices_count: %d\n", buffer, vertices_count);
 	ps2_video_t *ps2 = (ps2_video_t*)data;
-	GSTEXTURE *tex_fix = ps2_getTexture(data, buffer);
-	tex_fix->Clut = clut;
+	GSTEXTURE *tex = ps2_getTexture(data, buffer);
+	tex->Clut = clut;
 
-	gsKit_TexManager_invalidate(ps2->gsGlobal, tex_fix);
-	gsKit_TexManager_bind(ps2->gsGlobal, tex_fix);
+	gsKit_TexManager_invalidate(ps2->gsGlobal, tex);
+	gsKit_TexManager_bind(ps2->gsGlobal, tex);
 
-	gskit_prim_list_sprite_texture_uv_3d(ps2->gsGlobal, tex_fix, vertices_count, vertices);
+	gskit_prim_list_sprite_texture_uv_3d(ps2->gsGlobal, tex, vertices_count, vertices);
 }
 
 
@@ -651,5 +665,5 @@ video_driver_t video_ps2 = {
 	ps2_copyRectRotate,
 	ps2_drawTexture,
 	ps2_getNativeObjects,
-	ps2_blitFinishFix,
+	ps2_blitTexture,
 };

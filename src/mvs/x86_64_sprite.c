@@ -517,7 +517,7 @@ void blit_draw_fix(int x, int y, uint32_t code, uint16_t attr)
 void blit_finish_fix(void)
 {
 	if (!fix_num) return;
-	video_driver->blitFinishFix(video_data, TEX_FIX, clut, fix_num, vertices_fix);
+	video_driver->blitTexture(video_data, TEX_FIX, clut, fix_num, vertices_fix);
 }
 
 
@@ -635,7 +635,7 @@ void blit_finish_spr(void)
 		{
 			if (total_sprites)
 			{
-				video_driver->blitFinishFix(video_data, workBuffer, clut_tmp, total_sprites, vertices);
+				video_driver->blitTexture(video_data, workBuffer, clut_tmp, total_sprites, vertices);
 				total_sprites = 0;
 				vertices = vertices_tmp;
 			}
@@ -654,7 +654,7 @@ void blit_finish_spr(void)
 	}
 
 	if (total_sprites)
-		video_driver->blitFinishFix(video_data, workBuffer, clut_tmp, total_sprites, vertices);
+		video_driver->blitTexture(video_data, workBuffer, clut_tmp, total_sprites, vertices);
 }
 
 

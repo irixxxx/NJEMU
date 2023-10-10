@@ -524,7 +524,7 @@ static void *psp_getNativeObjects(void *data, int index) {
 	return NULL;
 }
 
-static void psp_blitFinishFix(void *data, enum WorkBuffer buffer, void *clut, uint32_t vertices_count, void *vertices) {
+static void psp_blitTexture(void *data, enum WorkBuffer buffer, void *clut, uint32_t vertices_count, void *vertices) {
 	uint8_t *tex_fix = psp_workFrame(data, buffer);
 	sceGuStart(GU_DIRECT, gulist);
 	sceGuDrawBufferList(GU_PSM_5551, work_frame, BUF_WIDTH);
@@ -557,5 +557,5 @@ video_driver_t video_psp = {
 	psp_copyRectRotate,
 	psp_drawTexture,
 	psp_getNativeObjects,
-	psp_blitFinishFix,
+	psp_blitTexture,
 };
