@@ -46,6 +46,7 @@ option(UI_32BPP "UI 32BPP" ON)
 option(RELEASE "Release" OFF)
 option(SYSTEM_BUTTONS "System Buttons" OFF)
 option(DEBUG "Debug" ON)
+option(USE_ASAN "Use ASAN" OFF)
 
 
 # Version
@@ -71,6 +72,7 @@ set(WARNING_OPTIONS
     -Werror
     -Wno-unused-but-set-variable
     -Wno-unused-function
+    -Wno-deprecated-declarations
 )
 
 # Disable some warnigns based in platform
@@ -199,7 +201,15 @@ add_executable(${TARGET}
 )
 
 # Add the warning flags
-target_compile_options(${TARGET} PUBLIC ${WARNING_OPTIONS})
+if (USE_ASAN)
+    set(ASAN_OPTIONS
+        -fsanitize=address
+        -fsanitize=undefined
+    )
+endif()
+
+target_compile_options(${TARGET} PUBLIC ${WARNING_OPTIONS} ${ASAN_OPTIONS})
+target_link_options(${TARGET} PUBLIC ${ASAN_OPTIONS})
 
 # Add common libraries
 target_link_libraries(${TARGET} PUBLIC
