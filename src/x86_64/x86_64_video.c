@@ -11,10 +11,16 @@
 #include <stdlib.h>
 #include <SDL.h>
 
+#define OUTPUT_WIDTH 352
+#define OUTPUT_HEIGHT 280
+
 typedef struct x86_64_video {
 	SDL_Window* window;
 	SDL_Renderer* renderer;
+	bool draw_extra_info;
+	SDL_BlendMode blendMode;
 
+	// Original buffers containing clut indexes
 	uint8_t *scrbitmap;
 	uint8_t *tex_spr;
 	uint8_t *tex_spr0;
@@ -27,8 +33,6 @@ typedef struct x86_64_video {
 	SDL_Texture *sdl_texture_tex_spr1;
 	SDL_Texture *sdl_texture_tex_spr2;
 	SDL_Texture *sdl_texture_tex_fix;
-
-	bool draw_extra_info;
 } x86_64_video_t;
 
 /******************************************************************************
@@ -38,15 +42,16 @@ typedef struct x86_64_video {
 static void x86_64_start(void *data) {
 	x86_64_video_t *x86_64 = (x86_64_video_t*)data;
 
+	// Original buffers containing clut indexes
 	size_t scrbitmapSize = BUF_WIDTH * SCR_HEIGHT;
 	size_t textureSize = BUF_WIDTH * TEXTURE_HEIGHT;
 	x86_64->scrbitmap = (uint8_t*)malloc(scrbitmapSize);
 	uint8_t *tex_spr = (uint8_t*)malloc(textureSize * 3);
+	x86_64->tex_spr = tex_spr;
 	x86_64->tex_spr0 = tex_spr;
 	x86_64->tex_spr1 = tex_spr + textureSize;
 	x86_64->tex_spr2 = tex_spr + textureSize * 2;
 	x86_64->tex_fix = (uint8_t*)malloc(textureSize);
-	x86_64->draw_extra_info = false;
 
 	// Create SDL textures
 	x86_64->sdl_texture_scrbitmap = SDL_CreateTexture(x86_64->renderer, SDL_PIXELFORMAT_ABGR1555, SDL_TEXTUREACCESS_STREAMING, BUF_WIDTH, SCR_HEIGHT);
@@ -77,19 +82,11 @@ static void x86_64_start(void *data) {
 		return;
 	}
 
-	SDL_BlendMode blendMode = SDL_ComposeCustomBlendMode(
-		SDL_BLENDFACTOR_ONE_MINUS_SRC_ALPHA, 
-		SDL_BLENDFACTOR_SRC_ALPHA, 
-		SDL_BLENDOPERATION_ADD, 
-		SDL_BLENDFACTOR_ZERO, 
-		SDL_BLENDFACTOR_ZERO, 
-		SDL_BLENDOPERATION_ADD
-	);
-	SDL_SetTextureBlendMode(x86_64->sdl_texture_scrbitmap, blendMode);
-	SDL_SetTextureBlendMode(x86_64->sdl_texture_tex_spr0, blendMode);
-	SDL_SetTextureBlendMode(x86_64->sdl_texture_tex_spr1, blendMode);
-	SDL_SetTextureBlendMode(x86_64->sdl_texture_tex_spr2, blendMode);
-	SDL_SetTextureBlendMode(x86_64->sdl_texture_tex_fix, blendMode);
+	SDL_SetTextureBlendMode(x86_64->sdl_texture_scrbitmap, x86_64->blendMode);
+	SDL_SetTextureBlendMode(x86_64->sdl_texture_tex_spr0, x86_64->blendMode);
+	SDL_SetTextureBlendMode(x86_64->sdl_texture_tex_spr1, x86_64->blendMode);
+	SDL_SetTextureBlendMode(x86_64->sdl_texture_tex_spr2, x86_64->blendMode);
+	SDL_SetTextureBlendMode(x86_64->sdl_texture_tex_fix, x86_64->blendMode);
 
 	ui_init();
 }
@@ -102,8 +99,8 @@ static void *x86_64_init(void)
 	// Create a window (width, height, window title)
 	char title[256];
 	sprintf(title, "%s %s", APPNAME_STR, VERSION_STR);
-	windows_width = x86_64->draw_extra_info ? BUF_WIDTH * 2 : 344;
-	windows_height = x86_64->draw_extra_info ? TEXTURE_HEIGHT * 2 : 256;
+	windows_width = x86_64->draw_extra_info ? BUF_WIDTH * 2 : OUTPUT_WIDTH;
+	windows_height = x86_64->draw_extra_info ? TEXTURE_HEIGHT * 2 : OUTPUT_HEIGHT;
 
 
     SDL_Window* window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, windows_width, windows_height, SDL_WINDOW_SHOWN);
@@ -119,7 +116,7 @@ static void *x86_64_init(void)
 	x86_64->window = window;
 
 	// Create a renderer
-	SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+	SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
 	// Check that the renderer was successfully created
 	if (renderer == NULL) {
@@ -131,6 +128,16 @@ static void *x86_64_init(void)
 	}
 
 	x86_64->renderer = renderer;
+
+	x86_64->blendMode = SDL_ComposeCustomBlendMode(
+		SDL_BLENDFACTOR_ONE_MINUS_SRC_ALPHA, 
+		SDL_BLENDFACTOR_SRC_ALPHA, 
+		SDL_BLENDOPERATION_ADD, 
+		SDL_BLENDFACTOR_ZERO, 
+		SDL_BLENDFACTOR_ZERO, 
+		SDL_BLENDOPERATION_ADD
+	);
+	x86_64->draw_extra_info = false;
 
 	x86_64_start(x86_64);
 	return x86_64;
