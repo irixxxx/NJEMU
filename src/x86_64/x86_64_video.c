@@ -95,6 +95,7 @@ static void *x86_64_init(void)
 {
 	uint32_t windows_width, windows_height;
 	x86_64_video_t *x86_64 = (x86_64_video_t*)calloc(1, sizeof(x86_64_video_t));
+	x86_64->draw_extra_info = false;
 
 	// Create a window (width, height, window title)
 	char title[256];
@@ -137,7 +138,6 @@ static void *x86_64_init(void)
 		SDL_BLENDFACTOR_ZERO, 
 		SDL_BLENDOPERATION_ADD
 	);
-	x86_64->draw_extra_info = false;
 
 	x86_64_start(x86_64);
 	return x86_64;
@@ -308,18 +308,36 @@ static void x86_64_transferWorkFrame(void *data, RECT *src_rect, RECT *dst_rect)
 {
 	x86_64_video_t *x86_64 = (x86_64_video_t*)data;
 
-	// Let's print the SPR0, SPR1 and SPR2, in the empty space of the screen
-	SDL_Rect dst_rect_spr0 = { BUF_WIDTH, 0, BUF_WIDTH, TEXTURE_HEIGHT };
-	SDL_Rect dst_rect_spr1 = { 0, TEXTURE_HEIGHT, BUF_WIDTH, TEXTURE_HEIGHT };
-	SDL_Rect dst_rect_spr2 = { BUF_WIDTH, TEXTURE_HEIGHT, BUF_WIDTH, TEXTURE_HEIGHT };
+	if (!x86_64->draw_extra_info) {
+		return;
+	}
+
+	// Let's print the SPR0, SPR1 SPR2 and FIX in the empty space of the screen (right size 0.5 scale)
+	SDL_Rect dst_rect_spr0 = { BUF_WIDTH, 0, BUF_WIDTH / 2, TEXTURE_HEIGHT / 2 };
+	SDL_Rect dst_rect_spr0_border = { dst_rect_spr0.x - 1, dst_rect_spr0.y - 1, dst_rect_spr0.w + 2, dst_rect_spr0.h + 2 };
+	SDL_Rect dst_rect_spr1 = { BUF_WIDTH, dst_rect_spr0.y + dst_rect_spr0.h + 20, BUF_WIDTH / 2, TEXTURE_HEIGHT / 2 };
+	SDL_Rect dst_rect_spr1_border = { dst_rect_spr1.x - 1, dst_rect_spr1.y - 1, dst_rect_spr1.w + 2, dst_rect_spr1.h + 2 };
+	SDL_Rect dst_rect_spr2 = { BUF_WIDTH, dst_rect_spr1.y + dst_rect_spr1.h + 20, BUF_WIDTH / 2, TEXTURE_HEIGHT / 2 };
+	SDL_Rect dst_rect_spr2_border = { dst_rect_spr2.x - 1, dst_rect_spr2.y - 1, dst_rect_spr2.w + 2, dst_rect_spr2.h + 2 };
+	SDL_Rect dst_rect_fix = { BUF_WIDTH, dst_rect_spr2.y + dst_rect_spr2.h + 20, BUF_WIDTH / 2, SCR_HEIGHT / 2 };
+	SDL_Rect dst_rect_fix_border = { dst_rect_fix.x - 1, dst_rect_fix.y - 1, dst_rect_fix.w + 2, dst_rect_fix.h + 2 };
+
+	SDL_SetRenderDrawColor(x86_64->renderer, 255, 0, 0, 255);
+	SDL_RenderFillRect(x86_64->renderer, &dst_rect_spr0_border);
+	SDL_RenderFillRect(x86_64->renderer, &dst_rect_spr1_border);
+	SDL_RenderFillRect(x86_64->renderer, &dst_rect_spr2_border);
+	SDL_RenderFillRect(x86_64->renderer, &dst_rect_fix_border);
+	SDL_SetRenderDrawColor(x86_64->renderer, 0, 0, 0, 255);
+	SDL_RenderFillRect(x86_64->renderer, &dst_rect_spr0);
+	SDL_RenderFillRect(x86_64->renderer, &dst_rect_spr1);
+	SDL_RenderFillRect(x86_64->renderer, &dst_rect_spr2);
+	SDL_RenderFillRect(x86_64->renderer, &dst_rect_fix);
 
 	SDL_RenderCopy(x86_64->renderer, x86_64->sdl_texture_tex_spr0, NULL, &dst_rect_spr0);
 	SDL_RenderCopy(x86_64->renderer, x86_64->sdl_texture_tex_spr1, NULL, &dst_rect_spr1);
-	SDL_RenderCopy(x86_64->renderer, x86_64->sdl_texture_tex_spr2, NULL, &dst_rect_spr2);
+	SDL_RenderCopy(x86_64->renderer, x86_64->sdl_texture_tex_spr2, NULL, &dst_rect_spr2);	
+	SDL_RenderCopy(x86_64->renderer, x86_64->sdl_texture_tex_fix, NULL, &dst_rect_fix);
 
-	// Let's print the FIX, in the empty space of the screen
-	// SDL_Rect dst_rect_fix = { BUF_WIDTH, SCR_HEIGHT, BUF_WIDTH, SCR_HEIGHT };
-	// SDL_RenderCopy(x86_64->renderer, x86_64->sdl_texture_tex_fix, NULL, &dst_rect_fix);
 }
 
 static void x86_64_copyRect(void *data, void *src, void *dst, RECT *src_rect, RECT *dst_rect)
