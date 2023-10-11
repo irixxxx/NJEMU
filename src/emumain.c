@@ -46,7 +46,7 @@ uint32_t frames_displayed;
 int fatal_error;
 
 char launchDir[MAX_PATH];
-char screenshotDir[MAX_PATH];  // スクリーンショト保存PATH
+char screenshotDir[MAX_PATH];
 bool systembuttons_available;
 void *platform_data = NULL;
 void *power_data = NULL;
@@ -400,8 +400,6 @@ void show_fatal_error(void)
 /*------------------------------------------------------
 	スクリーンショット保存
 ------------------------------------------------------*/
-
-extern char screenshotDir[MAX_PATH];  // スクリーンショト保存PATH
 
 void save_snapshot(void)
 {

@@ -76,6 +76,12 @@ set(WARNING_OPTIONS
 )
 
 # Disable some warnigns based in platform
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    list(APPEND WARNING_OPTIONS
+        -Wno-format-overflow
+    )
+endif()
+
 if (PLATFORM STREQUAL "PSP")
     list(APPEND WARNING_OPTIONS
         -Wno-unused-variable
@@ -83,7 +89,6 @@ if (PLATFORM STREQUAL "PSP")
 elseif (PLATFORM STREQUAL "PS2")
     list(APPEND WARNING_OPTIONS
         -Wno-unused-variable
-        -Wno-format-overflow
         -Wno-unknown-pragmas
         -Wno-restrict
         -Wno-strict-aliasing

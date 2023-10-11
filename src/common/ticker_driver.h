@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <sys/time.h>
+#include <time.h>
 
 typedef struct ticker_driver
 {
