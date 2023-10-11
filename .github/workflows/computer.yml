@@ -1,0 +1,54 @@
+name: Computer
+
+on:
+  push:
+    branches: 
+      - '*'
+    tags:
+      - v*
+  pull_request:
+  repository_dispatch:
+    types: [run_build]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        psp_mode: [LARGE_MEMORY=0]
+        command_list: [COMMAND_LIST=0]
+        adhoc: [ADHOC=0]
+        save_state: [SAVE_STATE=0]
+        emulator: [BUILD_MVS=1]
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install dependencies
+      run: |
+        apt-get update
+        apt-get install -y --no-install-recommends \
+          build-essential \
+          git \
+          wget \
+          unzip \
+          libbz2-dev \
+          sdl2-dev \
+
+    - name: Compile project
+      run: |
+        mkdir build_mac
+        cd build_mac
+        cmake -DTARGET="MVS" -DPLATFORM="X86_64" ..
+
+    - name: Get short SHA
+      id: slug
+      run: echo "sha8=$(echo ${GITHUB_SHA} | cut -c1-8)" >> $GITHUB_OUTPUT
+
+    - name: Upload artifacts
+      if: ${{ success() }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: NJEMU-${{ steps.slug.outputs.sha8 }}-${{ matrix.psp_mode }}-${{ matrix.command_list }}-${{ matrix.adhoc }}-${{ matrix.save_state }}-${{ matrix.emulator }}
+        path: |
+          build_mac/MVS
