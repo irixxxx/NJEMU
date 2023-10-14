@@ -306,10 +306,13 @@ static void ps2_transferWorkFrame(void *data, RECT *src_rect, RECT *dst_rect)
 	if (!ps2->drawExtraInfo) return;
 	gs_rgbaq color = color_to_RGBAQ(0x80, 0x80, 0x80, 0x80, 0);
 
+	// Choose texture to print
+	GSTEXTURE *tex = ps2->tex_fix;
+
 	#define LEFT 350
 	#define TOP 20
-	#define RIGHT (LEFT + ps2->tex_fix->Width / 2)
-	#define BOTTOM (TOP + ps2->tex_fix->Height / 2)
+	#define RIGHT (LEFT + tex->Width / 2)
+	#define BOTTOM (TOP + tex->Height / 2)
 	#define BORDER_LEFT LEFT - 1
 	#define BORDER_TOP TOP - 1
 	#define BORDER_RIGHT RIGHT + 1
@@ -321,17 +324,23 @@ static void ps2_transferWorkFrame(void *data, RECT *src_rect, RECT *dst_rect)
 		BORDER_LEFT, BORDER_BOTTOM, 
 		BORDER_RIGHT, BORDER_BOTTOM, 
 		0, GS_SETREG_RGBA(0x80, 0, 0, 0x80));
+	gsKit_prim_quad(ps2->gsGlobal, 
+		LEFT, TOP, 
+		RIGHT, TOP, 
+		LEFT, BOTTOM, 
+		RIGHT, BOTTOM, 
+		0, GS_SETREG_RGBA(0, 0, 0, 0x80));
 
 	GSPRIMUVPOINT *verts2 = (GSPRIMUVPOINT *)malloc(sizeof(GSPRIMUVPOINT) * 2);
 	verts2[0].xyz2 = vertex_to_XYZ2(ps2->gsGlobal, LEFT, TOP, 0);
-	verts2[0].uv = vertex_to_UV(ps2->tex_fix, 0, 0);
+	verts2[0].uv = vertex_to_UV(tex, 0, 0);
 	verts2[0].rgbaq = color;
 
 	verts2[1].xyz2 = vertex_to_XYZ2(ps2->gsGlobal, RIGHT, BOTTOM, 0);
-	verts2[1].uv = vertex_to_UV(ps2->tex_fix, ps2->tex_fix->Width, ps2->tex_fix->Height);
+	verts2[1].uv = vertex_to_UV(tex, tex->Width, tex->Height);
 	verts2[1].rgbaq = color;
 
-	gskit_prim_list_sprite_texture_uv_3d(ps2->gsGlobal, ps2->tex_fix, 2, verts2);
+	gskit_prim_list_sprite_texture_uv_3d(ps2->gsGlobal, tex, 2, verts2);
 
 	free(verts2);
 }
