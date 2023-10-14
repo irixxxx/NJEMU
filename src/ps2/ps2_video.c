@@ -33,6 +33,7 @@
 
 typedef struct ps2_video {
 	GSGLOBAL *gsGlobal;
+	bool drawExtraInfo;
 
 	// Original buffers containing clut indexes
 	uint8_t *screen;
@@ -125,6 +126,7 @@ static void ps2_start(void *data) {
 static void *ps2_init(void)
 {
 	ps2_video_t *ps2 = (ps2_video_t*)calloc(1, sizeof(ps2_video_t));
+	ps2->drawExtraInfo = true;
 
 	ps2_start(ps2);
 	return ps2;
@@ -300,31 +302,38 @@ static void ps2_fillFrame(void *data, void *frame, uint32_t color)
 
 static void ps2_transferWorkFrame(void *data, RECT *src_rect, RECT *dst_rect)
 {
-	// We assume that src is work_frame and dst is draw_frame
-	// int j, sw, dw, sh, dh;
-	// ps2_video_t *ps2 = (ps2_video_t*)data;
+	ps2_video_t *ps2 = (ps2_video_t*)data;
+	if (!ps2->drawExtraInfo) return;
+	gs_rgbaq color = color_to_RGBAQ(0x80, 0x80, 0x80, 0x80, 0);
 
-	// sw = src_rect->right - src_rect->left;
-	// dw = dst_rect->right - dst_rect->left;
-	// sh = src_rect->bottom - src_rect->top;
-	// dh = dst_rect->bottom - dst_rect->top;
+	#define LEFT 350
+	#define TOP 20
+	#define RIGHT (LEFT + ps2->tex_fix->Width / 2)
+	#define BOTTOM (TOP + ps2->tex_fix->Height / 2)
+	#define BORDER_LEFT LEFT - 1
+	#define BORDER_TOP TOP - 1
+	#define BORDER_RIGHT RIGHT + 1
+	#define BORDER_BOTTOM BOTTOM + 1
 
-	// ps2->scrbitmap->Filter = (sw == dw && sh == dh) ? GS_FILTER_NEAREST : GS_FILTER_LINEAR;
-	// gsKit_TexManager_invalidate(ps2->gsGlobal, ps2->scrbitmap);
-	// gsKit_TexManager_bind(ps2->gsGlobal, ps2->scrbitmap);
+	gsKit_prim_quad(ps2->gsGlobal, 
+		BORDER_LEFT, BORDER_TOP, 
+		BORDER_RIGHT, BORDER_TOP, 
+		BORDER_LEFT, BORDER_BOTTOM, 
+		BORDER_RIGHT, BORDER_BOTTOM, 
+		0, GS_SETREG_RGBA(0x80, 0, 0, 0x80));
 
-	// gsKit_prim_sprite_texture(ps2->gsGlobal, ps2->scrbitmap,
-	// 	dst_rect->left,		/* X1 */
-	// 	dst_rect->top,		/* Y1 */
-	// 	src_rect->left,		/* U1 */
-	// 	src_rect->top,		/* V1 */
-	// 	dst_rect->right,	/* X2 */
-	// 	dst_rect->bottom,	/* Y2 */
-	// 	src_rect->right,	/* U2 */
-	// 	src_rect->bottom,	/* V2 */
-	// 	1,					/* Z  */
-	// 	GS_TEXT
-	// );
+	GSPRIMUVPOINT *verts2 = (GSPRIMUVPOINT *)malloc(sizeof(GSPRIMUVPOINT) * 2);
+	verts2[0].xyz2 = vertex_to_XYZ2(ps2->gsGlobal, LEFT, TOP, 0);
+	verts2[0].uv = vertex_to_UV(ps2->tex_fix, 0, 0);
+	verts2[0].rgbaq = color;
+
+	verts2[1].xyz2 = vertex_to_XYZ2(ps2->gsGlobal, RIGHT, BOTTOM, 0);
+	verts2[1].uv = vertex_to_UV(ps2->tex_fix, ps2->tex_fix->Width, ps2->tex_fix->Height);
+	verts2[1].rgbaq = color;
+
+	gskit_prim_list_sprite_texture_uv_3d(ps2->gsGlobal, ps2->tex_fix, 2, verts2);
+
+	free(verts2);
 }
 
 static void ps2_copyRect(void *data, void *src, void *dst, RECT *src_rect, RECT *dst_rect)

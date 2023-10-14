@@ -76,7 +76,7 @@ static void x86_64_start(void *data) {
 		return;
 	}
 
-	x86_64->sdl_texture_tex_fix = SDL_CreateTexture(x86_64->renderer, SDL_PIXELFORMAT_ABGR1555, SDL_TEXTUREACCESS_STREAMING, BUF_WIDTH, SCR_HEIGHT);
+	x86_64->sdl_texture_tex_fix = SDL_CreateTexture(x86_64->renderer, SDL_PIXELFORMAT_ABGR1555, SDL_TEXTUREACCESS_STREAMING, BUF_WIDTH, TEXTURE_HEIGHT);
 	if (x86_64->sdl_texture_tex_fix == NULL) {
 		printf("Could not create sdl_texture_tex_fix: %s\n", SDL_GetError());
 		return;
