@@ -126,7 +126,7 @@ static void ps2_start(void *data) {
 static void *ps2_init(void)
 {
 	ps2_video_t *ps2 = (ps2_video_t*)calloc(1, sizeof(ps2_video_t));
-	ps2->drawExtraInfo = true;
+	ps2->drawExtraInfo = false;
 
 	ps2_start(ps2);
 	return ps2;
@@ -207,6 +207,23 @@ static void ps2_waitVsync(void *data)
 	スクリーンをフリップ
 --------------------------------------------------------*/
 
+/* Copy of gsKit_sync_flip, but without the 'sync' */
+static void gsKit_flip(GSGLOBAL *gsGlobal)
+{
+   if (!gsGlobal->FirstFrame)
+   {
+      if (gsGlobal->DoubleBuffering == GS_SETTING_ON)
+      {
+         GS_SET_DISPFB2(gsGlobal->ScreenBuffer[gsGlobal->ActiveBuffer & 1] / 8192,
+                        gsGlobal->Width / 64, gsGlobal->PSM, 0, 0);
+
+         gsGlobal->ActiveBuffer ^= 1;
+      }
+   }
+
+   gsKit_setactive(gsGlobal);
+}
+
 static void ps2_flipScreen(void *data, bool vsync)
 {
 	ps2_video_t *ps2 = (ps2_video_t*)data;
@@ -214,7 +231,12 @@ static void ps2_flipScreen(void *data, bool vsync)
 	gsKit_queue_exec(ps2->gsGlobal);
 	gsKit_finish();
 
-	if (vsync) gsKit_sync_flip(ps2->gsGlobal);
+	if (vsync) {
+		gsKit_sync_flip(ps2->gsGlobal);
+	} else {
+		gsKit_flip(ps2->gsGlobal);
+	}
+		
 
 	gsKit_TexManager_nextFrame(ps2->gsGlobal);
     gsKit_clear(ps2->gsGlobal, GS_BLACK);
