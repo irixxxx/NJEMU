@@ -82,7 +82,7 @@ static void ps2_start(void *data) {
 	gsGlobal->PSMZ = GS_PSMZ_16S;
 	gsGlobal->ZBuffering = GS_SETTING_OFF;
 	gsGlobal->DoubleBuffering = GS_SETTING_ON;
-	gsGlobal->PrimAlphaEnable = GS_SETTING_ON;
+	gsGlobal->PrimAlphaEnable = GS_SETTING_OFF;
 	gsGlobal->Dithering = GS_SETTING_OFF;
 
 	gsKit_set_primalpha(gsGlobal, GS_SETREG_ALPHA(0, 1, 0, 1, 0), 0);
