@@ -27,16 +27,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        apk add build-base git bash
-
-    # Needed till new release of gskit is included in ps2dev/ps2dev:latest
-    - name: Install latest GSKit version
-      run: |
-        git clone https://github.com/ps2dev/gsKit.git
-        cd gsKit
-        make -j $(getconf _NPROCESSORS_ONLN)
-        make -j $(getconf _NPROCESSORS_ONLN) install
-    
+        apk add build-base git bash    
 
     - name: Compile project
       run: |
