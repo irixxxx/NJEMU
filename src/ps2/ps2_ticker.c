@@ -4,7 +4,6 @@
 #include <time.h>
 
 #include <timer.h>
-#include <ps2sdkapi.h>
 #include "common/ticker_driver.h"
 
 typedef struct ps2_ticker {
@@ -21,7 +20,7 @@ static void ps2_free(void *data) {
 }
 
 static u_int64_t ps2_currentUs(void *data) {
-    return GetTimerSystemTime() / (kBUSCLK / CLOCKS_PER_SEC) * 1000;
+    return clock();
 }
 
 ticker_driver_t ticker_ps2 = {
