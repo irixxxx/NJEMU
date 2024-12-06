@@ -29,6 +29,7 @@ static int childThread(void *arg)
     ps2_thread_t *ps2 = (ps2_thread_t *)arg;
     ps2->threadFunc(0, NULL);
     SignalSema((int)ps2->endfunc);
+	ExitThread();
     return 0;
 }
 
@@ -107,7 +108,7 @@ static void ps2_sleepThread(void *data) {
 }
 
 static void ps2_exitThread(void *data, int32_t exitCode) {
-	ExitThread();
+	// We don't need to do anything here as we will call ExitThread in the childThread
 }
 
 thread_driver_t thread_ps2 = {
