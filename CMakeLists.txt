@@ -10,6 +10,12 @@ set(TARGET_VALUES
     "MVS"   # 2
     "NCDZ"  # 3
 )
+
+# Ensure TARGET is set or provide a default
+if(NOT DEFINED TARGET)
+    message(FATAL_ERROR "TARGET is not defined. Please specify a TARGET (e.g., -DTARGET=CPS1).")
+endif()
+
 list(FIND TARGET_VALUES ${TARGET} TARGET_INDEX)
 if (TARGET_INDEX EQUAL -1)
     message(FATAL_ERROR "Invalid TARGET. Please choose from the allowed values: ${TARGET_VALUES}")
@@ -17,6 +23,11 @@ endif()
 
 # Add target to compiler definitions
 add_definitions(-DBUILD_${TARGET})
+
+# Ensure PLATFORM is set or provide a default
+if(NOT DEFINED PLATFORM)
+    message(FATAL_ERROR "PLATFORM is not defined. Please specify a PLATFORM (e.g., -DPLATFORM=PSP).")
+endif()
 
 # Different platform availables
 set(PLATFORM_VALUES 
@@ -216,11 +227,6 @@ endif()
 target_compile_options(${TARGET} PUBLIC ${WARNING_OPTIONS} ${ASAN_OPTIONS})
 target_link_options(${TARGET} PUBLIC ${ASAN_OPTIONS})
 
-# Add common libraries
-target_link_libraries(${TARGET} PUBLIC
-    z
-)
-
 # Add platform specific libraries
 if (PLATFORM STREQUAL "X86_64")
     find_package(SDL2 REQUIRED)
@@ -230,5 +236,17 @@ if (PLATFORM STREQUAL "X86_64")
     target_link_libraries(${TARGET} PUBLIC
         SDL2::SDL2-static
     )
+elseif(PLATFORM STREQUAL "PS2")
+    target_link_libraries(${TARGET} PUBLIC
+        patches
+        gskit
+        dmakit
+        ps2_drivers
+    )
 endif()
+
+# Add common libraries
+target_link_libraries(${TARGET} PUBLIC
+    z
+)
         
