@@ -356,16 +356,14 @@ static void ps2_transferWorkFrame(void *data, RECT *src_rect, RECT *dst_rect)
 		RIGHT, BOTTOM, 
 		0, GS_SETREG_RGBA(0, 0, 0, 0x80));
 
-	GSPRIMUVPOINT *verts2 = (GSPRIMUVPOINT *)malloc(sizeof(GSPRIMUVPOINT) * 2);
+	GSPRIMUVPOINTFLAT *verts2 = (GSPRIMUVPOINTFLAT *)malloc(sizeof(GSPRIMUVPOINTFLAT) * 2);
 	verts2[0].xyz2 = vertex_to_XYZ2(ps2->gsGlobal, LEFT, TOP, 0);
 	verts2[0].uv = vertex_to_UV(tex, 0, 0);
-	verts2[0].rgbaq = color;
 
 	verts2[1].xyz2 = vertex_to_XYZ2(ps2->gsGlobal, RIGHT, BOTTOM, 0);
 	verts2[1].uv = vertex_to_UV(tex, tex->Width, tex->Height);
-	verts2[1].rgbaq = color;
 
-	gskit_prim_list_sprite_texture_uv_3d(ps2->gsGlobal, tex, 2, verts2);
+	gskit_prim_list_sprite_texture_uv_flat_color(ps2->gsGlobal, tex, color, 2, verts2);
 
 	free(verts2);
 }
@@ -680,13 +678,14 @@ static GSTEXTURE *ps2_getTexture(void *data, enum WorkBuffer buffer) {
 static void ps2_blitTexture(void *data, enum WorkBuffer buffer, void *clut, uint32_t vertices_count, void *vertices) {
 	// printf("ps2_blitTexture buffer: %d, vertices_count: %d\n", buffer, vertices_count);
 	ps2_video_t *ps2 = (ps2_video_t*)data;
+	gs_rgbaq color = color_to_RGBAQ(0x80, 0x80, 0x80, 0x80, 0);
 	GSTEXTURE *tex = ps2_getTexture(data, buffer);
 	tex->Clut = clut;
 
 	gsKit_TexManager_invalidate(ps2->gsGlobal, tex);
 	gsKit_TexManager_bind(ps2->gsGlobal, tex);
 
-	gskit_prim_list_sprite_texture_uv_3d(ps2->gsGlobal, tex, vertices_count, vertices);
+	gskit_prim_list_sprite_texture_uv_flat_color(ps2->gsGlobal, tex, color, vertices_count, vertices);
 }
 
 

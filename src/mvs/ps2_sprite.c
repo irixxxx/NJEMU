@@ -69,7 +69,7 @@ static SPRITE ALIGN_DATA fix_data[FIX_TEXTURE_SIZE];
 static SPRITE *fix_free_head;
 
 static uint8_t *tex_fix;
-static GSPRIMUVPOINT ALIGN_DATA vertices_fix[FIX_MAX_SPRITES * 2];
+static GSPRIMUVPOINTFLAT ALIGN_DATA vertices_fix[FIX_MAX_SPRITES * 2];
 static uint16_t fix_num;
 static uint16_t fix_texture_num;
 
@@ -88,7 +88,7 @@ static SPRITE ALIGN_DATA spr_data[SPR_TEXTURE_SIZE];
 static SPRITE *spr_free_head;
 
 static uint8_t *tex_spr[3];
-static GSPRIMUVPOINT ALIGN_DATA vertices_spr[SPR_MAX_SPRITES * 2];
+static GSPRIMUVPOINTFLAT ALIGN_DATA vertices_spr[SPR_MAX_SPRITES * 2];
 static uint16_t ALIGN_DATA spr_flags[SPR_MAX_SPRITES];
 static uint16_t spr_num;
 static uint16_t spr_texture_num;
@@ -470,9 +470,8 @@ void blit_finish(void)
 void blit_draw_fix(int x, int y, uint32_t code, uint16_t attr)
 {
 	int16_t idx;
-	GSPRIMUVPOINT *vertices;
+	GSPRIMUVPOINTFLAT *vertices;
 	uint32_t key = MAKE_FIX_KEY(code, attr);
-	gs_rgbaq color = color_to_RGBAQ(0x80, 0x80, 0x80, 0x80, 0);
 
 	if ((idx = fix_get_sprite(key)) < 0)
 	{
@@ -515,11 +514,9 @@ void blit_draw_fix(int x, int y, uint32_t code, uint16_t attr)
 
 	vertices[0].xyz2 = vertex_to_XYZ2(gsGlobal, x0, y0, 0);
 	vertices[0].uv = vertex_to_UV(atlas, u0, v0);
-	vertices[0].rgbaq = color;
 
 	vertices[1].xyz2 = vertex_to_XYZ2(gsGlobal, x1, y1, 0);
 	vertices[1].uv = vertex_to_UV(atlas, u1, v1);
-	vertices[1].rgbaq = color;
 }
 
 
@@ -541,7 +538,7 @@ void blit_finish_fix(void)
 void blit_draw_spr(int x, int y, int w, int h, uint32_t code, uint16_t attr)
 {
 	int16_t idx;
-	GSPRIMUVPOINT *vertices;
+	GSPRIMUVPOINTFLAT *vertices;
 	gs_rgbaq color = color_to_RGBAQ(0x80, 0x80, 0x80, 0x80, 0);
 	uint32_t key;
 
@@ -611,11 +608,9 @@ void blit_draw_spr(int x, int y, int w, int h, uint32_t code, uint16_t attr)
 
 	vertices[0].xyz2 = vertex_to_XYZ2(gsGlobal, x0, y0, 0);
 	vertices[0].uv = vertex_to_UV(atlas, u0, v0);
-	vertices[0].rgbaq = color;
 
 	vertices[1].xyz2 = vertex_to_XYZ2(gsGlobal, x1, y1, 0);
 	vertices[1].uv = vertex_to_UV(atlas, u1, v1);
-	vertices[1].rgbaq = color;
 }
 
 
@@ -642,14 +637,14 @@ void blit_finish_spr(void)
 	// // printf("blit_finish_spr\n");
 	int i, total_sprites = 0;
 	uint16_t flags, *pflags = spr_flags;
-	GSPRIMUVPOINT *vertices, *vertices_tmp;
+	GSPRIMUVPOINTFLAT *vertices, *vertices_tmp;
 	uint16_t *clut_tmp;
 	enum WorkBuffer workBuffer;
 
 	if (!spr_index) return;
 	// printf("blit_finish_spr has spr_index\n");
 
-	GSPRIMUVPOINT vertex_buffer[spr_num];
+	GSPRIMUVPOINTFLAT vertex_buffer[spr_num];
 
 	flags = *pflags;
 	workBuffer = getWorkBufferForSPR(flags & 3);
