@@ -78,14 +78,19 @@ static void ps2_start(void *data) {
 	gsGlobal->Mode = GS_MODE_NTSC;
     gsGlobal->Height = 448;
 
-	gsGlobal->PSM  = GS_PSM_CT24;
+	gsGlobal->PSM  = GS_PSM_CT16;
 	gsGlobal->PSMZ = GS_PSMZ_16S;
 	gsGlobal->ZBuffering = GS_SETTING_OFF;
 	gsGlobal->DoubleBuffering = GS_SETTING_ON;
-	gsGlobal->PrimAlphaEnable = GS_SETTING_OFF;
 	gsGlobal->Dithering = GS_SETTING_OFF;
+	gsGlobal->PrimAlphaEnable = GS_SETTING_ON;
 
-	gsKit_set_primalpha(gsGlobal, GS_SETREG_ALPHA(0, 1, 0, 1, 0), 0);
+	gsKit_set_test(gsGlobal, GS_ATEST_ON);
+
+	// // Do not draw pixels if they are fully transparent
+	gsGlobal->Test->ATE  = GS_SETTING_ON;
+	gsGlobal->Test->ATST = 7; // NOTEQUAL to AREF passes
+	gsGlobal->Test->AREF = 0x01;
 
 	dmaKit_init(D_CTRL_RELE_OFF, D_CTRL_MFD_OFF, D_CTRL_STS_UNSPEC, D_CTRL_STD_OFF, D_CTRL_RCYC_8, 1 << DMA_CHANNEL_GIF);
 	dmaKit_chan_init(DMA_CHANNEL_GIF);
@@ -236,10 +241,8 @@ static void ps2_flipScreen(void *data, bool vsync)
 	} else {
 		gsKit_flip(ps2->gsGlobal);
 	}
-		
 
 	gsKit_TexManager_nextFrame(ps2->gsGlobal);
-    gsKit_clear(ps2->gsGlobal, GS_BLACK);
 }
 
 
@@ -637,7 +640,7 @@ static void ps2_drawTexture(void *data, uint32_t src_fmt, uint32_t dst_fmt, void
 
 static void *ps2_getNativeObjects(void *data, int index) {
 	ps2_video_t *ps2 = (ps2_video_t*)data;
-	switch ( index) {
+	switch (index) {
 	case 0:
 		return ps2->gsGlobal;
 	case 1: 
