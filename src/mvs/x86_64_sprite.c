@@ -99,6 +99,7 @@ static uint8_t spr_disable;
 ------------------------------------------------------------------------*/
 
 static uint16_t *clut;
+static uint8_t clut_index;
 
 static const uint32_t ALIGN_DATA color_table[16] =
 {
@@ -419,6 +420,7 @@ void blit_reset(void)
 	clip_max_y = LAST_VISIBLE_LINE;
 
 	clut = (uint16_t *)&video_palettebank[palette_bank];
+	clut_index = palette_bank;
 
 	blit_clear_all_sprite();
 }
@@ -439,6 +441,7 @@ void blit_start(int start, int end)
 	if (start == FIRST_VISIBLE_LINE)
 	{
 		clut = (uint16_t *)&video_palettebank[palette_bank];
+		clut_index = palette_bank;
 
 		fix_num = 0;
 		spr_disable = 0;
@@ -517,7 +520,7 @@ void blit_draw_fix(int x, int y, uint32_t code, uint16_t attr)
 void blit_finish_fix(void)
 {
 	if (!fix_num) return;
-	video_driver->blitTexture(video_data, TEX_FIX, clut, fix_num, vertices_fix);
+	video_driver->blitTexture(video_data, TEX_FIX, clut, clut_index, fix_num, vertices_fix);
 }
 
 
@@ -635,7 +638,7 @@ void blit_finish_spr(void)
 		{
 			if (total_sprites)
 			{
-				video_driver->blitTexture(video_data, workBuffer, clut_tmp, total_sprites, vertices);
+				video_driver->blitTexture(video_data, workBuffer, clut_tmp, 0, total_sprites, vertices);
 				total_sprites = 0;
 				vertices = vertices_tmp;
 			}
@@ -654,7 +657,7 @@ void blit_finish_spr(void)
 	}
 
 	if (total_sprites)
-		video_driver->blitTexture(video_data, workBuffer, clut_tmp, total_sprites, vertices);
+		video_driver->blitTexture(video_data, workBuffer, clut_tmp, 0, total_sprites, vertices);
 }
 
 

@@ -393,7 +393,7 @@ static SDL_Texture *x86_64_getTexture(void *data, enum WorkBuffer buffer) {
 	}
 }
 
-static void x86_64_blitTexture(void *data, enum WorkBuffer buffer, void *clut, uint32_t vertices_count, void *vertices) {
+static void x86_64_blitTexture(void *data, enum WorkBuffer buffer, void *clut, uint8_t clut_index, uint32_t vertices_count, void *vertices) {
 	// We need to transform the texutres saved that uses clut into a SDL texture compatible format
 	SDL_Point size;
 	x86_64_video_t *x86_64 = (x86_64_video_t *)data;
@@ -467,5 +467,7 @@ video_driver_t video_x86_64 = {
 	x86_64_copyRectRotate,
 	x86_64_drawTexture,
 	x86_64_getNativeObjects,
+	NULL,
+	NULL,
 	x86_64_blitTexture,
 };

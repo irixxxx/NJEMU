@@ -111,7 +111,9 @@ typedef struct video_driver
 	void (*copyRectRotate)(void *data, void *src, void *dst, RECT *src_rect, RECT *dst_rect);
 	void (*drawTexture)(void *data, uint32_t src_fmt, uint32_t dst_fmt, void *src, void *dst, RECT *src_rect, RECT *dst_rect);
 	void *(*getNativeObjects)(void *data, int index);
-	void (*blitTexture)(void *data, enum WorkBuffer buffer, void *clut, uint32_t vertices_count, void *vertices);
+	void (*uploadMem)(void *data, enum WorkBuffer buffer);
+	void (*uploadClut)(void *data, uint16_t *clut, uint8_t clut_index);
+	void (*blitTexture)(void *data, enum WorkBuffer buffer, void *clut, uint8_t clut_index, uint32_t vertices_count, void *vertices);
 
 } video_driver_t;
 

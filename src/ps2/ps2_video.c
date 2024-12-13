@@ -16,6 +16,7 @@
 #include <gsToolkit.h>
 
 #include <gsInline.h>
+#include <gsCore.h>
 
 
 /******************************************************************************
@@ -52,20 +53,45 @@ typedef struct ps2_video {
 	uint32_t offset;
 	uint8_t vsync; /* 0 (Disabled), 1 (Enabled), 2 (Dynamic) */
 	uint8_t pixel_format;
+
+	void *vram_cluts;
+	uint32_t clut_vram_size;
 } ps2_video_t;
 
 /*--------------------------------------------------------
 	ƒrƒfƒIˆ—‰Šú‰»
 --------------------------------------------------------*/
-static GSTEXTURE *initializeTexture(int width, int height, void *mem) {
+static GSTEXTURE *initializeTexture(GSGLOBAL *gsGlobal, int width, int height, void *mem) {
 	GSTEXTURE *tex = (GSTEXTURE *)calloc(1, sizeof(GSTEXTURE));
 	tex->Width = width;
 	tex->Height = height;
 	tex->PSM = GS_PSM_T8;
 	tex->ClutPSM = GS_PSM_CT16;
 	tex->Mem = mem;
+	tex->Vram = gsKit_vram_alloc(gsGlobal, gsKit_texture_size(width, height, GS_PSM_T8), GSKIT_ALLOC_USERBUFFER);
 
+	gsKit_setup_tbw(tex);
 	return tex;
+}
+
+static void *ps2_workFrame(void *data, enum WorkBuffer buffer)
+{
+	ps2_video_t *ps2 = (ps2_video_t*)data;
+	switch (buffer)
+	{
+		case SCRBITMAP:
+			return ps2->screen;
+		case TEX_SPR0:
+			return ps2->spr0;
+		case TEX_SPR1:
+			return ps2->spr1;
+		case TEX_SPR2:
+			return ps2->spr2;
+		case TEX_FIX:
+			return ps2->fix;
+	}
+
+	return NULL;
 }
 
 static void ps2_start(void *data) {
@@ -101,8 +127,6 @@ static void ps2_start(void *data) {
 
 	gsKit_init_screen(gsGlobal);
 
-	gsKit_TexManager_init(gsGlobal);
-
 	gsKit_mode_switch(gsGlobal, GS_ONESHOT);
     gsKit_clear(gsGlobal, GS_BLACK);
 	ps2->gsGlobal = gsGlobal;
@@ -119,11 +143,23 @@ static void ps2_start(void *data) {
 	ps2->fix = (uint8_t*)malloc(textureSize);
 
 	// Initialize textures
-	ps2->scrbitmap = initializeTexture(BUF_WIDTH, SCR_HEIGHT, ps2->screen);
-	ps2->tex_spr0 = initializeTexture(BUF_WIDTH, TEXTURE_HEIGHT, ps2->spr0);
-	ps2->tex_spr1 = initializeTexture(BUF_WIDTH, TEXTURE_HEIGHT, ps2->spr1);
-	ps2->tex_spr2 = initializeTexture(BUF_WIDTH, TEXTURE_HEIGHT, ps2->spr2);
-	ps2->tex_fix = initializeTexture(BUF_WIDTH, TEXTURE_HEIGHT, ps2->fix);
+	ps2->scrbitmap = initializeTexture(gsGlobal, BUF_WIDTH, SCR_HEIGHT, ps2->screen);
+	ps2->tex_spr0 = initializeTexture(gsGlobal, BUF_WIDTH, TEXTURE_HEIGHT, ps2->spr0);
+	ps2->tex_spr1 = initializeTexture(gsGlobal, BUF_WIDTH, TEXTURE_HEIGHT, ps2->spr1);
+	ps2->tex_spr2 = initializeTexture(gsGlobal, BUF_WIDTH, TEXTURE_HEIGHT, ps2->spr2);
+	ps2->tex_fix = initializeTexture(gsGlobal, BUF_WIDTH, TEXTURE_HEIGHT, ps2->fix);
+
+	// Initialize VRAM directly
+	printf("BUF_WIDTH %i, SCR_HEIGHT %i, gsKit_texture_size %i\n", BUF_WIDTH, SCR_HEIGHT, gsKit_texture_size(BUF_WIDTH, SCR_HEIGHT, GS_PSM_T8));
+	printf("BUF_WIDTH %i, TEXTURE_HEIGHT %i, gsKit_texture_size %i\n", BUF_WIDTH, TEXTURE_HEIGHT, gsKit_texture_size(BUF_WIDTH, TEXTURE_HEIGHT, GS_PSM_T8));
+	printf("width %i, height %i, gsKit_texture_size %i\n", 16, 16, gsKit_texture_size(16, 16, GS_PSM_CT16));
+
+	uint32_t clut_vram_size = gsKit_texture_size(16, 16, GS_PSM_CT16);
+	uint32_t all_clut_vram_size = clut_vram_size * 32;
+	void *vram_cluts = (void *)gsKit_vram_alloc(gsGlobal, all_clut_vram_size, GSKIT_ALLOC_USERBUFFER);
+	printf("vram_cluts %p\n", vram_cluts);
+	ps2->clut_vram_size = clut_vram_size;
+	ps2->vram_cluts = vram_cluts;
 
 	ui_init();
 }
@@ -167,6 +203,8 @@ static void ps2_exit(ps2_video_t *ps2) {
 	ps2->spr2 = NULL;
 	free(ps2->fix);
 	ps2->fix = NULL;
+
+	// We don't need to free vram, it's done with gsKit_vram_clear
 }
 
 static void ps2_free(void *data)
@@ -241,8 +279,6 @@ static void ps2_flipScreen(void *data, bool vsync)
 	} else {
 		gsKit_flip(ps2->gsGlobal);
 	}
-
-	gsKit_TexManager_nextFrame(ps2->gsGlobal);
 }
 
 
@@ -259,26 +295,6 @@ static void *ps2_frameAddr(void *data, void *frame, int x, int y)
 // 	else
 // #endif
 // 		return (void *)(((uint32_t)frame | 0x44000000) + ((x + (y << 9)) << 1));
-	return NULL;
-}
-
-static void *ps2_workFrame(void *data, enum WorkBuffer buffer)
-{
-	ps2_video_t *ps2 = (ps2_video_t*)data;
-	switch (buffer)
-	{
-		case SCRBITMAP:
-			return ps2->screen;
-		case TEX_SPR0:
-			return ps2->spr0;
-		case TEX_SPR1:
-			return ps2->spr1;
-		case TEX_SPR2:
-			return ps2->spr2;
-		case TEX_FIX:
-			return ps2->fix;
-	}
-
 	return NULL;
 }
 
@@ -675,15 +691,25 @@ static GSTEXTURE *ps2_getTexture(void *data, enum WorkBuffer buffer) {
 	}
 }
 
-static void ps2_blitTexture(void *data, enum WorkBuffer buffer, void *clut, uint32_t vertices_count, void *vertices) {
-	// printf("ps2_blitTexture buffer: %d, vertices_count: %d\n", buffer, vertices_count);
+static void ps2_uploadMem(void *data, enum WorkBuffer buffer) {
+	ps2_video_t *ps2 = (ps2_video_t*)data;
+	GSTEXTURE *tex = ps2_getTexture(data, buffer);
+   	gsKit_texture_send(tex->Mem, tex->Width, tex->Height, tex->Vram, tex->PSM, tex->TBW, GS_CLUT_TEXTURE);
+}
+
+static void ps2_uploadClut(void *data, uint16_t *clut, uint8_t clut_index) {
+	ps2_video_t *ps2 = (ps2_video_t*)data;
+	void *vram = (void *)((uint8_t *)ps2->vram_cluts + (clut_index * ps2->clut_vram_size));
+   	gsKit_texture_send((u32 *)clut, 256, 1, (u32)vram, GS_PSM_CT16, 1, GS_CLUT_PALLETE);
+}
+
+static void ps2_blitTexture(void *data, enum WorkBuffer buffer, void *clut, uint8_t clut_index, uint32_t vertices_count, void *vertices) {
 	ps2_video_t *ps2 = (ps2_video_t*)data;
 	gs_rgbaq color = color_to_RGBAQ(0x80, 0x80, 0x80, 0x80, 0);
 	GSTEXTURE *tex = ps2_getTexture(data, buffer);
-	tex->Clut = clut;
 
-	gsKit_TexManager_invalidate(ps2->gsGlobal, tex);
-	gsKit_TexManager_bind(ps2->gsGlobal, tex);
+	tex->Clut = clut;
+	tex->VramClut = (u32)((uint8_t *)ps2->vram_cluts + (clut_index * ps2->clut_vram_size));
 
 	gskit_prim_list_sprite_texture_uv_flat_color(ps2->gsGlobal, tex, color, vertices_count, vertices);
 }
@@ -707,5 +733,7 @@ video_driver_t video_ps2 = {
 	ps2_copyRectRotate,
 	ps2_drawTexture,
 	ps2_getNativeObjects,
+	ps2_uploadMem,
+	ps2_uploadClut,
 	ps2_blitTexture,
 };

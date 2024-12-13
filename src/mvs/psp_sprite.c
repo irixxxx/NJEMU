@@ -100,6 +100,7 @@ static uint8_t spr_disable;
 ------------------------------------------------------------------------*/
 
 static uint16_t *clut;
+static uint8_t clut_index;
 
 static const uint32_t ALIGN_DATA color_table[16] =
 {
@@ -431,6 +432,7 @@ void blit_reset(void)
 	clip_max_y = LAST_VISIBLE_LINE;
 
 	clut = (uint16_t *)PSP_UNCACHE_PTR(&video_palettebank[palette_bank]);
+	clut_index = palette_bank;
 
 	blit_clear_all_sprite();
 }
@@ -551,7 +553,7 @@ void blit_finish_fix(void)
 
 	vertices = (struct Vertex *)sceGuGetMemory(fix_num * sizeof(struct Vertex));
 	memcpy(vertices, vertices_fix, fix_num * sizeof(struct Vertex));
-	video_driver->blitTexture(video_data, TEX_FIX, clut, fix_num, vertices);
+	video_driver->blitTexture(video_data, TEX_FIX, clut, clut_index, fix_num, vertices);
 }
 
 
