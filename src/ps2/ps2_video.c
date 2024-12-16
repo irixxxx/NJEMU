@@ -708,6 +708,10 @@ static void ps2_blitTexture(void *data, enum WorkBuffer buffer, void *clut, uint
 	gs_rgbaq color = color_to_RGBAQ(0x80, 0x80, 0x80, 0x80, 0);
 	GSTEXTURE *tex = ps2_getTexture(data, buffer);
 
+	// We should identify better when the CLUT and the texture are updated to avoid uploading them again
+	ps2_uploadMem(data, buffer);
+	ps2_uploadClut(data, clut, clut_index);
+
 	tex->Clut = clut;
 	tex->VramClut = (u32)((uint8_t *)ps2->vram_cluts + (clut_index * ps2->clut_vram_size));
 
