@@ -32,6 +32,9 @@
 /* Size of Oneshot drawbuffer (Double Buffered, so it uses this size * 2) */
 #define RENDER_QUEUE_OS_POOLSIZE 1024 * 1024 * 2 // 2048K of oneshot renderqueue
 
+#define CLUT_WIDTH 256
+#define CLUT_HEIGHT 1
+
 typedef struct ps2_video {
 	GSGLOBAL *gsGlobal;
 	bool drawExtraInfo;
@@ -69,6 +72,7 @@ static GSTEXTURE *initializeTexture(GSGLOBAL *gsGlobal, int width, int height, v
 	tex->ClutPSM = GS_PSM_CT16;
 	tex->Mem = mem;
 	tex->Vram = gsKit_vram_alloc(gsGlobal, gsKit_texture_size(width, height, GS_PSM_T8), GSKIT_ALLOC_USERBUFFER);
+	tex->ClutStorageMode = GS_CLUT_STORAGE_CSM2;
 
 	gsKit_setup_tbw(tex);
 	return tex;
@@ -152,10 +156,10 @@ static void ps2_start(void *data) {
 	// Initialize VRAM directly
 	printf("BUF_WIDTH %i, SCR_HEIGHT %i, gsKit_texture_size %i\n", BUF_WIDTH, SCR_HEIGHT, gsKit_texture_size(BUF_WIDTH, SCR_HEIGHT, GS_PSM_T8));
 	printf("BUF_WIDTH %i, TEXTURE_HEIGHT %i, gsKit_texture_size %i\n", BUF_WIDTH, TEXTURE_HEIGHT, gsKit_texture_size(BUF_WIDTH, TEXTURE_HEIGHT, GS_PSM_T8));
-	printf("width %i, height %i, gsKit_texture_size %i\n", 16, 16, gsKit_texture_size(16, 16, GS_PSM_CT16));
+	printf("width %i, height %i, gsKit_texture_size %i\n", CLUT_WIDTH, CLUT_HEIGHT * 32, gsKit_texture_size(CLUT_WIDTH, CLUT_HEIGHT * 32, GS_PSM_CT16));
 
-	uint32_t clut_vram_size = gsKit_texture_size(16, 16, GS_PSM_CT16);
-	uint32_t all_clut_vram_size = clut_vram_size * 32;
+	uint32_t clut_vram_size = gsKit_texture_size(CLUT_WIDTH, CLUT_HEIGHT * 16, GS_PSM_CT16);
+	uint32_t all_clut_vram_size = clut_vram_size * 2;
 	void *vram_cluts = (void *)gsKit_vram_alloc(gsGlobal, all_clut_vram_size, GSKIT_ALLOC_USERBUFFER);
 	printf("vram_cluts %p\n", vram_cluts);
 	ps2->clut_vram_size = clut_vram_size;
@@ -340,10 +344,16 @@ static void ps2_fillFrame(void *data, void *frame, uint32_t color)
 /*--------------------------------------------------------
 	矩形範囲をコピー
 --------------------------------------------------------*/
-
+static int transfer_count = 0;
 static void ps2_transferWorkFrame(void *data, RECT *src_rect, RECT *dst_rect)
 {
 	ps2_video_t *ps2 = (ps2_video_t*)data;
+	// printf("transferWorkFrame %d\n", transfer_count);
+	// // sleep(1);
+    // if (transfer_count == 530) {
+        // SleepThread();
+    // }
+    transfer_count++;
 	if (!ps2->drawExtraInfo) return;
 	gs_rgbaq color = color_to_RGBAQ(0x80, 0x80, 0x80, 0x80, 0);
 
@@ -697,24 +707,31 @@ static void ps2_uploadMem(void *data, enum WorkBuffer buffer) {
    	gsKit_texture_send(tex->Mem, tex->Width, tex->Height, tex->Vram, tex->PSM, tex->TBW, GS_CLUT_TEXTURE);
 }
 
-static void ps2_uploadClut(void *data, uint16_t *clut, uint8_t clut_index) {
+static void ps2_uploadClut(void *data, uint16_t *bank, uint8_t bank_index) {
 	ps2_video_t *ps2 = (ps2_video_t*)data;
-	void *vram = (void *)((uint8_t *)ps2->vram_cluts + (clut_index * ps2->clut_vram_size));
-   	gsKit_texture_send((u32 *)clut, 256, 1, (u32)vram, GS_PSM_CT16, 1, GS_CLUT_PALLETE);
+	void *vram = (void *)((uint8_t *)ps2->vram_cluts + (bank_index * 16) * ps2->clut_vram_size);
+   	gsKit_texture_send((u32 *)bank, CLUT_WIDTH, CLUT_HEIGHT*16, (u32)vram, GS_PSM_CT16, 1, GS_CLUT_PALLETE);
 }
 
-static void ps2_blitTexture(void *data, enum WorkBuffer buffer, void *clut, uint8_t clut_index, uint32_t vertices_count, void *vertices) {
+static void ps2_blitTexture(void *data, enum WorkBuffer buffer, void *clut, uint8_t bank_index, uint32_t vertices_count, void *vertices) {
+	// printf("blitTexture %i, clut_index %i, vertices_count %i\n", buffer, clut_index, vertices_count);
+	// if (buffer != TEX_FIX) return;
 	ps2_video_t *ps2 = (ps2_video_t*)data;
 	gs_rgbaq color = color_to_RGBAQ(0x80, 0x80, 0x80, 0x80, 0);
 	GSTEXTURE *tex = ps2_getTexture(data, buffer);
 
 	// We should identify better when the CLUT and the texture are updated to avoid uploading them again
-	ps2_uploadMem(data, buffer);
-	ps2_uploadClut(data, clut, clut_index);
+	// ps2_uploadMem(data, buffer);
+	// ps2_uploadClut(data, clut, clut_index);
 
 	tex->Clut = clut;
-	tex->VramClut = (u32)((uint8_t *)ps2->vram_cluts + (clut_index * ps2->clut_vram_size));
+	tex->VramClut = (u32)((uint8_t *)ps2->vram_cluts + (bank_index * ps2->clut_vram_size));
 
+	ptrdiff_t offset = (uint16_t *)clut - (uint16_t *)&video_palettebank;
+	uint8_t clut_index = offset / 256 - (bank_index * 16);
+	gs_texclut texclut = postion_to_TEXCLUT(4, 0, clut_index);
+
+	gsKit_set_texclut(ps2->gsGlobal, texclut);
 	gskit_prim_list_sprite_texture_uv_flat_color(ps2->gsGlobal, tex, color, vertices_count, vertices);
 }
 

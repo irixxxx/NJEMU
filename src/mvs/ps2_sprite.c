@@ -102,7 +102,6 @@ static uint8_t spr_disable;
 ------------------------------------------------------------------------*/
 
 static uint16_t *clut;
-static uint8_t clut_index;
 
 static const uint32_t ALIGN_DATA color_table[16] =
 {
@@ -424,8 +423,7 @@ void blit_reset(void)
 	clip_max_y = LAST_VISIBLE_LINE;
 
 	clut = (uint16_t *)&video_palettebank[palette_bank];
-	clut_index = palette_bank;
-	video_driver->uploadClut(video_data, clut, clut_index);
+	video_driver->uploadClut(video_data, clut, palette_bank);
 
 	printf("===> palette_bank = %d\n", palette_bank);
 
@@ -448,8 +446,7 @@ void blit_start(int start, int end)
 	if (start == FIRST_VISIBLE_LINE)
 	{
 		clut = (uint16_t *)&video_palettebank[palette_bank];
-		clut_index = palette_bank;
-		video_driver->uploadClut(video_data, clut, clut_index);
+		video_driver->uploadClut(video_data, clut, palette_bank);
 
 		fix_num = 0;
 		spr_disable = 0;
@@ -542,7 +539,7 @@ void blit_finish_fix(void)
 		video_driver->uploadMem(video_data, TEX_FIX);
 		tex_fix_changed = false;
 	}
-	video_driver->blitTexture(video_data, TEX_FIX, clut, clut_index, fix_num, vertices_fix);
+	video_driver->blitTexture(video_data, TEX_FIX, clut, palette_bank, fix_num, vertices_fix);
 }
 
 
@@ -654,7 +651,6 @@ void blit_finish_spr(void)
 	uint16_t flags, *pflags = spr_flags;
 	GSPRIMUVPOINTFLAT *vertices, *vertices_tmp;
 	uint16_t *clut_tmp;
-	uint8_t clut_tmp_index;
 	enum WorkBuffer workBuffer;
 
 	if (!spr_index) return;
@@ -668,11 +664,9 @@ void blit_finish_spr(void)
 	flags = *pflags;
 	workBuffer = getWorkBufferForSPR(flags & 3);
 	memUploaded[flags & 3] = true;
-	clut_tmp_index = (clut_index * PALETTE_BANK_SIZE) + (flags & 0xf00)/256;
 	clutUploaded[(flags & 0xf00)/256] = true;
 	clut_tmp = &clut[flags & 0xf00];
 	video_driver->uploadMem(video_data, workBuffer);
-	video_driver->uploadClut(video_data, clut_tmp, clut_tmp_index);
 
 	vertices_tmp = vertices = &vertex_buffer[0];
 
@@ -682,7 +676,7 @@ void blit_finish_spr(void)
 		{
 			if (total_sprites)
 			{
-				video_driver->blitTexture(video_data, workBuffer, clut_tmp, clut_tmp_index, total_sprites, vertices);
+				video_driver->blitTexture(video_data, workBuffer, clut_tmp, palette_bank, total_sprites, vertices);
 				total_sprites = 0;
 				vertices = vertices_tmp;
 			}
@@ -690,14 +684,12 @@ void blit_finish_spr(void)
 			flags = *pflags;
 			workBuffer = getWorkBufferForSPR(flags & 3);
 			clut_tmp = &clut[flags & 0xf00];
-			clut_tmp_index = (clut_index * PALETTE_BANK_SIZE) + (flags & 0xf00)/256;
 			if (memUploaded[flags & 3] == false) {
 				memUploaded[flags & 3] = true;
 				video_driver->uploadMem(video_data, workBuffer);
 			}
 			if (clutUploaded[(flags & 0xf00)/256] == false) {
 				clutUploaded[(flags & 0xf00)/256] = true;
-				video_driver->uploadClut(video_data, clut_tmp, clut_tmp_index);
 			}
 		}
 
@@ -710,7 +702,7 @@ void blit_finish_spr(void)
 	}
 
 	if (total_sprites)
-		video_driver->blitTexture(video_data, workBuffer, clut_tmp, clut_tmp_index, total_sprites, vertices);
+		video_driver->blitTexture(video_data, workBuffer, clut_tmp, palette_bank, total_sprites, vertices);
 }
 
 
