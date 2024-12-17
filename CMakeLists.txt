@@ -227,6 +227,18 @@ if (USE_ASAN)
     )
 endif()
 
+
+# Define the source directory (resources folder)
+set(RESOURCE_DIR "${CMAKE_SOURCE_DIR}/${TARGET}_RESOURCE/")
+
+# Set the destination directory to the build directory (CMAKE_BINARY_DIR)
+set(DESTINATION_DIR "${CMAKE_BINARY_DIR}")
+
+# Copy the resources during the configure stage
+file(COPY ${RESOURCE_DIR} DESTINATION ${DESTINATION_DIR})
+
+message(STATUS "Resources copied to the build directory: ${DESTINATION_DIR}")
+
 target_compile_options(${TARGET} PUBLIC ${WARNING_OPTIONS} ${ASAN_OPTIONS})
 target_link_options(${TARGET} PUBLIC ${ASAN_OPTIONS})
 
