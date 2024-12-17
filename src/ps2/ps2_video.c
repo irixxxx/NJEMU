@@ -34,10 +34,16 @@
 
 #define CLUT_WIDTH 256
 #define CLUT_HEIGHT 1
+#define CLUT_BANK_HEIGHT 16
+#define CLUT_BANKS_COUNT 2
+#define CLUT_CBW (CLUT_WIDTH >> 6)
 
 typedef struct ps2_video {
 	GSGLOBAL *gsGlobal;
 	bool drawExtraInfo;
+
+	// Base clut starting address
+	uint16_t *clut_base;
 
 	// Original buffers containing clut indexes
 	uint8_t *screen;
@@ -76,6 +82,20 @@ static GSTEXTURE *initializeTexture(GSGLOBAL *gsGlobal, int width, int height, v
 
 	gsKit_setup_tbw(tex);
 	return tex;
+}
+
+static inline void *ps2_vramClutForBankIndex(void *data, uint8_t bank_index) {
+	ps2_video_t *ps2 = (ps2_video_t*)data;
+	return (void *)((uint8_t *)ps2->vram_cluts + bank_index * ps2->clut_vram_size);
+}
+
+static inline gs_texclut ps2_textclutForParameters(void *data, uint16_t *current_clut, uint8_t bank_index) {
+	ps2_video_t *ps2 = (ps2_video_t*)data;
+	ptrdiff_t offset = current_clut - ps2->clut_base;
+	uint8_t cov = offset / CLUT_WIDTH - (bank_index * CLUT_BANK_HEIGHT);
+
+	gs_texclut texclut = postion_to_TEXCLUT(CLUT_CBW, 0, cov);
+	return texclut;
 }
 
 static void *ps2_workFrame(void *data, enum WorkBuffer buffer)
@@ -156,10 +176,10 @@ static void ps2_start(void *data) {
 	// Initialize VRAM directly
 	printf("BUF_WIDTH %i, SCR_HEIGHT %i, gsKit_texture_size %i\n", BUF_WIDTH, SCR_HEIGHT, gsKit_texture_size(BUF_WIDTH, SCR_HEIGHT, GS_PSM_T8));
 	printf("BUF_WIDTH %i, TEXTURE_HEIGHT %i, gsKit_texture_size %i\n", BUF_WIDTH, TEXTURE_HEIGHT, gsKit_texture_size(BUF_WIDTH, TEXTURE_HEIGHT, GS_PSM_T8));
-	printf("width %i, height %i, gsKit_texture_size %i\n", CLUT_WIDTH, CLUT_HEIGHT * 32, gsKit_texture_size(CLUT_WIDTH, CLUT_HEIGHT * 32, GS_PSM_CT16));
+	printf("width %i, height %i, gsKit_texture_size %i\n", CLUT_WIDTH, CLUT_HEIGHT * CLUT_BANK_HEIGHT * CLUT_BANKS_COUNT, gsKit_texture_size(CLUT_WIDTH, CLUT_HEIGHT * CLUT_BANK_HEIGHT * CLUT_BANKS_COUNT, GS_PSM_CT16));
 
-	uint32_t clut_vram_size = gsKit_texture_size(CLUT_WIDTH, CLUT_HEIGHT * 16, GS_PSM_CT16);
-	uint32_t all_clut_vram_size = clut_vram_size * 2;
+	uint32_t clut_vram_size = gsKit_texture_size(CLUT_WIDTH, CLUT_HEIGHT * CLUT_BANK_HEIGHT, GS_PSM_CT16);
+	uint32_t all_clut_vram_size = clut_vram_size * CLUT_BANKS_COUNT;
 	void *vram_cluts = (void *)gsKit_vram_alloc(gsGlobal, all_clut_vram_size, GSKIT_ALLOC_USERBUFFER);
 	printf("vram_cluts %p\n", vram_cluts);
 	ps2->clut_vram_size = clut_vram_size;
@@ -236,6 +256,12 @@ static void ps2_setMode(void *data, int mode)
 		ps2_start(data);
 	}
 #endif
+}
+
+static void ps2_setClutBaseAddr(void *data, uint16_t *clut_base)
+{
+	ps2_video_t *ps2 = (ps2_video_t*)data;
+	ps2->clut_base = clut_base;
 }
 
 /*--------------------------------------------------------
@@ -709,8 +735,8 @@ static void ps2_uploadMem(void *data, enum WorkBuffer buffer) {
 
 static void ps2_uploadClut(void *data, uint16_t *bank, uint8_t bank_index) {
 	ps2_video_t *ps2 = (ps2_video_t*)data;
-	void *vram = (void *)((uint8_t *)ps2->vram_cluts + (bank_index * 16) * ps2->clut_vram_size);
-   	gsKit_texture_send((u32 *)bank, CLUT_WIDTH, CLUT_HEIGHT*16, (u32)vram, GS_PSM_CT16, 1, GS_CLUT_PALLETE);
+	void *vram = ps2_vramClutForBankIndex(data, bank_index);
+   	gsKit_texture_send((u32 *)bank, CLUT_WIDTH, CLUT_HEIGHT * CLUT_BANK_HEIGHT, (u32)vram, GS_PSM_CT16, 1, GS_CLUT_PALLETE);
 }
 
 static void ps2_blitTexture(void *data, enum WorkBuffer buffer, void *clut, uint8_t bank_index, uint32_t vertices_count, void *vertices) {
@@ -725,11 +751,9 @@ static void ps2_blitTexture(void *data, enum WorkBuffer buffer, void *clut, uint
 	// ps2_uploadClut(data, clut, clut_index);
 
 	tex->Clut = clut;
-	tex->VramClut = (u32)((uint8_t *)ps2->vram_cluts + (bank_index * ps2->clut_vram_size));
+	tex->VramClut = (u32)ps2_vramClutForBankIndex(data, bank_index);
 
-	ptrdiff_t offset = (uint16_t *)clut - (uint16_t *)&video_palettebank;
-	uint8_t clut_index = offset / 256 - (bank_index * 16);
-	gs_texclut texclut = postion_to_TEXCLUT(4, 0, clut_index);
+	gs_texclut texclut = ps2_textclutForParameters(data, clut, bank_index);
 
 	gsKit_set_texclut(ps2->gsGlobal, texclut);
 	gskit_prim_list_sprite_texture_uv_flat_color(ps2->gsGlobal, tex, color, vertices_count, vertices);
@@ -741,6 +765,7 @@ video_driver_t video_ps2 = {
 	ps2_init,
 	ps2_free,
 	ps2_setMode,
+	ps2_setClutBaseAddr,
 	ps2_waitVsync,
 	ps2_flipScreen,
 	ps2_frameAddr,

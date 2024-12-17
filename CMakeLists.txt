@@ -76,6 +76,9 @@ else()
 endif()
 add_definitions(-DVERSION_STR="${VERSION_STR}")
 
+# Define TARGET_STR in the code
+add_definitions(-DTARGET_STR="${TARGET}")
+
 # Set compiler flags
 
 # Common Warning options
@@ -242,6 +245,15 @@ elseif(PLATFORM STREQUAL "PS2")
         gskit
         dmakit
         ps2_drivers
+    )
+elseif(PLATFORM STREQUAL "PSP")
+    target_link_libraries(${TARGET} PUBLIC
+        pspdisplay
+        pspge 
+        pspctrl
+        pspaudio
+        pspgu
+        psppower
     )
 endif()
 

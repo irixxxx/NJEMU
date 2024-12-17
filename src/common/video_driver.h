@@ -98,6 +98,7 @@ typedef struct video_driver
 	/* Stops and frees driver data. */
    	void (*free)(void *data);
 	void (*setMode)(void *data, int mode);
+	void (*setClutBaseAddr)(void *data, uint16_t *clut_base);
 	void (*waitVsync)(void *data);
 	void (*flipScreen)(void *data, bool vsync);
 	void *(*frameAddr)(void *data, void *frame, int x, int y);
@@ -112,8 +113,8 @@ typedef struct video_driver
 	void (*drawTexture)(void *data, uint32_t src_fmt, uint32_t dst_fmt, void *src, void *dst, RECT *src_rect, RECT *dst_rect);
 	void *(*getNativeObjects)(void *data, int index);
 	void (*uploadMem)(void *data, enum WorkBuffer buffer);
-	void (*uploadClut)(void *data, uint16_t *clut, uint8_t clut_index);
-	void (*blitTexture)(void *data, enum WorkBuffer buffer, void *clut, uint8_t clut_index, uint32_t vertices_count, void *vertices);
+	void (*uploadClut)(void *data, uint16_t *bank, uint8_t bank_index);
+	void (*blitTexture)(void *data, enum WorkBuffer buffer, void *clut, uint8_t bank_index, uint32_t vertices_count, void *vertices);
 
 } video_driver_t;
 

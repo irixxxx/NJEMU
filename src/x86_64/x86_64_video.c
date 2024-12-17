@@ -19,6 +19,9 @@ typedef struct x86_64_video {
 	SDL_Renderer* renderer;
 	bool draw_extra_info;
 	SDL_BlendMode blendMode;
+    
+    // Base clut starting address
+    uint16_t *clut_base;
 
 	// Original buffers containing clut indexes
 	uint8_t *scrbitmap;
@@ -221,6 +224,12 @@ static void x86_64_setMode(void *data, int mode)
 		x86_64_start(data);
 	}
 #endif
+}
+
+static void x86_64_setClutBaseAddr(void *data, uint16_t *clut_base)
+{
+	x86_64_video_t *x86_64 = (x86_64_video_t*)data;
+	x86_64->clut_base = clut_base;
 }
 
 /*--------------------------------------------------------
@@ -448,12 +457,19 @@ static void x86_64_blitTexture(void *data, enum WorkBuffer buffer, void *clut, u
 	}
 }
 
+static void x86_64_uploadMem(void *data, enum WorkBuffer buffer) {
+}
+
+static void x86_64_uploadClut(void *data, uint16_t *bank, uint8_t bank_index) {
+}
+
 
 video_driver_t video_x86_64 = {
 	"x86_64",
 	x86_64_init,
 	x86_64_free,
 	x86_64_setMode,
+	x86_64_setClutBaseAddr,
 	x86_64_waitVsync,
 	x86_64_flipScreen,
 	x86_64_frameAddr,
@@ -467,7 +483,7 @@ video_driver_t video_x86_64 = {
 	x86_64_copyRectRotate,
 	x86_64_drawTexture,
 	x86_64_getNativeObjects,
-	NULL,
-	NULL,
+	x86_64_uploadMem,
+	x86_64_uploadClut,
 	x86_64_blitTexture,
 };

@@ -30,6 +30,8 @@ static int pixel_format;
 ******************************************************************************/
 
 typedef struct psp_video {
+	// Base clut starting address
+	uint16_t *clut_base;
 } psp_video_t;
 
 /*--------------------------------------------------------
@@ -150,6 +152,12 @@ static void psp_setMode(void *data, int mode)
 		psp_start(data);
 	}
 #endif
+}
+
+static void psp_setClutBaseAddr(void *data, uint16_t *clut_base)
+{
+	psp_video_t *psp = (psp_video_t*)data;
+	psp->clut_base = clut_base;
 }
 
 /*--------------------------------------------------------
@@ -524,6 +532,12 @@ static void *psp_getNativeObjects(void *data, int index) {
 	return NULL;
 }
 
+static void psp_uploadMem(void *data, enum WorkBuffer buffer) {
+}
+
+static void psp_uploadClut(void *data, uint16_t *bank, uint8_t bank_index) {
+}
+
 static void psp_blitTexture(void *data, enum WorkBuffer buffer, void *clut, uint8_t clut_index, uint32_t vertices_count, void *vertices) {
 	uint8_t *tex_fix = psp_workFrame(data, buffer);
 	sceGuStart(GU_DIRECT, gulist);
@@ -544,6 +558,7 @@ video_driver_t video_psp = {
 	psp_init,
 	psp_free,
 	psp_setMode,
+	psp_setClutBaseAddr,
 	psp_waitVsync,
 	psp_flipScreen,
 	psp_frameAddr,
@@ -557,7 +572,7 @@ video_driver_t video_psp = {
 	psp_copyRectRotate,
 	psp_drawTexture,
 	psp_getNativeObjects,
-	NULL,
-	NULL,
+	psp_uploadMem,
+	psp_uploadClut,
 	psp_blitTexture,
 };

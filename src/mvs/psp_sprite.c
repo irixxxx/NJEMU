@@ -431,6 +431,7 @@ void blit_reset(void)
 	clip_min_y = FIRST_VISIBLE_LINE;
 	clip_max_y = LAST_VISIBLE_LINE;
 
+	video_driver->setClutBaseAddr(video_data, (uint16_t *)&video_palettebank);
 	clut = (uint16_t *)PSP_UNCACHE_PTR(&video_palettebank[palette_bank]);
 	clut_index = palette_bank;
 
