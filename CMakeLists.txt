@@ -273,4 +273,14 @@ endif()
 target_link_libraries(${TARGET} PUBLIC
     z
 )
-        
+       
+# Create the PBP file for PSP
+if(PLATFORM STREQUAL "PSP")
+    create_pbp_file(
+        TARGET ${TARGET}
+        ICON_PATH NULL
+        BACKGROUND_PATH NULL
+        PREVIEW_PATH NULL
+        TITLE "${TARGET}"
+    )
+endif()
