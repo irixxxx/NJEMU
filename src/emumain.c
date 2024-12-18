@@ -444,6 +444,25 @@ void save_snapshot(void)
 
 int main(int argc, char *argv[]) {
 	printf("===> %s, %s:%i\n", __FUNCTION__, __FILE__, __LINE__);
+    // Some default values
+    option_speedlimit = 1;
+    // option_vsync = 1;
+    option_showfps = 1;
+
+	input_map[P1_UP] = PLATFORM_PAD_UP;
+	input_map[P1_DOWN] = PLATFORM_PAD_DOWN;
+	input_map[P1_LEFT] = PLATFORM_PAD_LEFT;
+	input_map[P1_RIGHT] = PLATFORM_PAD_RIGHT;
+	input_map[P1_BUTTONA] = PLATFORM_PAD_B1;
+	input_map[P1_BUTTONB] = PLATFORM_PAD_B2;
+	input_map[P1_BUTTONC] = PLATFORM_PAD_B3;
+	input_map[P1_BUTTOND] = PLATFORM_PAD_B4;
+	input_map[P1_START] = PLATFORM_PAD_START;
+	input_map[P1_COIN] = PLATFORM_PAD_SELECT;
+
+
+    
+    // Init process
 	platform_data = platform_driver->init();
 	ticker_data = ticker_driver->init();
 	power_data = power_driver->init();
