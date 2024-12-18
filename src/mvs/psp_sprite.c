@@ -564,7 +564,6 @@ void blit_finish_fix(void)
 
 void blit_draw_spr(int x, int y, int w, int h, uint32_t code, uint16_t attr)
 {
-	printf("blit_draw_spr(%i, %i, %i, %i, %i, %i)\n", x, y, w, h, code, attr);
 	int16_t idx;
 	struct Vertex *vertices;
 	uint32_t key;

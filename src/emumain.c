@@ -265,7 +265,7 @@ void update_screen(void)
 				}
 			}
 
-			usSleep(target - curr);
+			if (target > curr) usSleep(target - curr);
 			curr = ticker_driver->currentUs(ticker_data);
 		}
 		if (!flip) video_driver->flipScreen(video_data, 0);
