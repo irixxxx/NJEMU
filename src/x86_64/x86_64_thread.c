@@ -2,17 +2,24 @@
 #include <stdlib.h>
 #include "common/thread_driver.h"
 
+#include <SDL.h>
+
 typedef struct x86_64_thread {
-	int32_t threadId;
-	void *endfunc;
-	void (*threadFunc)(void *);
+    SDL_Thread *thread;
+    SDL_sem *start;
+    SDL_sem *end;
+    int32_t (*threadFunc)(uint32_t, void *);
 } x86_64_thread_t;
 
 
 static int childThread(void *arg)
 {
+    int32_t res;
     x86_64_thread_t *x86_64 = (x86_64_thread_t *)arg;
-    return 0;
+    SDL_SemWait(x86_64->start);
+    res = x86_64->threadFunc(0, NULL);
+    SDL_SemPost(x86_64->end);
+    return res;
 }
 
 static void *x86_64_init(void) {
@@ -27,17 +34,22 @@ static void x86_64_free(void *data) {
 
 static bool x86_64_createThread(void *data, const char *name, int32_t (*threadFunc)(u_int32_t, void *), uint32_t priority, uint32_t stackSize) {
 	x86_64_thread_t *x86_64 = (x86_64_thread_t*)data;
-    x86_64->threadId = 1;
+    x86_64->threadFunc = threadFunc;
+    x86_64->start = SDL_CreateSemaphore(0);
+    x86_64->end = SDL_CreateSemaphore(0);
+    x86_64->thread = SDL_CreateThreadWithStackSize(childThread, name, stackSize, x86_64);
 
-	return x86_64->threadId >= 0;
+	return x86_64->thread != NULL;
 }
 
 static void x86_64_startThread(void *data) {
 	x86_64_thread_t *x86_64 = (x86_64_thread_t*)data;
+    SDL_SemPost(x86_64->start);
 }
 
 static void x86_64_waitThreadEnd(void *data) {
 	x86_64_thread_t *x86_64 = (x86_64_thread_t*)data;
+    SDL_SemPost(x86_64->end);
 }
 
 static void x86_64_wakeupThread(void *data) {

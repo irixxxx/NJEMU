@@ -3,48 +3,127 @@
 
 #include "common/audio_driver.h"
 
+#include <SDL.h>
+
 typedef struct x86_64_audio {
-	int32_t channel;
+    SDL_AudioDeviceID device;
+    SDL_AudioSpec spec;
+    SDL_AudioStream *stream;
 } x86_64_audio_t;
 
 static void *x86_64_init(void) {
 	x86_64_audio_t *x86_64 = (x86_64_audio_t*)calloc(1, sizeof(x86_64_audio_t));
+    SDL_Init(SDL_INIT_AUDIO);
 	return x86_64;
 }
 
 static void x86_64_free(void *data) {
 	x86_64_audio_t *x86_64 = (x86_64_audio_t*)data;
-
-	free(x86_64);
+    if (x86_64->device) {
+        SDL_CloseAudioDevice(x86_64->device);
+    }
+	
+    free(x86_64);
 }
 
 static int32_t x86_64_volumeMax(void *data) {
-	return 100;
+	return SDL_MIX_MAXVOLUME;
 }
 
-static bool x86_64_chSRCReserve(void *data, int32_t samples, int32_t freqency, int32_t channels) {
-	x86_64_audio_t *x86_64 = (x86_64_audio_t*)data;
+static bool x86_64_chSRCReserve(void *data, uint16_t samples, int32_t frequency, uint8_t channels) {
+    x86_64_audio_t *x86_64 = (x86_64_audio_t*)data;
 
-    x86_64->channel = 1;
-	return x86_64->channel >= 0;
+    SDL_AudioSpec desired, obtained;
+    SDL_memset(&desired, 0, sizeof(desired));
+    desired.freq = frequency;
+    desired.format = AUDIO_S16SYS; // Floating-point audio format
+    desired.channels = channels;
+    desired.samples = samples;
+    desired.callback = NULL; // No callback; we use blocking audio
+
+    x86_64->device = SDL_OpenAudioDevice(NULL, 0, &desired, &obtained, SDL_AUDIO_ALLOW_ANY_CHANGE);
+    if (x86_64->device == 0) {
+        fprintf(stderr, "Failed to open audio device: %s\n", SDL_GetError());
+        return false;
+    }
+
+    x86_64->spec = obtained;
+    
+    // Create an audio stream for sample conversion
+    x86_64->stream = SDL_NewAudioStream(AUDIO_S16SYS, channels, frequency,
+                                        obtained.format, obtained.channels, obtained.freq);
+    if (!x86_64->stream) {
+        fprintf(stderr, "Failed to create audio stream: %s\n", SDL_GetError());
+        SDL_CloseAudioDevice(x86_64->device);
+        return false;
+    }
+    
+//    SDL_PauseAudioDevice(x86_64->device, 0); // Start audio playback
+    return true;
 }
 
-static bool x86_64_chReserve(void *data, int32_t samplecount, int32_t channels) {
-	x86_64_audio_t *x86_64 = (x86_64_audio_t*)data;
-	// int32_t format = channels == 1 ? PS2_AUDIO_FORMAT_MONO : PS2_AUDIO_FORMAT_STEREO;
-	// x86_64->channel = sceAudioChReserve(PS2_AUDIO_NEXT_CHANNEL, samplecount, format);
-	// return x86_64->channel >= 0;
-	return false;
+static bool x86_64_chReserve(void *data, uint16_t samplecount, uint8_t channels) {
+    // This function may be redundant if `x86_64_chSRCReserve` handles initialization
+    return true;
 }
 
 static void x86_64_release(void *data) {
+    x86_64_audio_t *x86_64 = (x86_64_audio_t*)data;
+
+    if (x86_64->stream) {
+        SDL_FreeAudioStream(x86_64->stream);
+        x86_64->stream = NULL;
+    }
+
+    if (x86_64->device) {
+        SDL_CloseAudioDevice(x86_64->device);
+        x86_64->device = 0;
+    }
 }
 
-static void x86_64_srcOutputBlocking(void *data, int32_t volume, void *buffer) {
+static void x86_64_srcOutputBlocking(void *data, int32_t volume, void *buffer, size_t size) {
+    x86_64_audio_t *x86_64 = (x86_64_audio_t*)data;
+
+    if (!x86_64->device || !x86_64->stream) {
+        fprintf(stderr, "Audio device or stream not initialized\n");
+        return;
+    }
+    
+    int available = SDL_AudioStreamAvailable(x86_64->stream);
+
+    // Add data to the stream for conversion
+    if (SDL_AudioStreamPut(x86_64->stream, buffer, available) < 0) {
+        fprintf(stderr, "Failed to queue audio stream data: %s\n", SDL_GetError());
+        return;
+    }
+
+    SDL_AudioStreamFlush(x86_64->stream);
+
+    void *out_buffer = malloc(available);
+    int len = SDL_AudioStreamGet(x86_64->stream, out_buffer, SDL_AudioStreamAvailable(x86_64->stream));
+    if (len > 0) {
+        SDL_QueueAudio(x86_64->device, out_buffer, len);
+    }
+    free(out_buffer);
 }
 
 static void x86_64_outputPannedBlocking(void *data, int leftvol, int rightvol, void *buf) {
-	x86_64_audio_t *x86_64 = (x86_64_audio_t*)data;
+    // In a stereo configuration, pan the audio manually
+    x86_64_audio_t *x86_64 = (x86_64_audio_t*)data;
+
+    if (!x86_64->device || x86_64->spec.channels < 2) {
+        fprintf(stderr, "Audio device not initialized or not stereo\n");
+        return;
+    }
+
+    float *float_buffer = (float*)buf;
+    int samples = x86_64->spec.samples * x86_64->spec.channels;
+    for (int i = 0; i < samples; i += 2) {
+        float_buffer[i] *= (leftvol / 100.0f);
+        float_buffer[i + 1] *= (rightvol / 100.0f);
+    }
+
+    SDL_QueueAudio(x86_64->device, float_buffer, samples * sizeof(float));
 }
 
 audio_driver_t audio_x86_64 = {

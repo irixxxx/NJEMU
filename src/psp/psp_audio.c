@@ -21,13 +21,13 @@ static int32_t psp_volumeMax(void *data) {
 	return PSP_AUDIO_VOLUME_MAX;
 }
 
-static bool psp_chSRCReserve(void *data, int32_t samples, int32_t freqency, int32_t channels) {
+static bool psp_chSRCReserve(void *data, uint16_t samples, int32_t frequency, uint8_t channels) {
 	psp_audio_t *psp = (psp_audio_t*)data;
-	psp->channel = sceAudioSRCChReserve(samples, freqency, channels);
+	psp->channel = sceAudioSRCChReserve(samples, frequency, channels);
 	return psp->channel >= 0;
 }
 
-static bool psp_chReserve(void *data, int32_t samplecount, int32_t channels) {
+static bool psp_chReserve(void *data, uint16_t samplecount, uint8_t channels) {
 	psp_audio_t *psp = (psp_audio_t*)data;
 	int32_t format = channels == 1 ? PSP_AUDIO_FORMAT_MONO : PSP_AUDIO_FORMAT_STEREO;
 	psp->channel = sceAudioChReserve(PSP_AUDIO_NEXT_CHANNEL, samplecount, format);
@@ -35,10 +35,10 @@ static bool psp_chReserve(void *data, int32_t samplecount, int32_t channels) {
 }
 
 static void psp_release(void *data) {
-	sceAudioSRCChRelease();
+	psp_audio_t *psp = (psp_audio_t*)data;
 }
 
-static void psp_srcOutputBlocking(void *data, int32_t volume, void *buffer) {
+static void psp_srcOutputBlocking(void *data, int32_t volume, void *buffer, size_t size) {
 	sceAudioSRCOutputBlocking(volume, buffer);
 }
 

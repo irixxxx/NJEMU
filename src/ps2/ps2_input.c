@@ -104,36 +104,54 @@ static struct  JoyInfo *getFirstJoyInfo(uint32_t pad){
 	return NULL;	
 }
 
+static inline int16_t convert_u8_to_s16(uint8_t val)
+{
+    if (val == 0) {
+        return -0x7fff;
+    }
+    return val * 0x0101 - 0x8000;
+}
+
 static uint32_t basicPoll(struct padButtonStatus *paddata, bool exclusive) {
 	uint32_t data = 0;
+	int32_t state, pressed_buttons, ret;
 	struct JoyInfo *info = NULL;
 
 	info = getFirstJoyInfo(0);
 	if (info == NULL) {
 		return data;
 	}
-	// Read just first controller for now
-	if (padRead(info->port, info->slot, paddata) == 0) {
-		data |= (paddata->btns & PAD_UP) ? PLATFORM_PAD_UP : 0;
-		data |= (paddata->btns & PAD_DOWN) ? PLATFORM_PAD_DOWN : 0;
-		data |= (paddata->btns & PAD_LEFT) ? PLATFORM_PAD_LEFT : 0;
-		data |= (paddata->btns & PAD_RIGHT) ? PLATFORM_PAD_RIGHT : 0;
+	state = padGetState(info->port, info->slot);
+	if (state != PAD_STATE_DISCONN && state != PAD_STATE_EXECCMD && state != PAD_STATE_ERROR) {
+        ret = padRead(info->port, info->slot, paddata); // port, slot, buttons
+        if (ret != 0) {
+			// Buttons
+        	pressed_buttons = 0xffff ^ paddata->btns;
 
-		data |= (paddata->btns & PAD_CIRCLE) ? PLATFORM_PAD_B1 : 0;
-		data |= (paddata->btns & PAD_CROSS) ? PLATFORM_PAD_B2 : 0;
-		data |= (paddata->btns & PAD_SQUARE) ? PLATFORM_PAD_B3 : 0;
-		data |= (paddata->btns & PAD_TRIANGLE) ? PLATFORM_PAD_B4 : 0;
+			data |= (pressed_buttons & PAD_UP) ? PLATFORM_PAD_UP : 0;
+			data |= (pressed_buttons & PAD_DOWN) ? PLATFORM_PAD_DOWN : 0;
+			data |= (pressed_buttons & PAD_LEFT) ? PLATFORM_PAD_LEFT : 0;
+			data |= (pressed_buttons & PAD_RIGHT) ? PLATFORM_PAD_RIGHT : 0;
 
-		data |= (paddata->btns & PAD_L1) ? PLATFORM_PAD_L : 0;
-		data |= (paddata->btns & PAD_R1) ? PLATFORM_PAD_R : 0;
-		
-		data |= (paddata->btns & PAD_START) ? PLATFORM_PAD_START : 0;
-		data |= (paddata->btns & PAD_SELECT) ? PLATFORM_PAD_SELECT : 0;
+			data |= (pressed_buttons & PAD_CIRCLE) ? PLATFORM_PAD_B1 : 0;
+			data |= (pressed_buttons & PAD_CROSS) ? PLATFORM_PAD_B2 : 0;
+			data |= (pressed_buttons & PAD_SQUARE) ? PLATFORM_PAD_B3 : 0;
+			data |= (pressed_buttons & PAD_TRIANGLE) ? PLATFORM_PAD_B4 : 0;
 
-		if ((paddata->ljoy_v >= 0xd0) && !(exclusive && (paddata->btns & PAD_UP))) data |=  PLATFORM_PAD_DOWN;
-		if ((paddata->ljoy_v <= 0x30) && !(exclusive && (paddata->btns & PAD_DOWN))) data |=  PLATFORM_PAD_UP;
-		if ((paddata->ljoy_h <= 0x30) && !(exclusive && (paddata->btns & PAD_LEFT))) data |=  PLATFORM_PAD_LEFT;
-		if ((paddata->ljoy_h >= 0xd0) && !(exclusive && (paddata->btns & PAD_RIGHT))) data |=  PLATFORM_PAD_RIGHT;
+			data |= (pressed_buttons & PAD_L1) ? PLATFORM_PAD_L : 0;
+			data |= (pressed_buttons & PAD_R1) ? PLATFORM_PAD_R : 0;
+			
+			data |= (pressed_buttons & PAD_START) ? PLATFORM_PAD_START : 0;
+			data |= (pressed_buttons & PAD_SELECT) ? PLATFORM_PAD_SELECT : 0;
+
+			/* Analog */
+            if (paddata->ljoy_h || paddata->ljoy_v || paddata->rjoy_h || paddata->rjoy_v) {
+				if ((convert_u8_to_s16(paddata->ljoy_v) < 0) && !(exclusive && (pressed_buttons & PAD_UP))) data |=  PLATFORM_PAD_DOWN;
+				if ((convert_u8_to_s16(paddata->ljoy_v) > 0) && !(exclusive && (pressed_buttons & PAD_DOWN))) data |=  PLATFORM_PAD_UP;
+				if ((convert_u8_to_s16(paddata->ljoy_h) < 0) && !(exclusive && (pressed_buttons & PAD_LEFT))) data |=  PLATFORM_PAD_LEFT;
+				if ((convert_u8_to_s16(paddata->ljoy_h) > 0) && !(exclusive && (pressed_buttons & PAD_RIGHT))) data |=  PLATFORM_PAD_RIGHT;
+			}
+		}
 	}
 
 	return data;
