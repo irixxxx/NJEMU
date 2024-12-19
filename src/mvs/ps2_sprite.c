@@ -613,8 +613,11 @@ void blit_draw_spr(int x, int y, int w, int h, uint32_t code, uint16_t attr)
 	attr ^= 0x03;
 	uint32_t index_u = (attr & 0x01) >> 0;
 	uint32_t index_v = (attr & 0x02) >> 1;
-	u1 = (index_u ? u1 : u0) + 16;
-	v1 = (index_v ? v1 : v0) + 16;
+
+	u0 += index_u ? 0 : 16;
+	v0 += index_v ? 0 : 16;
+	u1 += index_u ? 16 : 0;
+	v1 += index_v ? 16 : 0;
 
 	GSGLOBAL *gsGlobal = video_driver->getNativeObjects(video_data, 0);
 	GSTEXTURE *atlas = video_driver->getNativeObjects(video_data, 2);
