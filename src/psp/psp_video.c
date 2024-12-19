@@ -225,6 +225,10 @@ static void *psp_workFrame(void *data, enum WorkBuffer buffer)
 	描画/表示フレームをクリア
 --------------------------------------------------------*/
 
+static void psp_clearScreenWithColor(void *data, u_int32_t color)
+{
+}
+
 static void psp_clearScreen(void *data)
 {
 	video_driver->clearFrame(data, show_frame);
@@ -563,6 +567,7 @@ video_driver_t video_psp = {
 	psp_flipScreen,
 	psp_frameAddr,
 	psp_workFrame,
+	psp_clearScreenWithColor,
 	psp_clearScreen,
 	psp_clearFrame,
 	psp_fillFrame,

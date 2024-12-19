@@ -455,7 +455,7 @@ void blit_start(int start, int end)
 		if (clear_spr_texture) blit_clear_spr_sprite();
 		if (clear_fix_texture) blit_clear_fix_sprite();
 
-		video_driver->clearScreen(video_data);
+		video_driver->clearScreenWithColor(video_data, CNVCOL15TO32(video_palette[4095]));
 	}
 }
 

@@ -333,10 +333,19 @@ static void *ps2_frameAddr(void *data, void *frame, int x, int y)
 	描画/表示フレームをクリア
 --------------------------------------------------------*/
 
-static void ps2_clearScreen(void *data)
+static void ps2_clearScreenWithColor(void *data, uint32_t color)
 {
 	ps2_video_t *ps2 = (ps2_video_t*)data;
-	gsKit_clear(ps2->gsGlobal, GS_BLACK);
+	uint8_t alpha = color >> 24;
+	uint8_t blue = color >> 16;
+	uint8_t green = color >> 8;
+	uint8_t red = color >> 0;
+	uint64_t ps2_color = GS_SETREG_RGBA(red, green, blue, alpha);
+	gsKit_clear(ps2->gsGlobal, ps2_color);
+}
+
+static void ps2_clearScreen(void *data) {
+	ps2_clearScreenWithColor(data, 0);
 }
 
 /*--------------------------------------------------------
@@ -770,6 +779,7 @@ video_driver_t video_ps2 = {
 	ps2_flipScreen,
 	ps2_frameAddr,
 	ps2_workFrame,
+	ps2_clearScreenWithColor,
 	ps2_clearScreen,
 	ps2_clearFrame,
 	ps2_fillFrame,

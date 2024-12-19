@@ -285,10 +285,20 @@ static void *x86_64_workFrame(void *data, enum WorkBuffer buffer)
 	描画/表示フレームをクリア
 --------------------------------------------------------*/
 
-static void x86_64_clearScreen(void *data)
+
+static void x86_64_clearScreenWithColor(void *data, uint32_t color)
 {
 	x86_64_video_t *x86_64 = (x86_64_video_t*)data;
+    uint8_t alpha = color >> 24;
+    uint8_t blue = color >> 16;
+    uint8_t green = color >> 8;
+    uint8_t red = color >> 0;
+    SDL_SetRenderDrawColor(x86_64->renderer, red, green, blue, alpha);
 	SDL_RenderClear(x86_64->renderer);
+}
+
+static void x86_64_clearScreen(void *data) {
+    x86_64_clearScreenWithColor(data, 0);
 }
 
 /*--------------------------------------------------------
@@ -474,6 +484,7 @@ video_driver_t video_x86_64 = {
 	x86_64_flipScreen,
 	x86_64_frameAddr,
 	x86_64_workFrame,
+    x86_64_clearScreenWithColor,
 	x86_64_clearScreen,
 	x86_64_clearFrame,
 	x86_64_fillFrame,
