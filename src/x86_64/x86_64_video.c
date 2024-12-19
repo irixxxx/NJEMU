@@ -11,8 +11,8 @@
 #include <stdlib.h>
 #include <SDL.h>
 
-#define OUTPUT_WIDTH 352
-#define OUTPUT_HEIGHT 280
+#define OUTPUT_WIDTH 312
+#define OUTPUT_HEIGHT 232
 
 typedef struct x86_64_video {
 	SDL_Window* window;
@@ -90,6 +90,17 @@ static void x86_64_start(void *data) {
 	SDL_SetTextureBlendMode(x86_64->sdl_texture_tex_spr1, x86_64->blendMode);
 	SDL_SetTextureBlendMode(x86_64->sdl_texture_tex_spr2, x86_64->blendMode);
 	SDL_SetTextureBlendMode(x86_64->sdl_texture_tex_fix, x86_64->blendMode);
+    
+    SDL_Rect clipRect = {
+        24,
+        0,
+        304,
+        248,
+    };
+    SDL_RenderSetClipRect(x86_64->renderer, &clipRect);
+    
+    SDL_Rect viewport = { -20, -16, 328, 248 }; // x, y, width, height
+    SDL_RenderSetViewport(x86_64->renderer, &viewport);
 
 	ui_init();
 }
@@ -412,6 +423,8 @@ static SDL_Texture *x86_64_getTexture(void *data, enum WorkBuffer buffer) {
 	}
 }
 
+#define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
+
 static void x86_64_blitTexture(void *data, enum WorkBuffer buffer, void *clut, uint8_t clut_index, uint32_t vertices_count, void *vertices) {
 	// We need to transform the texutres saved that uses clut into a SDL texture compatible format
 	SDL_Point size;
@@ -442,6 +455,8 @@ static void x86_64_blitTexture(void *data, enum WorkBuffer buffer, void *clut, u
 	// Unlock texture
 	SDL_UnlockTexture(texture);
 
+    SDL_Rect dst_rect, src_rect;
+    SDL_RendererFlip horizontalFlip, verticalFlip;
 	// Render Geometry expect to receive a SDL_Vertex array and it is using triangles
 	// however x86_64_blitTexture receives a SDL_Vertex array using 2 vertex per sprite
 	// so we are going to use SDL_RenderCopy to render all the sprites
@@ -449,21 +464,21 @@ static void x86_64_blitTexture(void *data, enum WorkBuffer buffer, void *clut, u
 		struct Vertex *vertex1 = &vertexs[i];
 		struct Vertex *vertex2 = &vertexs[i + 1];
 
-		SDL_Rect dst_rect = { 
-			vertex1->x,
-			vertex1->y,
-			vertex2->x - vertex1->x,
-			vertex2->y - vertex1->y
-		};
-		SDL_Rect src_rect = { 
-			vertex1->u,
-			vertex1->v,
-			vertex2->u - vertex1->u,
-			vertex2->v - vertex1->v
-		};
-
+        dst_rect.x = vertex1->x;
+        dst_rect.y = vertex1->y;
+        dst_rect.w = abs(vertex2->x - vertex1->x);
+        dst_rect.h = abs(vertex2->y - vertex1->y);
+        
+        src_rect.x = MIN(vertex1->u, vertex2->u);
+        src_rect.y = MIN(vertex1->v, vertex2->v);
+        src_rect.w = abs(vertex2->u - vertex1->u);
+        src_rect.h = abs(vertex2->v - vertex1->v);
+        
+        horizontalFlip = vertex1->u > vertex2->u ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
+        verticalFlip = vertex1->v > vertex2->v ? SDL_FLIP_VERTICAL : SDL_FLIP_NONE;
+        
 		// Render the sprite
-		SDL_RenderCopy(x86_64->renderer, texture, &src_rect, &dst_rect);
+        SDL_RenderCopyEx(x86_64->renderer, texture, &src_rect, &dst_rect, 0, NULL, horizontalFlip | verticalFlip);
 	}
 }
 
