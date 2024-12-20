@@ -73,33 +73,33 @@ void m68000_init(void)
 	C68k_Set_WriteB(&C68K, m68000_write_memory_8);
 	C68k_Set_WriteW(&C68K, m68000_write_memory_16);
 #if (EMU_SYSTEM == CPS1)
-	C68k_Set_Fetch(&C68K, 0x000000, 0x1fffff, (uint32_t)memory_region_cpu1);
-	C68k_Set_Fetch(&C68K, 0x900000, 0x92ffff, (uint32_t)cps1_gfxram);
-	C68k_Set_Fetch(&C68K, 0xff0000, 0xffffff, (uint32_t)cps1_ram);
+	C68k_Set_Fetch(&C68K, 0x000000, 0x1fffff, (uintptr_t)memory_region_cpu1);
+	C68k_Set_Fetch(&C68K, 0x900000, 0x92ffff, (uintptr_t)cps1_gfxram);
+	C68k_Set_Fetch(&C68K, 0xff0000, 0xffffff, (uintptr_t)cps1_ram);
 #elif (EMU_SYSTEM == CPS2)
 	if (memory_length_user1)
-		C68k_Set_Fetch(&C68K, 0x000000, 0x3fffff, (uint32_t)memory_region_user1);
+		C68k_Set_Fetch(&C68K, 0x000000, 0x3fffff, (uintptr_t)memory_region_user1);
 	else
-		C68k_Set_Fetch(&C68K, 0x000000, 0x3fffff, (uint32_t)memory_region_cpu1);
-	C68k_Set_Fetch(&C68K, 0x660000, 0x663fff, (uint32_t)cps2_ram);
-	C68k_Set_Fetch(&C68K, 0x900000, 0x92ffff, (uint32_t)cps1_gfxram);
-	C68k_Set_Fetch(&C68K, 0xff0000, 0xffffff, (uint32_t)cps1_ram);
+		C68k_Set_Fetch(&C68K, 0x000000, 0x3fffff, (uintptr_t)memory_region_cpu1);
+	C68k_Set_Fetch(&C68K, 0x660000, 0x663fff, (uintptr_t)cps2_ram);
+	C68k_Set_Fetch(&C68K, 0x900000, 0x92ffff, (uintptr_t)cps1_gfxram);
+	C68k_Set_Fetch(&C68K, 0xff0000, 0xffffff, (uintptr_t)cps1_ram);
 	if (memory_length_user1)
 	{
 		C68k_Set_ReadB_PC_Relative(&C68K, m68000_read_pcrelative_8);
 		C68k_Set_ReadW_PC_Relative(&C68K, m68000_read_pcrelative_16);
 	}
 #elif (EMU_SYSTEM == MVS)
-	C68k_Set_Fetch(&C68K, 0x000000, 0x0fffff, (uint32_t)memory_region_cpu1);
-	C68k_Set_Fetch(&C68K, 0x100000, 0x10ffff, (uint32_t)neogeo_ram);
+	C68k_Set_Fetch(&C68K, 0x000000, 0x0fffff, (uintptr_t)memory_region_cpu1);
+	C68k_Set_Fetch(&C68K, 0x100000, 0x10ffff, (uintptr_t)neogeo_ram);
 	if (memory_length_cpu1 > 0x100000)
-		C68k_Set_Fetch(&C68K, 0x200000, 0x2fffff, (uint32_t)&memory_region_cpu1[0x100000]);
+		C68k_Set_Fetch(&C68K, 0x200000, 0x2fffff, (uintptr_t)&memory_region_cpu1[0x100000]);
 	else
-		C68k_Set_Fetch(&C68K, 0x200000, 0x2fffff, (uint32_t)memory_region_cpu1);
-	C68k_Set_Fetch(&C68K, 0xc00000, 0xc00000 + (memory_length_user1 - 1), (uint32_t)memory_region_user1);
+		C68k_Set_Fetch(&C68K, 0x200000, 0x2fffff, (uintptr_t)memory_region_cpu1);
+	C68k_Set_Fetch(&C68K, 0xc00000, 0xc00000 + (memory_length_user1 - 1), (uintptr_t)memory_region_user1);
 #elif (EMU_SYSTEM == NCDZ)
-	C68k_Set_Fetch(&C68K, 0x000000, 0x1fffff, (uint32_t)memory_region_cpu1);
-	C68k_Set_Fetch(&C68K, 0xc00000, 0xc7ffff, (uint32_t)memory_region_user1);
+	C68k_Set_Fetch(&C68K, 0x000000, 0x1fffff, (uintptr_t)memory_region_cpu1);
+	C68k_Set_Fetch(&C68K, 0xc00000, 0xc7ffff, (uintptr_t)memory_region_user1);
 	C68k_Reset(&C68K);
 #endif
 }
@@ -203,7 +203,7 @@ void m68000_set_irq_line(int irqline, int state)
 	割り込みコールバック関数設定
 --------------------------------------------------------*/
 
-void m68000_set_irq_callback(int (*callback)(int line))
+void m68000_set_irq_callback(int32_t (*callback)(int32_t irqline))
 {
 	C68k_Set_IRQ_Callback(&C68K, callback);
 }

@@ -25,15 +25,18 @@
 	グローバル構造体
 ******************************************************************************/
 
-c68k_struc ALIGN_DATA C68K;
-
+c68k_struc C68K;
+int32_t m68000_ICountBk;
+int32_t ICount;
+uint32_t BusErrHandling = 0;
+uint32_t BusErrAdr = 0;
 
 /******************************************************************************
 	ローカル変数
 ******************************************************************************/
 
-static void ALIGN_DATA *JumpTable[0x10000];
-static uint8_t ALIGN_DATA c68k_bad_address[1 << C68K_FETCH_SFT];
+static void *JumpTable[0x10000];
+static uint8_t c68k_bad_address[1 << C68K_FETCH_SFT];
 
 
 /******************************************************************************
@@ -79,7 +82,7 @@ void C68k_Init(c68k_struc *CPU)
 	memset(c68k_bad_address, 0xff, sizeof(c68k_bad_address));
 
 	for (i = 0; i < C68K_FETCH_BANK; i++)
-		CPU->Fetch[i] = (uint32_t)c68k_bad_address;
+		CPU->Fetch[i] = (uintptr_t)c68k_bad_address;
 
 	C68k_Exec(NULL, 0);
 }
@@ -93,7 +96,7 @@ void C68k_Reset(c68k_struc *CPU)
 {
 	uint32_t PC;
 
-	memset(CPU, 0, (uint32_t)&CPU->BasePC - (uint32_t)CPU);
+	memset(CPU, 0, (uintptr_t)&CPU->BasePC - (uintptr_t)CPU);
 
 	CPU->flag_I = 7;
 	CPU->flag_S = C68K_SR_S;
@@ -109,16 +112,19 @@ void C68k_Reset(c68k_struc *CPU)
 	CPU実行
 --------------------------------------------------------*/
 
+extern uint32_t BusErrHandling;
+extern uint32_t BusErrAdr;
+
 int32_t C68k_Exec(c68k_struc *CPU, int32_t cycles)
 {
 	if (CPU)
 	{
-		uint32_t PC;
+		uintptr_t PC;
 		uint32_t Opcode;
 		uint32_t adr;
 		uint32_t res;
-		uint32_t src;
-		uint32_t dst;
+		uintptr_t src;
+		uintptr_t dst;
 
 		PC = CPU->PC;
 		CPU->ICount = cycles;
@@ -131,6 +137,22 @@ C68k_Check_Interrupt:
 C68k_Exec_Next:
 			if (CPU->ICount > 0)
 			{
+
+				if (BusErrHandling) {
+					printf("BusError occured\n");
+					SWAP_SP();
+					PUSH_32_F(GET_PC() - 2);
+					PUSH_16_F(GET_SR());
+					CPU->A[7] -= 2;
+					PUSH_32_F(BusErrAdr);
+					CPU->A[7] -= 2;
+					CPU->flag_S = C68K_SR_S;
+					PC = READ_MEM_32((C68K_BUS_ERROR_EX) << 2);
+					SET_PC(PC);
+					BusErrHandling = 0;
+				}
+
+
 				Opcode = READ_IMM_16();
 				PC += 2;
 				goto *JumpTable[Opcode];
@@ -179,7 +201,7 @@ uint32_t C68k_Get_Reg(c68k_struc *CPU, int32_t regnum)
 {
 	switch (regnum)
 	{
-	case C68K_PC:  return (CPU->PC - CPU->BasePC);
+	case C68K_PC:  return (uint32_t)(CPU->PC - CPU->BasePC);
 	case C68K_USP: return (CPU->flag_S ? CPU->USP : CPU->A[7]);
 	case C68K_MSP: return (CPU->flag_S ? CPU->A[7] : CPU->USP);
 	case C68K_SR:  return GET_SR();
@@ -255,7 +277,7 @@ void C68k_Set_Reg(c68k_struc *CPU, int32_t regnum, uint32_t val)
 	フェッチアドレス設定
 --------------------------------------------------------*/
 
-void C68k_Set_Fetch(c68k_struc *CPU, uint32_t low_adr, uint32_t high_adr, uint32_t fetch_adr)
+void C68k_Set_Fetch(c68k_struc *CPU, uint32_t low_adr, uint32_t high_adr, uintptr_t fetch_adr)
 {
 	uint32_t i, j;
 
