@@ -8,9 +8,12 @@
 
 #include <fcntl.h>
 #include <zlib.h>
+#include <ctype.h>
 #include <psptypes.h>
 #include <pspwlan.h>
 #include "emumain.h"
+
+void swab(const void *restrict src, void *restrict dest, ssize_t nbytes);
 
 #define MAX_ENTRY 1024
 #define MAX_GAMES 512

@@ -9,6 +9,7 @@
 #include <fcntl.h>
 #include "mvs.h"
 
+void swab(const void *restrict src, void *restrict dest, ssize_t nbytes);
 
 /******************************************************************************
 	¥°¥í©`¥Ð¥ë‰äÊý
@@ -227,15 +228,15 @@ static void apply_cheat()
     if( a_cheat_option == NULL)
 		break; //seguro
 
-		//Se ejecutan todos los value del cheat option
-		for(  j = 0; j< a_cheat_option->num_cheat_values; j++)
-		{
-		a_cheat_value = a_cheat_option->cheat_value[j];
-			if( a_cheat_value == NULL)
-				break;//seguro
-				m68000_write_memory_8(a_cheat_value->address,  a_cheat_value->value);
+	//Se ejecutan todos los value del cheat option
+	for(  j = 0; j< a_cheat_option->num_cheat_values; j++)
+	{
+	a_cheat_value = a_cheat_option->cheat_value[j];
+		if( a_cheat_value == NULL)
+			break;//seguro
+		m68000_write_memory_8(a_cheat_value->address,  a_cheat_value->value);
 
-		}
+	}
     }
 }
 

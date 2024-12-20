@@ -17,9 +17,9 @@ static void psp_free(void *data) {
 	free(psp);
 }
 
-static bool psp_createThread(void *data, const char *name, void (*threadFunc)(void *), uint32_t priority, uint32_t stackSize) {
+static bool psp_createThread(void *data, const char *name, int32_t (*threadFunc)(uint32_t, void *), uint32_t priority, uint32_t stackSize) {
 	psp_thread_t *psp = (psp_thread_t*)data;
-	psp->threadId = sceKernelCreateThread(name, threadFunc, priority, stackSize, 0, NULL);
+	psp->threadId = sceKernelCreateThread(name, (SceKernelThreadEntry)threadFunc, priority, stackSize, 0, NULL);
 	return psp->threadId >= 0;
 }
 

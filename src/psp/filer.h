@@ -18,6 +18,5 @@ void delete_files(const char *dirname, const char *pattern);
 void find_state_file(uint8_t *slot);
 #endif
 void show_exit_screen(void);
-void file_browser(void);
 
 #endif /* PSP_FILEBROWSER_H */

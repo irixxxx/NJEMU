@@ -21,7 +21,7 @@ typedef struct thread_driver
 	void *(*init)(void);
 	/* Stops and frees driver data. */
    	void (*free)(void *data);
-	bool (*createThread)(void *data, const char *name, void (*threadFunc)(void *), uint32_t priority, uint32_t stackSize);
+	bool (*createThread)(void *data, const char *name, int32_t (*threadFunc)(uint32_t, void *), uint32_t priority, uint32_t stackSize);
 	void (*startThread)(void *data);
 	void (*waitThreadEnd)(void *data);
 	void (*wakeupThread)(void *data);

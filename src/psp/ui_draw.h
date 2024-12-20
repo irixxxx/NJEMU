@@ -93,23 +93,6 @@ int gbk_s14_get_gryph(struct font_t *font, uint16_t code);
 
 
 /*------------------------------------------------------
-	�ե�����軭��ȡ�� (��`�����󥿥ե��`����)
-------------------------------------------------------*/
-
-int uifont_get_string_width(const char *s);
-
-
-/*------------------------------------------------------
-	�ե�����軭 (��`�����󥿥ե��`����)
-------------------------------------------------------*/
-
-void uifont_print(int sx, int sy, int r, int g, int b, const char *s);
-void uifont_print_center(int sy, int r, int g, int b, const char *s);
-void uifont_print_shadow(int sx, int sy, int r, int g, int b, const char *s);
-void uifont_print_shadow_center(int sy, int r, int g, int b, const char *s);
-
-
-/*------------------------------------------------------
 	�ե�����軭 (�ƥ����ȱ�ʾ��)
 ------------------------------------------------------*/
 
@@ -123,7 +106,6 @@ void textfont_print(int sx, int sy, int r, int g, int b, const char *s, int flag
 ------------------------------------------------------*/
 
 void small_icon(int sx, int sy, int r, int g, int b, int no);
-void small_icon_shadow(int sx, int sy, int r, int g, int b, int no);
 void small_icon_light(int sx, int sy, int r, int g, int b, int no);
 
 void large_icon(int sx, int sy, int r, int g, int b, int no);
@@ -144,9 +126,6 @@ void draw_volume(int volume);
 	�ե�����軭 (���`�໭����)
 ------------------------------------------------------*/
 
-void small_font_print(int sx, int sy, const char *s, int bg);
-void small_font_printf(int x, int y, const char *text, ...);
-
 void debug_font_printf(void *frame, int x, int y, const char *text, ...);
 
 
@@ -165,7 +144,6 @@ void vline_gradation(int x, int sy, int ey, int r1, int g1, int b1, int r2, int 
 void box(int sx, int sy, int ex, int ey, int r, int g, int b);
 
 void boxfill(int sx, int sy, int ex, int ey, int r, int g, int b);
-void boxfill_alpha(int sx, int sy, int ex, int ey, int r, int g, int b, int alpha);
 void boxfill_gradation(int sx, int sy, int ex, int ey, int r1, int g1, int b1, int r2, int g2, int b2, int alpha, int dir);
 
 void draw_bar_shadow(void);

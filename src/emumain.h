@@ -16,7 +16,9 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <malloc.h>
+#include <stdlib.h>
+#include "emucfg.h"
+#include "main_ui_draw.h"
 
 #ifndef MAX_PATH
 #define MAX_PATH 256

@@ -8,6 +8,7 @@
 
 #include "ncdz.h"
 
+void swab(const void *restrict src, void *restrict dest, ssize_t nbytes);
 
 #define IRQ1CTRL_ENABLE				0x10
 #define IRQ1CTRL_LOAD_RELATIVE		0x20

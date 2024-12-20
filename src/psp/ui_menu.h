@@ -2,7 +2,7 @@
 
 	ui_menu.c
 
-	PSP ¥á¥Ë¥å©`
+	PSP ï¿½ï¿½Ë¥ï¿½`
 
 ******************************************************************************/
 
@@ -17,7 +17,6 @@
 #define VRAM_FMT	GU_PSM_5551
 #endif
 
-void showmenu(void);
 #if VIDEO_32BPP
 void show_color_menu(void);
 #endif

@@ -212,11 +212,10 @@ input_driver_t input_null = {
 	NULL,
 	NULL,
 	NULL,
+#if (EMU_SYSTEM == MVS)
 	NULL,
 	NULL,
-	NULL,
-	NULL,
-	NULL,
+#endif
 };
 
 input_driver_t *input_drivers[] = {

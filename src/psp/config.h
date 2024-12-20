@@ -11,7 +11,5 @@
 
 void load_settings(void);
 void save_settings(void);
-void load_gamecfg(const char *name);
-void save_gamecfg(const char *name);
 
 #endif /* PSP_CONFIG_H */

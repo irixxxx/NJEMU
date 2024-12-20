@@ -459,7 +459,7 @@ static uint32_t read_cache_zipfile(uint32_t offset)
 	キャッシュを使用しない、または全て読み込んだ場合。
 ------------------------------------------------------*/
 
-static void update_cache_disable(uint32_t offset)
+static inline void update_cache_disable(uint32_t offset)
 {
 }
 
@@ -471,7 +471,7 @@ static void update_cache_disable(uint32_t offset)
 	キャッシュを管理しない場合は不要。
 ------------------------------------------------------*/
 
-static void update_cache_dynamic(uint32_t offset)
+static inline void update_cache_dynamic(uint32_t offset)
 {
 	int16_t new_block = offset >> BLOCK_SHIFT;
 	int idx = blocks[new_block];

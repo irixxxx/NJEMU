@@ -276,7 +276,7 @@ static void MP3Update(void)
 	MP3ƒXƒŒƒbƒh
 --------------------------------------------------------*/
 
-static int MP3Thread(int32_t args, void *argp)
+static int32_t MP3Thread(uint32_t args, void *argp)
 {
 	while (mp3_active)
 	{

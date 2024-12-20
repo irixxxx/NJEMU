@@ -182,8 +182,8 @@ static void update_inputport0(void)
 	switch (neogeo_ngh)
 	{
 	case NGH_irrmaze:
-		{
 		if (!option_controller)
+		{
 			if (input_flag[P1_UP])      value &= ~0x01;
 			if (input_flag[P1_DOWN])    value &= ~0x02;
 			if (input_flag[P1_LEFT])    value &= ~0x04;
@@ -191,6 +191,7 @@ static void update_inputport0(void)
 			if (input_flag[P1_BUTTONA]) value &= ~0x10;
 			if (input_flag[P1_BUTTONB]) value &= ~0x20;
 		}
+		break;
 
 	case NGH_popbounc:
 		if (!option_controller)

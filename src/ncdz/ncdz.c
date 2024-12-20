@@ -8,6 +8,7 @@
 
 #include "ncdz.h"
 
+void swab(const void *restrict src, void *restrict dest, ssize_t nbytes);
 
 /******************************************************************************
 	¥°¥í©`¥Ð¥ë‰äÊý
