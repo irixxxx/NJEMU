@@ -124,3 +124,7 @@ hbl/multi language support: 173210
 mame team
 
 and NJ's emulator
+
+
+---------------------------------------------
+Starting crossplatform support for NJEmu 2.3.5
