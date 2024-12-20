@@ -459,7 +459,7 @@ static uint32_t read_cache_zipfile(uint32_t offset)
 	キャッシュを使用しない、または全て読み込んだ場合。
 ------------------------------------------------------*/
 
-static void update_cache_disable(uint32_t offset)
+static inline void update_cache_disable(uint32_t offset)
 {
 }
 
@@ -471,7 +471,7 @@ static void update_cache_disable(uint32_t offset)
 	キャッシュを管理しない場合は不要。
 ------------------------------------------------------*/
 
-static void update_cache_dynamic(uint32_t offset)
+static inline void update_cache_dynamic(uint32_t offset)
 {
 	int16_t new_block = offset >> BLOCK_SHIFT;
 	int idx = blocks[new_block];
@@ -591,7 +591,7 @@ int cache_start(void)
 	{
 		if ((pcm_fd = cachefile_open(CACHE_VROM)) >= 0)
 		{
-			if ((memory_region_sound1 = memalign(MEM_ALIGN, MAX_PCM_SIZE * BLOCK_SIZE)) != NULL)
+			if ((memory_region_sound1 = malloc(MAX_PCM_SIZE * BLOCK_SIZE)) != NULL)
 			{
 				pcm_cache_enable = 1;
 				disable_sound = 0;
@@ -705,10 +705,10 @@ int cache_start(void)
 		return 0;
 	}
 
-	if ((GFX_MEMORY = (uint8_t *)memalign(MEM_ALIGN, GFX_SIZE + CACHE_SAFETY)) != NULL)
+	if ((GFX_MEMORY = (uint8_t *)malloc(GFX_SIZE + CACHE_SAFETY)) != NULL)
 	{
 		free(GFX_MEMORY);
-		GFX_MEMORY = (uint8_t *)memalign(MEM_ALIGN, GFX_SIZE);
+		GFX_MEMORY = (uint8_t *)malloc(GFX_SIZE);
 		memset(GFX_MEMORY, 0, GFX_SIZE);
 
 		num_cache = GFX_SIZE >> 16;
@@ -741,7 +741,7 @@ int cache_start(void)
 		{
 			for (i = GFX_SIZE >> BLOCK_SHIFT; i >= MIN_CACHE_SIZE; i--)
 			{
-				if ((GFX_MEMORY = (uint8_t *)memalign(MEM_ALIGN, (i << BLOCK_SHIFT) + CACHE_SAFETY)) != NULL)
+				if ((GFX_MEMORY = (uint8_t *)malloc((i << BLOCK_SHIFT) + CACHE_SAFETY)) != NULL)
 				{
 					size = i << BLOCK_SHIFT;
 					free(GFX_MEMORY);
@@ -756,7 +756,7 @@ int cache_start(void)
 				return 0;
 			}
 
-			if ((GFX_MEMORY = (uint8_t *)memalign(MEM_ALIGN, size)) == NULL)
+			if ((GFX_MEMORY = (uint8_t *)malloc(size)) == NULL)
 			{
 				msg_printf(TEXT(COULD_NOT_ALLOCATE_CACHE_MEMORY));
 				return 0;

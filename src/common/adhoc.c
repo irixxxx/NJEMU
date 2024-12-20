@@ -41,7 +41,7 @@ static volatile int adhoc_active;
 	入力ポート送受信スレッド
 ------------------------------------------------------*/
 
-static int adhoc_update_inputport(int32_t args, void *argp)
+static int32_t adhoc_update_inputport(uint32_t args, void *argp)
 {
 	int error = 0;
 

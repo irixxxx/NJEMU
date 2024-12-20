@@ -42,7 +42,9 @@ void m68000_write_memory_32(uint32_t address, uint32_t value);
 uint8_t z80_read_memory_8(uint32_t address);
 void z80_write_memory_8(uint32_t address, uint8_t data);
 
+#ifdef SAVE_STATE
 STATE_SAVE( memory );
 STATE_LOAD( memory );
+#endif
 
 #endif /* NCDZ_MEMINTRF_H */

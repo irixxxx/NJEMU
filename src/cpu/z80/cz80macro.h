@@ -48,29 +48,16 @@
 #define READ_OP()			GET_OP(); PC++
 
 #define READ_ARG()			(*(uint8_t *)PC++)
-#if CZ80_LITTLE_ENDIAN
 #define READ_ARG16()		(*(uint8_t *)PC | (*(uint8_t *)(PC + 1) << 8)); PC += 2
-#else
-#define READ_ARG16()		(*(uint8_t *)(PC + 1) | (*(uint8_t *)PC << 8)); PC += 2
-#endif
 
 #ifndef BUILD_CPS1
 #define READ_MEM8(A)		memory_region_cpu2[(A)]
 #else
 #define READ_MEM8(A)		CPU->Read_Byte(A)
 #endif
-#if CZ80_LITTLE_ENDIAN
 #define READ_MEM16(A)		(READ_MEM8(A) | (READ_MEM8((A) + 1) << 8))
-#else
-#define READ_MEM16(A)		((READ_MEM8(A) << 8) | READ_MEM8((A) + 1))
-#endif
-
 #define WRITE_MEM8(A, D)	CPU->Write_Byte(A, D);
-#if CZ80_LITTLE_ENDIAN
 #define WRITE_MEM16(A, D)	{ WRITE_MEM8(A, D); WRITE_MEM8((A) + 1, (D) >> 8); }
-#else
-#define WRITE_MEM16(A, D)	{ WRITE_MEM8((A) + 1, D); WRITE_MEM8(A, (D) >> 8); }
-#endif
 
 #define PUSH_16(A)			{ uint32_t sp; zSP -= 2; sp = zSP; WRITE_MEM16(sp, A); }
 #define POP_16(A)			{ uint32_t sp; sp = zSP; A = READ_MEM16(sp); zSP = sp + 2; }
@@ -81,12 +68,12 @@
 #define CHECK_INT													\
 	if (zIFF1)														\
 	{																\
-		uint32_t IntVect;												\
+		uint32_t IntVect;											\
 																	\
 		if (CPU->IRQState == HOLD_LINE)								\
 			CPU->IRQState = CLEAR_LINE;								\
 																	\
-		CPU->HaltState = 0;											\
+		CPU->Status &= ~(CZ80_HALTED|CZ80_HAS_INT);					\
 		zIFF1 = zIFF2 = 0;											\
 		IntVect = CPU->Interrupt_Callback(CPU->IRQLine);			\
 																	\

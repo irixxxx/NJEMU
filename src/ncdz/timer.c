@@ -43,7 +43,7 @@ typedef struct timer_t
 typedef struct cpuinfo_t
 {
 	int  (*execute)(int cycles);
-	int  *icount;
+	int32_t  *icount;
 	int  cycles_per_usec;
 	int  cycles;
 	int  suspended;

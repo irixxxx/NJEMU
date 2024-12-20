@@ -314,7 +314,7 @@ static int build_zoom_tables(void)
 	uint8_t *tile_fullmode1;
 	int zoom_y;
 
-	if ((memory_region_user3 = memalign(MEM_ALIGN, 0x10000)) == NULL)
+	if ((memory_region_user3 = malloc(0x10000)) == NULL)
 	{
 		error_memory("REGION_USER3");
 		return 0;
@@ -526,7 +526,7 @@ static int load_rom_cpu1(void)
 	int i, res;
 	char fname[32], *parent;
 
-	if ((memory_region_cpu1 = memalign(MEM_ALIGN, memory_length_cpu1)) == NULL)
+	if ((memory_region_cpu1 = malloc(memory_length_cpu1)) == NULL)
 	{
 		error_memory("REGION_CPU1");
 		return 0;
@@ -633,7 +633,7 @@ static int load_rom_cpu2(void)
 	int i, res;
 	char fname[32], *parent;
 
-	if ((memory_region_cpu2 = memalign(MEM_ALIGN, memory_length_cpu2)) == NULL)
+	if ((memory_region_cpu2 = malloc(memory_length_cpu2)) == NULL)
 	{
 		error_memory("REGION_CPU2");
 		return 0;
@@ -733,7 +733,7 @@ static int load_rom_gfx1(void)
 	int res;
 	char fname[32];
 
-	if ((memory_region_gfx1 = memalign(MEM_ALIGN, memory_length_gfx1)) == NULL)
+	if ((memory_region_gfx1 = malloc(memory_length_gfx1)) == NULL)
 	{
 		error_memory("REGION_GFX1");
 		return 0;
@@ -765,7 +765,7 @@ static int load_rom_gfx1(void)
 
 static int load_rom_gfx2(void)
 {
-	if ((memory_region_gfx2 = memalign(MEM_ALIGN, memory_length_gfx2)) == NULL)
+	if ((memory_region_gfx2 = malloc(memory_length_gfx2)) == NULL)
 	{
 		error_memory("REGION_GFX2");
 		return 0;
@@ -842,7 +842,7 @@ static int load_rom_gfx3(void)
 		if ((memory_region_gfx3 = psp2k_mem_alloc(memory_length_gfx3)) == NULL)
 #endif
 		{
-			memory_region_gfx3 = memalign(MEM_ALIGN, memory_length_gfx3);
+			memory_region_gfx3 = malloc(memory_length_gfx3);
 		}
 
 		if (memory_region_gfx3 != NULL)
@@ -905,7 +905,7 @@ static int load_rom_gfx4(void)
 	int res;
 	char fname[32];
 
-	if ((memory_region_gfx4 = memalign(MEM_ALIGN, memory_length_gfx4)) == NULL)
+	if ((memory_region_gfx4 = malloc(memory_length_gfx4)) == NULL)
 	{
 		error_memory("REGION_GFX4");
 		return 0;
@@ -947,13 +947,13 @@ static int load_rom_sound1(void)
 		return 1;
 	}
 
-	if ((memory_region_sound1 = memalign(MEM_ALIGN, memory_length_sound1)) == NULL)
+	if ((memory_region_sound1 = malloc(memory_length_sound1)) == NULL)
 	{
 		error_memory("REGION_SOUND1");
 		return 0;
 	}
 #else
-	if ((memory_region_sound1 = memalign(MEM_ALIGN, memory_length_sound1)) == NULL)
+	if ((memory_region_sound1 = malloc(memory_length_sound1)) == NULL)
 	{
 		if (disable_sound)
 		{
@@ -1033,7 +1033,7 @@ static int load_rom_sound2(void)
 		return 1;
 	}
 
-	if ((memory_region_sound2 = memalign(MEM_ALIGN, memory_length_sound2)) == NULL)
+	if ((memory_region_sound2 = malloc(memory_length_sound2)) == NULL)
 	{
 		error_memory("REGION_SOUND2");
 		return 0;
@@ -1077,7 +1077,7 @@ static int load_rom_user1(int reload)
 
 	if (!reload)
 	{
-		if ((memory_region_user1 = memalign(MEM_ALIGN, memory_length_user1)) == NULL)
+		if ((memory_region_user1 = malloc(memory_length_user1)) == NULL)
 		{
 			error_memory("REGION_USER1");
 			return 0;
@@ -1180,7 +1180,7 @@ static int load_rom_user2(void)
 		return 1;
 	}
 
-	if ((memory_region_user2 = memalign(MEM_ALIGN, memory_length_user2)) == NULL)
+	if ((memory_region_user2 = malloc(memory_length_user2)) == NULL)
 	{
 		error_memory("REGION_USER2");
 		return 0;
@@ -1725,17 +1725,17 @@ int memory_init(void)
 #endif
 	}
 
-	if ((gfx_pen_usage[0] = memalign(MEM_ALIGN, memory_length_gfx1 / 32)) == NULL)
+	if ((gfx_pen_usage[0] = malloc(memory_length_gfx1 / 32)) == NULL)
 	{
 		error_memory("GFX_PEN_USAGE (sfix)");
 		return 0;
 	}
-	if ((gfx_pen_usage[1] = memalign(MEM_ALIGN, memory_length_gfx2 / 32)) == NULL)
+	if ((gfx_pen_usage[1] = malloc(memory_length_gfx2 / 32)) == NULL)
 	{
 		error_memory("GFX_PEN_USAGE (fix)");
 		return 0;
 	}
-	if ((gfx_pen_usage[2] = memalign(MEM_ALIGN, memory_length_gfx3 / 128)) == NULL)
+	if ((gfx_pen_usage[2] = malloc(memory_length_gfx3 / 128)) == NULL)
 	{
 		error_memory("GFX_PEN_USAGE (spr)");
 		return 0;

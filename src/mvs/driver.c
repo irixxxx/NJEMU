@@ -193,8 +193,8 @@ static void neogeo_set_cpu1_second_bank(uint32_t offset)
 	if (m68k_second_bank != offset)
 	{
 		m68k_second_bank = offset;
-		neogeo_cpu1_second_bank = (uint16_t *)((uint32_t)memory_region_cpu1 + offset - 0x200000);
-		C68k_Set_Fetch(&C68K, 0x200000, 0x2fffff, (uint32_t)&memory_region_cpu1[offset]);
+		neogeo_cpu1_second_bank = (uint16_t *)((uintptr_t)memory_region_cpu1 + offset - 0x200000);
+		C68k_Set_Fetch(&C68K, 0x200000, 0x2fffff, (uintptr_t)&memory_region_cpu1[offset]);
 	}
 }
 

@@ -10,6 +10,7 @@
 #include <fcntl.h>
 #include "emumain.h"
 
+void swab(const void *restrict src, void *restrict dest, ssize_t nbytes);
 
 #if (EMU_SYSTEM != NCDZ)
 

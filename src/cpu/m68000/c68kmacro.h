@@ -8,8 +8,6 @@
 
 /*------------------------------- core macros -------------------------------*/
 
-#include <stdint.h>
-
 #define AY						CPU->A[Opcode & 7]
 #define AX						CPU->A[(Opcode >> 9) & 7]
 #define A7						CPU->A[7]
@@ -116,7 +114,7 @@
 
 #define DECODE_EXT_WORD														\
 {																			\
-	uint32_t ext = READ_IMM_16();												\
+	uint32_t ext = READ_IMM_16();											\
 	PC += 2;																\
 																			\
 	adr += MAKE_INT_8(ext);													\
@@ -137,7 +135,7 @@
 	RELEASE_CYCLES();														\
 	goto C68k_Check_Interrupt;
 
-#define GET_PC()				(PC - CPU->BasePC)
+#define GET_PC()				(uint32_t)(PC - CPU->BasePC)
 
 #define SET_PC(A)															\
 	CPU->BasePC = CPU->Fetch[((A) >> C68K_FETCH_SFT) & C68K_FETCH_MASK];	\
@@ -199,6 +197,9 @@
 		CPU->IRQLine = 0;													\
 		SWAP_SP()															\
 		res = CPU->Interrupt_CallBack(adr);									\
+		if (res < 0) { \
+			res = adr + 24; \
+		} \
 		EXCEPTION(res)														\
 		CPU->flag_I = adr;													\
 		USE_CYCLES(44)														\
@@ -214,7 +215,9 @@
 #define CFLAG_16(A)				((A) >> 8)
 
 #define CFLAG_ADD_32(S, D, R)	(((S & D & 1) + (S >> 1) + (D >> 1)) >> 23)
+#define CFLAG_ADDX_32(S, D, F)	(((((S & 1) + (D & 1) + (F & 1)) >> 1) + (S >> 1) + (D >> 1)) >> 23)
 #define CFLAG_SUB_32(S, D, R)	(((S & R & 1) + (S >> 1) + (R >> 1)) >> 23)
+#define CFLAG_SUBX_32(S, R, F)	(((((S & 1) + (R & 1) + (F & 1)) >> 1) + (S >> 1) + (R >> 1)) >> 23)
 
 #define VFLAG_ADD_8(S, D, R)	((S ^ R) & (D ^ R))
 #define VFLAG_ADD_16(S, D, R)	(((S ^ R) & (D ^ R)) >> 8)
@@ -456,140 +459,140 @@
 
 #define FLAGS_ADD_8()														\
 	FLAG_N = FLAG_X = FLAG_C = CFLAG_8(res);								\
-	FLAG_V = VFLAG_ADD_8(src, dst, res);									\
+	FLAG_V = VFLAG_ADD_8((uint32_t)src, (uint32_t)dst, res);				\
 	FLAG_Z = ZFLAG_8(res);
 
 #define FLAGS_ADD_16()														\
-	FLAG_V = VFLAG_ADD_16(src, dst, res);									\
+	FLAG_V = VFLAG_ADD_16((uint32_t)src, (uint32_t)dst, res);				\
 	FLAG_N = FLAG_X = FLAG_C = CFLAG_16(res);								\
 	FLAG_Z = ZFLAG_16(res);
 
 #define FLAGS_ADD_32()														\
 	FLAG_Z = ZFLAG_32(res);													\
-	FLAG_X = FLAG_C = CFLAG_ADD_32(src, dst, res);							\
-	FLAG_V = VFLAG_ADD_32(src, dst, res);									\
+	FLAG_X = FLAG_C = CFLAG_ADD_32((uint32_t)src, (uint32_t)dst, res);		\
+	FLAG_V = VFLAG_ADD_32((uint32_t)src, (uint32_t)dst, res);				\
 	FLAG_N = NFLAG_32(res);
 
 #define FLAGS_ADDX_8()														\
 	FLAG_N = FLAG_X = FLAG_C = CFLAG_8(res);								\
-	FLAG_V = VFLAG_ADD_8(src, dst, res);									\
+	FLAG_V = VFLAG_ADD_8((uint32_t)src, (uint32_t)dst, res);				\
 	FLAG_Z |= ZFLAG_8(res);
 
 #define FLAGS_ADDX_16()														\
-	FLAG_V = VFLAG_ADD_16(src, dst, res);									\
+	FLAG_V = VFLAG_ADD_16((uint32_t)src, (uint32_t)dst, res);				\
 	FLAG_N = FLAG_X = FLAG_C = CFLAG_16(res);								\
 	FLAG_Z |= ZFLAG_16(res);
 
 #define FLAGS_ADDX_32()														\
 	FLAG_Z |= ZFLAG_32(res);												\
-	FLAG_X = FLAG_C = CFLAG_ADD_32(src, dst, res);							\
-	FLAG_V = VFLAG_ADD_32(src, dst, res);									\
+	FLAG_X = FLAG_C = CFLAG_ADDX_32((uint32_t)src, (uint32_t)dst, XFLAG_AS_1());\
+	FLAG_V = VFLAG_ADD_32((uint32_t)src, (uint32_t)dst, res);					\
 	FLAG_N = NFLAG_32(res);
 
 #define FLAGS_SUB_8()														\
 	FLAG_N = FLAG_X = FLAG_C = CFLAG_8(res);								\
-	FLAG_V = VFLAG_SUB_8(src, dst, res);									\
+	FLAG_V = VFLAG_SUB_8((uint32_t)src, (uint32_t)dst, res);				\
 	FLAG_Z = ZFLAG_8(res);
 
 #define FLAGS_SUB_16()														\
-	FLAG_V = VFLAG_SUB_16(src, dst, res);									\
+	FLAG_V = VFLAG_SUB_16((uint32_t)src, (uint32_t)dst, res);				\
 	FLAG_N = FLAG_X = FLAG_C = CFLAG_16(res);								\
 	FLAG_Z = ZFLAG_16(res);
 
 #define FLAGS_SUB_32()														\
 	FLAG_Z = ZFLAG_32(res);													\
-	FLAG_X = FLAG_C = CFLAG_SUB_32(src, dst, res);							\
-	FLAG_V = VFLAG_SUB_32(src, dst, res);									\
+	FLAG_X = FLAG_C = CFLAG_SUB_32((uint32_t)src, (uint32_t)dst, res);		\
+	FLAG_V = VFLAG_SUB_32((uint32_t)src, (uint32_t)dst, res);				\
 	FLAG_N = NFLAG_32(res);
 
 #define FLAGS_SUBX_8()														\
 	FLAG_N = FLAG_X = FLAG_C = CFLAG_8(res);								\
-	FLAG_V = VFLAG_SUB_8(src, dst, res);									\
+	FLAG_V = VFLAG_SUB_8((uint32_t)src, (uint32_t)dst, res);				\
 	FLAG_Z |= ZFLAG_8(res);
 
 #define FLAGS_SUBX_16()														\
-	FLAG_V = VFLAG_SUB_16(src, dst, res);									\
+	FLAG_V = VFLAG_SUB_16((uint32_t)src, (uint32_t)dst, res);				\
 	FLAG_N = FLAG_X = FLAG_C = CFLAG_16(res);								\
 	FLAG_Z |= ZFLAG_16(res);
 
 #define FLAGS_SUBX_32()														\
 	FLAG_Z |= ZFLAG_32(res);												\
-	FLAG_X = FLAG_C = CFLAG_SUB_32(src, dst, res);							\
-	FLAG_V = VFLAG_SUB_32(src, dst, res);									\
+	FLAG_X = FLAG_C = CFLAG_SUBX_32((uint32_t)src, res, XFLAG_AS_1());		\
+	FLAG_V = VFLAG_SUB_32((uint32_t)src, (uint32_t)dst, res);				\
 	FLAG_N = NFLAG_32(res);
 
 #define FLAGS_CMP_8()														\
 	FLAG_N = FLAG_C = CFLAG_8(res);											\
-	FLAG_V = VFLAG_SUB_8(src, dst, res);									\
+	FLAG_V = VFLAG_SUB_8((uint32_t)src, (uint32_t)dst, res);				\
 	FLAG_Z = ZFLAG_8(res);
 
 #define FLAGS_CMP_16()														\
-	FLAG_V = VFLAG_SUB_16(src, dst, res);									\
+	FLAG_V = VFLAG_SUB_16((uint32_t)src, (uint32_t)dst, res);				\
 	FLAG_N = FLAG_C = CFLAG_16(res);										\
 	FLAG_Z = ZFLAG_16(res);
 
 #define FLAGS_CMP_32()														\
 	FLAG_Z = ZFLAG_32(res);													\
-	FLAG_C = CFLAG_SUB_32(src, dst, res);									\
-	FLAG_V = VFLAG_SUB_32(src, dst, res);									\
+	FLAG_C = CFLAG_SUB_32((uint32_t)src, (uint32_t)dst, res);				\
+	FLAG_V = VFLAG_SUB_32((uint32_t)src, (uint32_t)dst, res);				\
 	FLAG_N = NFLAG_32(res);
 
 #define FLAGS_NEGX_8()														\
-	FLAG_V = res & src;														\
+	FLAG_V = res & (uint32_t)src;											\
 	FLAG_N = FLAG_X = FLAG_C = CFLAG_8(res);								\
 	FLAG_Z |= ZFLAG_8(res);
 
 #define FLAGS_NEGX_16()														\
-	FLAG_V = (res & src) >> 8;												\
+	FLAG_V = (res & (uint32_t)src) >> 8;									\
 	FLAG_N = FLAG_X = FLAG_C = CFLAG_16(res);								\
 	FLAG_Z |= ZFLAG_16(res);
 
 #define FLAGS_NEGX_32()														\
 	FLAG_Z |= ZFLAG_32(res);												\
-	FLAG_V = (res & src) >> 24;												\
-	FLAG_X = FLAG_C = CFLAG_SUB_32(src, dst, res);							\
+	FLAG_V = (res & (uint32_t)src) >> 24;									\
+	FLAG_X = FLAG_C = CFLAG_SUB_32((uint32_t)src, (uint32_t)dst, res);		\
 	FLAG_N = NFLAG_32(res);
 
 #define FLAGS_NEG_8()														\
-	FLAG_V = res & src;														\
+	FLAG_V = res & (uint32_t)src;											\
 	FLAG_N = FLAG_X = FLAG_C = CFLAG_8(res);								\
 	FLAG_Z = ZFLAG_8(res);
 
 #define FLAGS_NEG_16()														\
-	FLAG_V = (res & src) >> 8;												\
+	FLAG_V = (res & (uint32_t)src) >> 8;									\
 	FLAG_N = FLAG_X = FLAG_C = CFLAG_16(res);								\
 	FLAG_Z = ZFLAG_16(res);
 
 #define FLAGS_NEG_32()														\
 	FLAG_Z = ZFLAG_32(res);													\
-	FLAG_V = (res & src) >> 24;												\
-	FLAG_X = FLAG_C = CFLAG_SUB_32(src, dst, res);							\
+	FLAG_V = (res & (uint32_t)src) >> 24;									\
+	FLAG_X = FLAG_C = CFLAG_SUB_32((uint32_t)src, (uint32_t)dst, res);		\
 	FLAG_N = NFLAG_32(res);
 
 /*--------------------------------- operation -------------------------------*/
 
 #define OP_OR(size)															\
-	res |= src;																\
+	res |= (uint32_t)src;													\
 	FLAGS(size)
 
 #define OP_AND(size)														\
-	res &= src;																\
+	res &= (uint32_t)src;													\
 	FLAGS(size)
 
 #define OP_EOR(size)														\
-	res ^= src;																\
+	res ^= (uint32_t)src;													\
 	FLAGS(size)
 
 #define OP_ADD(size)														\
-	res = dst + src;														\
+	res = (uint32_t)(dst + src);											\
 	FLAGS_ADD_##size()
 
 #define OP_SUB(size)														\
-	res = dst - src;														\
+	res = (uint32_t)(dst - src);											\
 	FLAGS_SUB_##size()
 
 #define OP_CMP(size)														\
-	res = dst - src;														\
+	res = (uint32_t)(dst - src);											\
 	FLAGS_CMP_##size()
 
 /******************************************************************************
@@ -786,16 +789,16 @@
 #define BSET_CLOCKS_S_32	12
 
 #define BTST_WRITE(size, mode, xy)
-#define BCHG_WRITE(size, mode, xy)	res ^= src;  EA_WRITE_RESULT(size, mode, xy)
-#define BCLR_WRITE(size, mode, xy)	res &= ~src; EA_WRITE_RESULT(size, mode, xy)
-#define BSET_WRITE(size, mode, xy)	res |= src;  EA_WRITE_RESULT(size, mode, xy)
+#define BCHG_WRITE(size, mode, xy)	res ^= (uint32_t)src;  EA_WRITE_RESULT(size, mode, xy)
+#define BCLR_WRITE(size, mode, xy)	res &= ~(uint32_t)src; EA_WRITE_RESULT(size, mode, xy)
+#define BSET_WRITE(size, mode, xy)	res |= (uint32_t)src;  EA_WRITE_RESULT(size, mode, xy)
 
 #define BITOP_DYNAMIC(op, size, mode)										\
 {																			\
 	EA_READ_D(size, X, src)													\
-	src = 1 << (src & (size - 1));											\
+	src = 1 << ((uint32_t)src & (size - 1));								\
 	EA_READ_##mode(size, Y, res)											\
-	FLAG_Z = res & src;														\
+	FLAG_Z = res & (uint32_t)src;											\
 	B##op##_WRITE(size, mode, Y)											\
 	RET(B##op##_CLOCKS_D_##size + EA_CLOCKS_##mode##_##size)				\
 }
@@ -803,9 +806,9 @@
 #define BITOP_STATIC(op, size, mode)										\
 {																			\
 	EA_READ_I(8, NA, src)													\
-	src = 1 << (src & (size - 1));											\
+	src = 1 << ((uint32_t)src & (size - 1));								\
 	EA_READ_##mode(size, Y, res)											\
-	FLAG_Z = res & src;														\
+	FLAG_Z = res & (uint32_t)src;											\
 	B##op##_WRITE(size, mode, Y)											\
 	RET(B##op##_CLOCKS_S_##size + EA_CLOCKS_##mode##_##size)				\
 }
@@ -891,7 +894,7 @@
 #define NEGX(size, clk, mode)												\
 {																			\
 	EA_READ_##mode(size, Y, src)											\
-	res = -src - XFLAG_AS_1();												\
+	res = -(uint32_t)src - XFLAG_AS_1();									\
 	FLAGS_NEGX_##size()														\
 	EA_WRITE_RESULT(size, mode, Y)											\
 	RET(NEGX_CLOCKS_##clk##_##size + EA_CLOCKS_##mode##_##size)				\
@@ -934,7 +937,7 @@
 #define NEG(size, clk, mode)												\
 {																			\
 	EA_READ_##mode(size, Y, src)											\
-	res = -src;																\
+	res = -(uint32_t)src;													\
 	FLAGS_NEG_##size()														\
 	EA_WRITE_RESULT(size, mode, Y)											\
 	RET(NEG_CLOCKS_##clk##_##size + EA_CLOCKS_##mode##_##size)				\
@@ -955,7 +958,7 @@
 #define NOT(size, clk, mode)												\
 {																			\
 	EA_READ_##mode(size, Y, src)											\
-	res = ~src;																\
+	res = ~(uint32_t)src;													\
 	FLAG_C = CFLAG_CLEAR;													\
 	FLAG_V = VFLAG_CLEAR;													\
 	FLAG_N = NFLAG_##size(res);												\
@@ -1078,48 +1081,89 @@
 #define MOVEM_CLOCKS_ER_PCDI	16
 #define MOVEM_CLOCKS_ER_PCIX	18
 
-#define MOVEM_RE(size, mode)												\
+#define MOVEM_RE_16(mode)													\
 {																			\
 	EA_READ_I(16, NA, res)													\
 	EA_##mode(NA, Y)														\
-	src = (uint32_t)(&D0);													\
+	src = (uintptr_t)(&D0);													\
 	dst = adr;																\
 	do																		\
 	{																		\
 		if (res & 1)														\
 		{																	\
-			WRITE_MEM_##size(adr, *(uint##size##_t *)src);							\
-			adr += (size / 8);												\
+			WRITE_MEM_16(adr, *(uint16_t *)src);							\
+			adr += 2;														\
 		}																	\
 		src += 4;															\
 	} while (res >>= 1);													\
-	RET(MOVEM_CLOCKS_RE_##mode + ((adr - dst) << 1))						\
+	RET(MOVEM_CLOCKS_RE_##mode + ((adr - (uint32_t)dst) << 1))				\
 }
 
-#define MOVEM_RE_PD(size, y)												\
+#define MOVEM_RE_32(mode)													\
 {																			\
 	EA_READ_I(16, NA, res)													\
-	adr = A##y;																\
-	src = (uint32_t)(&A7);													\
+	EA_##mode(NA, Y)														\
+	src = (uintptr_t)(&D0);													\
 	dst = adr;																\
 	do																		\
 	{																		\
 		if (res & 1)														\
 		{																	\
-			adr -= (size / 8);												\
-			WRITE_MEM_##size##PD(adr, *(uint##size##_t *)src);						\
+			WRITE_MEM_32(adr, *(uint32_t *)src);							\
+			adr += 4;														\
+		}																	\
+		src += 4;															\
+	} while (res >>= 1);													\
+	RET(MOVEM_CLOCKS_RE_##mode + ((adr - (uint32_t)dst) << 1))				\
+}
+
+#define MOVEM_RE(size, mode) MOVEM_RE_##size(mode)
+
+#define MOVEM_RE_16PD(y)													\
+{																			\
+	EA_READ_I(16, NA, res)													\
+	adr = A##y;																\
+	src = (uintptr_t)(&A7);													\
+	dst = adr;																\
+	do																		\
+	{																		\
+		if (res & 1)														\
+		{																	\
+			adr -= 2;														\
+			WRITE_MEM_16PD(adr, *(uint16_t *)src);							\
 		}																	\
 		src -= 4;															\
 	} while (res >>= 1);													\
 	A##y = adr;																\
-	RET(MOVEM_CLOCKS_RE_PD + ((dst - adr) << 1))							\
+	RET(MOVEM_CLOCKS_RE_PD + (((uint32_t)dst - adr) << 1))					\
 }
+
+#define MOVEM_RE_32PD(y)													\
+{																			\
+	EA_READ_I(16, NA, res)													\
+	adr = A##y;																\
+	src = (uintptr_t)(&A7);													\
+	dst = adr;																\
+	do																		\
+	{																		\
+		if (res & 1)														\
+		{																	\
+			adr -= 4;														\
+			WRITE_MEM_32PD(adr, *(uint32_t *)src);							\
+		}																	\
+		src -= 4;															\
+	} while (res >>= 1);													\
+	A##y = adr;																\
+	RET(MOVEM_CLOCKS_RE_PD + (((uint32_t)dst - adr) << 1))					\
+}
+
+#define MOVEM_RE_PD(size, y) MOVEM_RE_##size##PD(y)
 
 #define MOVEM_ER(size, mode)												\
 {																			\
 	EA_READ_I(16, NA, res)													\
 	EA_##mode(NA, Y)														\
-	src = (uint32_t)(&D0);													\
+	src = (uintptr_t)(&D0);													\
 	dst = adr;																\
 	do																		\
 	{																		\
@@ -1130,26 +1174,26 @@
 		}																	\
 		src += 4;															\
 	} while (res >>= 1);													\
-	RET(MOVEM_CLOCKS_ER_##mode + ((adr - dst) << 1))						\
+	RET(MOVEM_CLOCKS_ER_##mode + ((adr - (uint32_t)dst) << 1))				\
 }
 
 #define MOVEM_ER_PI(size, y)												\
 {																			\
 	EA_READ_I(16, NA, res)													\
 	adr = A##y;																\
-	src = (uint32_t)(&D0);													\
+	src = (uintptr_t)(&D0);													\
 	dst = adr;																\
 	do																		\
 	{																		\
 		if (res & 1)														\
 		{																	\
-			*(int32_t *)src = READSX_MEM_##size(adr);							\
+			*(int32_t *)src = READSX_MEM_##size(adr);						\
 			adr += (size / 8);												\
 		}																	\
 		src += 4;															\
 	} while (res >>= 1);													\
 	A##y = adr;																\
-	RET(MOVEM_CLOCKS_ER_PI + ((adr - dst) << 1))							\
+	RET(MOVEM_CLOCKS_ER_PI + ((adr - (uint32_t)dst) << 1))					\
 }
 
 /*-----------------------------------------------------------------------------
@@ -1389,7 +1433,7 @@
 #define ADDQ_A(size)														\
 {																			\
 	src = GET_QUICK();														\
-	AY += src;																\
+	AY += (uint32_t)src;													\
 	RET(8)																	\
 }
 
@@ -1417,7 +1461,7 @@
 #define SUBQ_A(size)														\
 {																			\
 	src = GET_QUICK();														\
-	AY -= src;																\
+	AY -= (uint32_t)src;													\
 	RET(8)																	\
 }
 
@@ -1468,7 +1512,7 @@
 
 #define OR_CLOCKS_ER_8		4
 #define OR_CLOCKS_ER_16		4
-#define OR_CLOCKS_ER_32		6	// *
+#define OR_CLOCKS_ER_32		6	/* (*) */
 
 #define OR_CLOCKS_RE_8		8
 #define OR_CLOCKS_RE_16		8
@@ -1544,7 +1588,7 @@
 	if (src)																\
 	{																		\
 		EA_READ_D(32, X, dst)												\
-		res = dst / src;													\
+		res = (uint32_t)dst / (uint32_t)src;								\
 		if (res & 0xffff0000) /* overflow */								\
 		{																	\
 			FLAG_V = VFLAG_SET;												\
@@ -1555,7 +1599,7 @@
 		FLAG_V = VFLAG_CLEAR;												\
 		FLAG_N = NFLAG_16(res);												\
 		FLAG_Z = res;														\
-		res |= (dst % src) << 16;											\
+		res |= ((uint32_t)dst % (uint32_t)src) << 16;						\
 		EA_WRITE_RESULT(32, D, X)											\
 		RET(90 + EA_CLOCKS_##mode##_16)										\
 	}																		\
@@ -1574,7 +1618,7 @@
 	if (src)																\
 	{																		\
 		EA_READ_D(32, X, dst)												\
-		if (((uint32_t)dst == 0x80000000) && ((int32_t)src == -1))				\
+		if (((uint32_t)dst == 0x80000000) && ((int32_t)src == -1))			\
 		{																	\
 			FLAG_C = CFLAG_CLEAR;											\
 			FLAG_V = VFLAG_CLEAR;											\
@@ -1585,7 +1629,7 @@
 		}																	\
 		else																\
 		{																	\
-			int32_t quotient = (int32_t)dst / (int32_t)src;						\
+			int32_t quotient = (int32_t)dst / (int32_t)src;					\
 			if (quotient > 0x7fff || quotient < -0x8000)					\
 			{																\
 				FLAG_V = VFLAG_SET;											\
@@ -1593,7 +1637,7 @@
 			}																\
 			else															\
 			{																\
-				int32_t remainder = (int32_t)dst % (int32_t)src;					\
+				int32_t remainder = (int32_t)dst % (int32_t)src;			\
 				quotient &= 0x0000ffff;										\
 				FLAG_C = CFLAG_CLEAR;										\
 				FLAG_V = VFLAG_CLEAR;										\
@@ -1626,7 +1670,7 @@
 
 #define SUB_CLOCKS_ER_8		4
 #define SUB_CLOCKS_ER_16	4
-#define SUB_CLOCKS_ER_32	6	// *
+#define SUB_CLOCKS_ER_32	6	/* (*) */
 
 #define SUB_CLOCKS_RE_8		8
 #define SUB_CLOCKS_RE_16	8
@@ -1675,7 +1719,7 @@
 {																			\
 	EA_READ_##modey(size, Y, src)											\
 	EA_READ_##modex(size, X, dst)											\
-	res = dst - src - XFLAG_AS_1();											\
+	res = (uint32_t)dst - (uint32_t)src - XFLAG_AS_1();						\
 	FLAGS_SUBX_##size()														\
 	EA_WRITE_RESULT(size, modex, X)											\
 	RET(SUBX_CLOCKS_##clk##_##size)											\
@@ -1692,19 +1736,19 @@
 */
 
 #define SUBA_CLOCKS_16		8
-#define SUBA_CLOCKS_32		6	// *
+#define SUBA_CLOCKS_32		6	/* (*) */
 
 #define SUBA_RI32(mode)														\
 {																			\
 	EA_READSX_##mode(32, Y, src)											\
-	AX -= src;																\
+	AX -= (uint32_t)src;													\
 	RET(8 + EA_CLOCKS_##mode##_32)											\
 }
 
 #define SUBA(size, mode)													\
 {																			\
 	EA_READSX_##mode(size, Y, src)											\
-	AX -= src;																\
+	AX -= (uint32_t)src;													\
 	RET(SUBA_CLOCKS_##size + EA_CLOCKS_##mode##_##size)						\
 }
 
@@ -1793,7 +1837,7 @@
 
 #define AND_CLOCKS_ER_8		4
 #define AND_CLOCKS_ER_16	4
-#define AND_CLOCKS_ER_32	6	// *
+#define AND_CLOCKS_ER_32	6	/* (*) */
 
 #define AND_CLOCKS_RE_8		8
 #define AND_CLOCKS_RE_16	8
@@ -1867,7 +1911,7 @@
 {																			\
 	EA_READ_##mode(16, Y, src)												\
 	EA_READ_D(16, X, res)													\
-	res = res * src;														\
+	res = res * (uint32_t)src;												\
 	FLAGS(32)																\
 	EA_WRITE_RESULT(32, D, X)												\
 	RET(50 + EA_CLOCKS_##mode##_16)											\
@@ -1881,7 +1925,7 @@
 {																			\
 	EA_READSX_##mode(16, Y, src)											\
 	EA_READSX_D(16, X, res)													\
-	res = (int32_t)res * (int32_t)src;											\
+	res = (int32_t)res * (int32_t)src;										\
 	FLAGS(32)																\
 	EA_WRITE_RESULT(32, D, X)												\
 	RET(50 + EA_CLOCKS_##mode##_16)											\
@@ -1915,7 +1959,7 @@
 
 #define ADD_CLOCKS_ER_8		4
 #define ADD_CLOCKS_ER_16	4
-#define ADD_CLOCKS_ER_32	6	// *
+#define ADD_CLOCKS_ER_32	6	/* (*) */
 
 #define ADD_CLOCKS_RE_8		8
 #define ADD_CLOCKS_RE_16	8
@@ -1964,7 +2008,7 @@
 {																			\
 	EA_READ_##modey(size, Y, src)											\
 	EA_READ_##modex(size, X, dst)											\
-	res = dst + src + XFLAG_AS_1();											\
+	res = (uint32_t)dst + (uint32_t)src + XFLAG_AS_1();						\
 	FLAGS_ADDX_##size()														\
 	EA_WRITE_RESULT(size, modex, X)											\
 	RET(ADDX_CLOCKS_##clk##_##size)											\
@@ -1981,19 +2025,19 @@
 */
 
 #define ADDA_CLOCKS_16		8
-#define ADDA_CLOCKS_32		6	// *
+#define ADDA_CLOCKS_32		6	/* (*) */
 
 #define ADDA_RI32(mode)														\
 {																			\
 	EA_READSX_##mode(32, Y, src)											\
-	AX += src;																\
+	AX += (uint32_t)src;													\
 	RET(8 + EA_CLOCKS_##mode##_32)											\
 }
 
 #define ADDA(size, mode)													\
 {																			\
 	EA_READSX_##mode(size, Y, src)											\
-	AX += src;																\
+	AX += (uint32_t)src;													\
 	RET(ADDA_CLOCKS_##size + EA_CLOCKS_##mode##_##size)						\
 }
 
@@ -2012,8 +2056,8 @@
 #define ASR_EA(mode)														\
 {																			\
 	EA_READ_##mode(16, Y, src)												\
-	res = (src >> 1) | (src & (1 << 15));									\
-	FLAG_X = FLAG_C = src << 8;												\
+	res = ((uint32_t)src >> 1) | ((uint32_t)src & (1 << 15));				\
+	FLAG_X = FLAG_C = (uint32_t)src << 8;									\
 	FLAG_V = VFLAG_CLEAR;													\
 	FLAG_N = NFLAG_16(res);													\
 	FLAG_Z = res;															\
@@ -2028,8 +2072,8 @@
 #define LSR_EA(mode)														\
 {																			\
 	EA_READ_##mode(16, Y, src)												\
-	res = src >> 1;															\
-	FLAG_X = FLAG_C = src << 8;												\
+	res = (uint32_t)(src >> 1);												\
+	FLAG_X = FLAG_C = (uint32_t)src << 8;									\
 	FLAG_V = VFLAG_CLEAR;													\
 	FLAG_N = NFLAG_CLEAR;													\
 	FLAG_Z = res;															\
@@ -2044,8 +2088,8 @@
 #define ROXR_EA(mode)														\
 {																			\
 	EA_READ_##mode(16, Y, src)												\
-	res = (src >> 1) | (XFLAG_AS_1() << 15);								\
-	FLAG_X = FLAG_C = src << 8;												\
+	res = ((uint32_t)src >> 1) | (XFLAG_AS_1() << 15);						\
+	FLAG_X = FLAG_C = (uint32_t)src << 8;									\
 	FLAG_V = VFLAG_CLEAR;													\
 	FLAG_N = NFLAG_16(res);													\
 	FLAG_Z = res;															\
@@ -2060,8 +2104,8 @@
 #define ROR_EA(mode)														\
 {																			\
 	EA_READ_##mode(16, Y, src)												\
-	res = (src >> 1) | (src << 15);											\
-	FLAG_C = src << 8;														\
+	res = ((uint32_t)src >> 1) | ((uint32_t)src << 15);						\
+	FLAG_C = (uint32_t)src << 8;											\
 	FLAG_V = VFLAG_CLEAR;													\
 	FLAG_N = NFLAG_16(res);													\
 	FLAG_Z = ZFLAG_16(res);													\
@@ -2076,9 +2120,9 @@
 #define ASL_EA(mode)														\
 {																			\
 	EA_READ_##mode(16, Y, src)												\
-	res = src << 1;															\
-	FLAG_X = FLAG_C = src >> 7;												\
-	FLAG_V = (src ^ res) >> 8;												\
+	res = (uint32_t)(src << 1);												\
+	FLAG_X = FLAG_C = (uint32_t)(src >> 7);									\
+	FLAG_V = ((uint32_t)src ^ res) >> 8;									\
 	FLAG_N = NFLAG_16(res);													\
 	FLAG_Z = ZFLAG_16(res);													\
 	EA_WRITE_RESULT(16, mode, Y)											\
@@ -2092,8 +2136,8 @@
 #define LSL_EA(mode)														\
 {																			\
 	EA_READ_##mode(16, Y, src)												\
-	res = src << 1;															\
-	FLAG_X = FLAG_C = src >> 7;												\
+	res = (uint32_t)(src << 1);												\
+	FLAG_X = FLAG_C = (uint32_t)(src >> 7);									\
 	FLAG_V = VFLAG_CLEAR;													\
 	FLAG_N = NFLAG_16(res);													\
 	FLAG_Z = ZFLAG_16(res);													\
@@ -2108,8 +2152,8 @@
 #define ROXL_EA(mode)														\
 {																			\
 	EA_READ_##mode(16, Y, src)												\
-	res = (src << 1) | XFLAG_AS_1();										\
-	FLAG_X = FLAG_C = src >> 7;												\
+	res = ((uint32_t)src << 1) | XFLAG_AS_1();								\
+	FLAG_X = FLAG_C = (uint32_t)(src >> 7);									\
 	FLAG_V = VFLAG_CLEAR;													\
 	FLAG_N = NFLAG_16(res);													\
 	FLAG_Z = ZFLAG_16(res);													\
@@ -2124,8 +2168,8 @@
 #define ROL_EA(mode)														\
 {																			\
 	EA_READ_##mode(16, Y, src)												\
-	res = (src << 1) | (src >> 15);											\
-	FLAG_C = src >> 7;														\
+	res = ((uint32_t)src << 1) | ((uint32_t)src >> 15);						\
+	FLAG_C = (uint32_t)(src >> 7);											\
 	FLAG_V = VFLAG_CLEAR;													\
 	FLAG_N = NFLAG_16(res);													\
 	FLAG_Z = ZFLAG_16(res);													\

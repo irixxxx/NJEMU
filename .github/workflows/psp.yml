@@ -25,6 +25,7 @@ jobs:
             adhoc: ADHOC=1
           - adhoc: ADHOC=1
             save_state: SAVE_STATE=0
+      fail-fast: false
 
     container: pspdev/pspdev:latest
     steps:

@@ -29,7 +29,7 @@ int  m68000_execute(int cycles);
 void m68000_execute2(uint32_t start_pc, uint32_t break_point);
 #endif
 void m68000_set_irq_line(int irqline, int state);
-void m68000_set_irq_callback(int (*callback)(int irqline));
+void m68000_set_irq_callback(int32_t (*callback)(int32_t irqline));
 uint32_t  m68000_get_reg(int regnum);
 void m68000_set_reg(int regnum, uint32_t val);
 

@@ -15,16 +15,15 @@
 extern "C" {
 #endif
 
+#include <stdint.h>
 
-// setting
-///////////
+/* setting */
 
-//#define C68K_BIG_ENDIAN
+/* #define C68K_BIG_ENDIAN */
 
-#define C68K_FETCH_BITS 8		// [4-12]   default = 8
+#define C68K_FETCH_BITS 8		/* [4-12]   default = 8 */
 
-// 68K core types definitions
-//////////////////////////////
+/* 68K core types definitions */
 
 #define C68K_ADR_BITS	24
 
@@ -51,7 +50,7 @@ extern "C" {
 #define C68K_CCR_MASK	0x1F
 #define C68K_SR_MASK	(0x2700 | C68K_CCR_MASK)
 
-// exception defines taken from musashi core
+/* exception defines taken from musashi core */
 #define C68K_RESET_EX					1
 #define C68K_BUS_ERROR_EX				2
 #define C68K_ADDRESS_ERROR_EX			3
@@ -119,15 +118,15 @@ typedef struct c68k_t
 	uint32_t flag_S;
 
 	uint32_t USP;
-	uint32_t PC;
+	uintptr_t PC;
 
 	uint32_t HaltState;
 	int32_t IRQLine;
 	int32_t IRQState;
 	int32_t ICount;
 
-	uint32_t BasePC;
-	uint32_t Fetch[C68K_FETCH_BANK];
+	uintptr_t BasePC;
+	uintptr_t Fetch[C68K_FETCH_BANK];
 
 	uint8_t  (*Read_Byte)(uint32_t address);
 	uint16_t (*Read_Word)(uint32_t address);
@@ -142,14 +141,14 @@ typedef struct c68k_t
 } c68k_struc;
 
 
-// 68K core var declaration
-////////////////////////////
+/* 68K core var declaration */
 
 extern c68k_struc C68K;
+extern int32_t m68000_ICountBk;
+extern uint32_t BusErrHandling;
+extern uint32_t BusErrAdr;
 
-
-// 68K core function declaration
-/////////////////////////////////
+/* 68K core function declaration */
 
 void C68k_Init(c68k_struc *cpu);
 
@@ -162,7 +161,7 @@ void C68k_Set_IRQ(c68k_struc *cpu, int32_t line, int32_t state);
 uint32_t  C68k_Get_Reg(c68k_struc *cpu, int32_t regnum);
 void C68k_Set_Reg(c68k_struc *cpu, int32_t regnum, uint32_t val);
 
-void C68k_Set_Fetch(c68k_struc *cpu, uint32_t low_adr, uint32_t high_adr, uint32_t fetch_adr);
+void C68k_Set_Fetch(c68k_struc *cpu, uint32_t low_adr, uint32_t high_adr, uintptr_t fetch_adr);
 
 void C68k_Set_ReadB(c68k_struc *cpu, uint8_t (*Func)(uint32_t address));
 void C68k_Set_ReadW(c68k_struc *cpu, uint16_t (*Func)(uint32_t address));

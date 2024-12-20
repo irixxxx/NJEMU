@@ -23,7 +23,7 @@ typedef struct power_driver
    	void (*free)(void *data);
 	int32_t (*batteryLifePercent)(void *data);
 	bool (*isBatteryCharging)(void *data);
-	void (*setCpuClock)(void *data, int value);
+	void (*setCpuClock)(void *data, int32_t value);
 	void (*setLowestCpuClock)(void *data);
 	int32_t (*getHighestCpuClock)(void *data);
 
