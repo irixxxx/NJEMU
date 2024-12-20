@@ -183,7 +183,7 @@ static uint32_t ps2_pollFatfursp(void *data) {
 
 static uint32_t ps2_pollAnalog(void *data) {
 	uint32_t btnsData;
-	struct padButtonStatus paddata;
+	struct padButtonStatus paddata = {0};
 
 	btnsData = basicPoll(&paddata, false);
 
