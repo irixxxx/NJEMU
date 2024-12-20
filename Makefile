@@ -22,6 +22,7 @@ SAVE_STATE = 0
 UI_32BPP = 1
 RELEASE = 0
 SYSTEM_BUTTONS = 0
+DEBUG = 0
 
 #------------------------------------------------------------------------------
 # Version
@@ -196,21 +197,15 @@ include src/makefiles/$(TARGET).mak
 #------------------------------------------------------------------------------
 
 CFLAGS = \
-	-O3 \
-	-fomit-frame-pointer \
-	-fstrict-aliasing \
-	-falign-functions=32 \
-	-falign-loops \
-	-falign-labels \
-	-falign-jumps \
-	-Wall \
-	-Wundef \
-	-Wpointer-arith  \
-	-Wbad-function-cast \
-	-Wwrite-strings \
-	-Wmissing-prototypes \
-	-Wsign-compare
+	-Wno-unused-but-set-variable \
+	-Wno-unused-function \
+	-Werror \
 
+ifeq ($(DEBUG), 1)
+CFLAGS += -O0 -g
+else
+CFLAGS += -O3
+endif
 
 #------------------------------------------------------------------------------
 # Compiler Defines
