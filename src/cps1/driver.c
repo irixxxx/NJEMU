@@ -1583,7 +1583,7 @@ void cps1_driver_reset(void)
 STATE_SAVE( driver )
 {
 	state_save_long(&z80_bank, 1);
-	state_save_long(&sound_data, 1);
+	state_save_byte(&sound_data, 1);
 	state_save_long(&cps1_sound_fade_timer, 1);
 }
 
@@ -1592,7 +1592,7 @@ STATE_LOAD( driver )
 	int bank;
 
 	state_load_long(&bank, 1);
-	state_load_long(&sound_data, 1);
+	state_load_byte(&sound_data, 1);
 	state_load_long(&cps1_sound_fade_timer, 1);
 
 	z80_bank = 0xffffffff;

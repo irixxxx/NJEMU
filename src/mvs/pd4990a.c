@@ -350,8 +350,8 @@ STATE_SAVE( pd4990a )
 	state_save_long(&testbit, 1);
 	state_save_long(&outputbit, 1);
 	state_save_long(&bitno, 1);
-	state_save_long(&reading, 1);
-	state_save_long(&writting, 1);
+	state_save_byte(&reading, 1);
+	state_save_byte(&writting, 1);
 	state_save_long(&clock_line, 1);
 	state_save_long(&command_line, 1);
 }
@@ -374,8 +374,8 @@ STATE_LOAD( pd4990a )
 	state_load_long(&testbit, 1);
 	state_load_long(&outputbit, 1);
 	state_load_long(&bitno, 1);
-	state_load_long(&reading, 1);
-	state_load_long(&writting, 1);
+	state_load_byte(&reading, 1);
+	state_load_byte(&writting, 1);
 	state_load_long(&clock_line, 1);
 	state_load_long(&command_line, 1);
 }
