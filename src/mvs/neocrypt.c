@@ -924,7 +924,11 @@ int kf2k3pcb_sp1_decrypt(void)
 		if (buf[i] & 0x0010) buf[i] ^= 0x0002;
 		if (buf[i] & 0x0020) buf[i] ^= 0x0008;
 		}
+#ifdef LARGE_MEMORY
 		memcpy(rom, buf, 0x80000);
+#else
+		memcpy(rom, buf, 0x80000/2);
+#endif
 
 #ifndef LARGE_MEMORY
 		free(buf);
