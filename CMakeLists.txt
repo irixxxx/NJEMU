@@ -59,6 +59,10 @@ option(SYSTEM_BUTTONS "System Buttons" OFF)
 option(DEBUG "Debug" ON)
 option(USE_ASAN "Use ASAN" OFF)
 
+# Add options to compiler definitions
+if (NO_GUI)
+    add_definitions(-DNO_GUI)
+endif()
 
 # Version
 set(VERSION_MAJOR 2)

@@ -444,6 +444,8 @@ void save_snapshot(void)
 
 int main(int argc, char *argv[]) {
 	printf("===> %s, %s:%i\n", __FUNCTION__, __FILE__, __LINE__);
+#if defined(NO_GUI)
+#if defined(BUILD_MVS)
     // Some default values
     option_speedlimit = 1;
     option_vsync = 0;
@@ -460,7 +462,8 @@ int main(int argc, char *argv[]) {
 	input_map[P1_BUTTOND] = PLATFORM_PAD_B4;
 	input_map[P1_START] = PLATFORM_PAD_START;
 	input_map[P1_COIN] = PLATFORM_PAD_SELECT;
-
+#endif
+#endif
 
     
     // Init process
