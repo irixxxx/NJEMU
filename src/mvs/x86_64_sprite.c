@@ -33,8 +33,9 @@ struct sprite_t
 
 static RECT mvs_src_clip = { 24, 16, 24 + 304, 16 + 224 };
 
-static RECT mvs_clip[6] =
+static RECT mvs_clip[7] =
 {
+    {  0,  0,  0 + 640,  0 + 480 }, // option_stretch = 5  (480x270 16:9)
 	{ 88, 24, 88 + 304, 24 + 224 },	// option_stretch = 0  (304x224 19:14)
 	{ 80, 16, 80 + 320, 16 + 240 },	// option_stretch = 1  (320x240  4:3)
 	{ 60,  1, 60 + 360,  1 + 270 },	// option_stretch = 2  (360x270  4:3)
@@ -450,7 +451,7 @@ void blit_start(int start, int end)
 		if (clear_spr_texture) blit_clear_spr_sprite();
 		if (clear_fix_texture) blit_clear_fix_sprite();
 
-		video_driver->clearScreen(video_data);
+		video_driver->startWorkFrame(video_data, CNVCOL15TO32(video_palette[4095]));
 	}
 }
 

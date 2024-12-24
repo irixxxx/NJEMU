@@ -461,25 +461,7 @@ void blit_start(int start, int end)
 		if (clear_spr_texture) blit_clear_spr_sprite();
 		if (clear_fix_texture) blit_clear_fix_sprite();
 
-		sceGuStart(GU_DIRECT, gulist);
-		sceGuDrawBufferList(GU_PSM_5551, draw_frame, BUF_WIDTH);
-		sceGuScissor(0, 0, BUF_WIDTH, SCR_WIDTH);
-		sceGuClear(GU_COLOR_BUFFER_BIT | GU_FAST_CLEAR_BIT);
-
-		sceGuDrawBufferList(GU_PSM_5551, work_frame, BUF_WIDTH);
-		sceGuClear(GU_COLOR_BUFFER_BIT | GU_FAST_CLEAR_BIT);
-
-		sceGuScissor(24, 16, 336, 240);
-		sceGuClearColor(CNVCOL15TO32(video_palette[4095]));
-		sceGuClear(GU_COLOR_BUFFER_BIT | GU_FAST_CLEAR_BIT);
-
-		sceGuClearColor(0);
-		sceGuEnable(GU_ALPHA_TEST);
-		sceGuTexMode(GU_PSM_T8, 0, 0, GU_TRUE);
-		sceGuTexFilter(GU_NEAREST, GU_NEAREST);
-
-		sceGuFinish();
-		sceGuSync(0, GU_SYNC_FINISH);
+		video_driver->startWorkFrame(video_data, CNVCOL15TO32(video_palette[4095]));
 	}
 }
 

@@ -451,6 +451,7 @@ int main(int argc, char *argv[]) {
     option_vsync = 0;
    	option_showfps = 0;
 	option_sound_enable = 1;
+	option_stretch = 0;
 
 	input_map[P1_UP] = PLATFORM_PAD_UP;
 	input_map[P1_DOWN] = PLATFORM_PAD_DOWN;

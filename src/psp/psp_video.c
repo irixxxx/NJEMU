@@ -225,10 +225,6 @@ static void *psp_workFrame(void *data, enum WorkBuffer buffer)
 	描画/表示フレームをクリア
 --------------------------------------------------------*/
 
-static void psp_clearScreenWithColor(void *data, u_int32_t color)
-{
-}
-
 static void psp_clearScreen(void *data)
 {
 	video_driver->clearFrame(data, show_frame);
@@ -327,6 +323,28 @@ static void psp_copyRect(void *data, void *src, void *dst, RECT *src_rect, RECT 
 
 		sceGuDrawArray(GU_SPRITES, TEXTURE_FLAGS, 2, NULL, vertices);
 	}
+
+	sceGuFinish();
+	sceGuSync(0, GU_SYNC_FINISH);
+}
+
+static void psp_startWorkFrame(void *data, uint32_t color) {
+	sceGuStart(GU_DIRECT, gulist);
+	sceGuDrawBufferList(GU_PSM_5551, draw_frame, BUF_WIDTH);
+	sceGuScissor(0, 0, BUF_WIDTH, SCR_WIDTH);
+	sceGuClear(GU_COLOR_BUFFER_BIT | GU_FAST_CLEAR_BIT);
+
+	sceGuDrawBufferList(GU_PSM_5551, work_frame, BUF_WIDTH);
+	sceGuClear(GU_COLOR_BUFFER_BIT | GU_FAST_CLEAR_BIT);
+
+	sceGuScissor(24, 16, 336, 240);
+	sceGuClearColor(color);
+	sceGuClear(GU_COLOR_BUFFER_BIT | GU_FAST_CLEAR_BIT);
+
+	sceGuClearColor(0);
+	sceGuEnable(GU_ALPHA_TEST);
+	sceGuTexMode(GU_PSM_T8, 0, 0, GU_TRUE);
+	sceGuTexFilter(GU_NEAREST, GU_NEAREST);
 
 	sceGuFinish();
 	sceGuSync(0, GU_SYNC_FINISH);
@@ -567,10 +585,10 @@ video_driver_t video_psp = {
 	psp_flipScreen,
 	psp_frameAddr,
 	psp_workFrame,
-	psp_clearScreenWithColor,
 	psp_clearScreen,
 	psp_clearFrame,
 	psp_fillFrame,
+	psp_startWorkFrame,
 	psp_transferWorkFrame,
 	psp_copyRect,
 	psp_copyRectFlip,

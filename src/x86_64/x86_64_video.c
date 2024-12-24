@@ -11,8 +11,8 @@
 #include <stdlib.h>
 #include <SDL.h>
 
-#define OUTPUT_WIDTH 312
-#define OUTPUT_HEIGHT 232
+#define OUTPUT_WIDTH 640
+#define OUTPUT_HEIGHT 480
 
 typedef struct x86_64_video {
 	SDL_Window* window;
@@ -57,7 +57,7 @@ static void x86_64_start(void *data) {
 	x86_64->tex_fix = (uint8_t*)malloc(textureSize);
 
 	// Create SDL textures
-	x86_64->sdl_texture_scrbitmap = SDL_CreateTexture(x86_64->renderer, SDL_PIXELFORMAT_ABGR1555, SDL_TEXTUREACCESS_STREAMING, BUF_WIDTH, SCR_HEIGHT);
+	x86_64->sdl_texture_scrbitmap = SDL_CreateTexture(x86_64->renderer, SDL_PIXELFORMAT_ABGR1555, SDL_TEXTUREACCESS_TARGET, BUF_WIDTH, SCR_HEIGHT);
 	if (x86_64->sdl_texture_scrbitmap == NULL) {
 		printf("Could not create sdl_texture_scrbitmap: %s\n", SDL_GetError());
 		return;
@@ -90,17 +90,6 @@ static void x86_64_start(void *data) {
 	SDL_SetTextureBlendMode(x86_64->sdl_texture_tex_spr1, x86_64->blendMode);
 	SDL_SetTextureBlendMode(x86_64->sdl_texture_tex_spr2, x86_64->blendMode);
 	SDL_SetTextureBlendMode(x86_64->sdl_texture_tex_fix, x86_64->blendMode);
-    
-    SDL_Rect clipRect = {
-        24,
-        0,
-        304,
-        248,
-    };
-    SDL_RenderSetClipRect(x86_64->renderer, &clipRect);
-    
-    SDL_Rect viewport = { -20, -16, 328, 248 }; // x, y, width, height
-    SDL_RenderSetViewport(x86_64->renderer, &viewport);
 
 	ui_init();
 }
@@ -296,20 +285,11 @@ static void *x86_64_workFrame(void *data, enum WorkBuffer buffer)
 	描画/表示フレームをクリア
 --------------------------------------------------------*/
 
-
-static void x86_64_clearScreenWithColor(void *data, uint32_t color)
-{
-	x86_64_video_t *x86_64 = (x86_64_video_t*)data;
-    uint8_t alpha = color >> 24;
-    uint8_t blue = color >> 16;
-    uint8_t green = color >> 8;
-    uint8_t red = color >> 0;
-    SDL_SetRenderDrawColor(x86_64->renderer, red, green, blue, alpha);
-	SDL_RenderClear(x86_64->renderer);
-}
-
 static void x86_64_clearScreen(void *data) {
-    x86_64_clearScreenWithColor(data, 0);
+    x86_64_video_t *x86_64 = (x86_64_video_t*)data;
+    
+	SDL_SetRenderDrawColor(x86_64->renderer, 0, 0, 0, 0);
+	SDL_RenderClear(x86_64->renderer);
 }
 
 /*--------------------------------------------------------
@@ -334,9 +314,38 @@ static void x86_64_fillFrame(void *data, void *frame, uint32_t color)
 	矩形範囲をコピー
 --------------------------------------------------------*/
 
+static void x86_64_startWorkFrame(void *data, uint32_t color) {
+    x86_64_video_t *x86_64 = (x86_64_video_t*)data;
+    
+    if (SDL_SetRenderTarget(x86_64->renderer, x86_64->sdl_texture_scrbitmap) != 0) {
+        printf("Failed to set render target: %s\n", SDL_GetError());
+    }
+
+    uint8_t alpha = color >> 24;
+    uint8_t blue = color >> 16;
+    uint8_t green = color >> 8;
+    uint8_t red = color >> 0;
+    SDL_SetRenderDrawColor(x86_64->renderer, red, green, blue, alpha);
+}
+
 static void x86_64_transferWorkFrame(void *data, RECT *src_rect, RECT *dst_rect)
 {
 	x86_64_video_t *x86_64 = (x86_64_video_t*)data;
+    
+    SDL_Rect dst, src;
+    
+    dst.x = dst_rect->left;
+    dst.y = dst_rect->top;
+    dst.w = dst_rect->right - dst_rect->left;
+    dst.h = dst_rect->bottom - dst_rect->top;
+    
+    src.x = src_rect->left;
+    src.y = src_rect->top;
+    src.w = src_rect->right - src_rect->left;
+    src.h = src_rect->bottom - src_rect->top;
+    
+    SDL_SetRenderTarget(x86_64->renderer, NULL);
+    SDL_RenderCopy(x86_64->renderer, x86_64->sdl_texture_scrbitmap, &src, &dst);
 
 	if (!x86_64->draw_extra_info) {
 		return;
@@ -499,10 +508,10 @@ video_driver_t video_x86_64 = {
 	x86_64_flipScreen,
 	x86_64_frameAddr,
 	x86_64_workFrame,
-    x86_64_clearScreenWithColor,
 	x86_64_clearScreen,
 	x86_64_clearFrame,
 	x86_64_fillFrame,
+	x86_64_startWorkFrame,
 	x86_64_transferWorkFrame,
 	x86_64_copyRect,
 	x86_64_copyRectFlip,

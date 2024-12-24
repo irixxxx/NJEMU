@@ -35,14 +35,15 @@ struct sprite_t
 
 static RECT mvs_src_clip = { 24, 16, 24 + 304, 16 + 224 };
 
-static RECT mvs_clip[6] =
+static RECT mvs_clip[7] =
 {
-	{ 88, 24, 88 + 304, 24 + 224 },	// option_stretch = 0  (304x224 19:14)
-	{ 80, 16, 80 + 320, 16 + 240 },	// option_stretch = 1  (320x240  4:3)
-	{ 60,  1, 60 + 360,  1 + 270 },	// option_stretch = 2  (360x270  4:3)
-	{ 57,  1, 57 + 360,  1 + 270 },	// option_stretch = 3  (366x270 19:14)
-	{ 30,  1, 30 + 420,  1 + 270 },	// option_stretch = 4  (420x270 14:9)
-	{  0,  1,  0 + 480,  1 + 270 }	    // option_stretch = 5  (480x270 16:9)
+	{  0,  0,  0 + 640,  0 + 448 },	// option_stretch = 0  (640 x 448)
+	{ 88, 24, 88 + 304, 24 + 224 },	// option_stretch = 1  (304x224 19:14)
+	{ 80, 16, 80 + 320, 16 + 240 },	// option_stretch = 2  (320x240  4:3)
+	{ 60,  1, 60 + 360,  1 + 270 },	// option_stretch = 3  (360x270  4:3)
+	{ 57,  1, 57 + 360,  1 + 270 },	// option_stretch = 4  (366x270 19:14)
+	{ 30,  1, 30 + 420,  1 + 270 },	// option_stretch = 5  (420x270 14:9)
+	{  0,  1,  0 + 480,  1 + 270 }	    // option_stretch = 8  (480x270 16:9)
 };
 
 static int clip_min_y;
@@ -455,7 +456,7 @@ void blit_start(int start, int end)
 		if (clear_spr_texture) blit_clear_spr_sprite();
 		if (clear_fix_texture) blit_clear_fix_sprite();
 
-		video_driver->clearScreenWithColor(video_data, CNVCOL15TO32(video_palette[4095]));
+		video_driver->startWorkFrame(video_data, CNVCOL15TO32(video_palette[4095]));
 	}
 }
 
