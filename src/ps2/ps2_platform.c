@@ -5,6 +5,7 @@
 #include <iopcontrol.h>
 #include <sbv_patches.h>
 #include <ps2_filesystem_driver.h>
+#include <ps2_audio_driver.h>
 
 typedef struct ps2_platform {
 } ps2_platform_t;
@@ -12,10 +13,9 @@ typedef struct ps2_platform {
 static void reset_IOP()
 {
     SifInitRpc(0);
-    while (!SifIopReset(NULL, 0)) {
-    }
-    while (!SifIopSync()) {
-    }
+	/* Comment this line if you don't wanna debug the output */
+    while (!SifIopReset(NULL, 0)) {}
+    while (!SifIopSync()) {}
 }
 
 static void prepare_IOP()
@@ -30,10 +30,12 @@ static void prepare_IOP()
 static void init_drivers()
 {
 	init_ps2_filesystem_driver();
+	init_audio_driver();
 }
 
 static void deinit_drivers()
 {
+	deinit_audio_driver();
 	deinit_ps2_filesystem_driver();
 }
 

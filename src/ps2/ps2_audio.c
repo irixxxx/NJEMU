@@ -3,7 +3,6 @@
 
 #include <kernel.h>
 #include <audsrv.h>
-#include <ps2_audio_driver.h>
 
 #include "common/audio_driver.h"
 
@@ -13,17 +12,12 @@ typedef struct ps2_audio {
 } ps2_audio_t;
 
 static void *ps2_init(void) {
-	if(init_audio_driver() < 0)
-		return NULL;
-
 	ps2_audio_t *ps2 = (ps2_audio_t*)calloc(1, sizeof(ps2_audio_t));
 	return ps2;
 }
 
 static void ps2_free(void *data) {
 	ps2_audio_t *ps2 = (ps2_audio_t*)data;
-
-	deinit_audio_driver();
 
 	free(ps2);
 }
@@ -47,10 +41,17 @@ static bool ps2_chSRCReserve(void *data, uint16_t samples, int32_t frequency, ui
 
 static bool ps2_chReserve(void *data, uint16_t samplecount, uint8_t channels) {
 	ps2_audio_t *ps2 = (ps2_audio_t*)data;
-	// int32_t format = channels == 1 ? PS2_AUDIO_FORMAT_MONO : PS2_AUDIO_FORMAT_STEREO;
-	// ps2->channel = sceAudioChReserve(PS2_AUDIO_NEXT_CHANNEL, samplecount, format);
+	// struct audsrv_fmt_t format;
+    // format.bits = 16;
+    // format.freq = frequency;
+    // format.channels = channels;
+
+    // ps2->channel = audsrv_set_format(&format);
+	// ps2->samples = samples;
+    // audsrv_set_volume(MAX_VOLUME);
 	// return ps2->channel >= 0;
-	return false;
+
+	return ps2->channel >= 0;
 }
 
 static void ps2_release(void *data) {
@@ -63,6 +64,7 @@ static void ps2_srcOutputBlocking(void *data, int32_t volume, void *buffer, size
 }
 
 static void ps2_outputPannedBlocking(void *data, int leftvol, int rightvol, void *buf) {
+	printf("====> %s, %s:%d\n", __FUNCTION__, __FILE__, __LINE__);
 	ps2_audio_t *ps2 = (ps2_audio_t*)data;
 	// sceAudioOutputPannedBlocking(ps2->channel, leftvol, rightvol, buf);
 }

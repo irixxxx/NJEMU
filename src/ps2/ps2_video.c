@@ -188,8 +188,7 @@ static void *ps2_workFrame(void *data, enum WorkBuffer buffer)
 	switch (buffer)
 	{
 		case SCRBITMAP:
-			perror("SCRBITMAP not supported");
-			return NULL;
+			return(void *)ps2->scrbitmap->Vram;
 		case TEX_SPR0:
 			return ps2->spr0;
 		case TEX_SPR1:
