@@ -445,14 +445,16 @@ void save_snapshot(void)
 int main(int argc, char *argv[]) {
 	printf("===> %s, %s:%i\n", __FUNCTION__, __FILE__, __LINE__);
 #if defined(NO_GUI)
-#if defined(BUILD_MVS)
-    // Some default values
-    option_speedlimit = 1;
-    option_vsync = 0;
-   	option_showfps = 0;
+	// Some default values
+	option_speedlimit = 1;
+	option_vsync = 0;
+	option_showfps = 0;
 	option_sound_enable = 1;
+	option_samplerate = 2;
+	option_sound_volume = 10;
 	option_stretch = 0;
 
+#if defined(BUILD_MVS)
 	input_map[P1_UP] = PLATFORM_PAD_UP;
 	input_map[P1_DOWN] = PLATFORM_PAD_DOWN;
 	input_map[P1_LEFT] = PLATFORM_PAD_LEFT;
@@ -466,7 +468,6 @@ int main(int argc, char *argv[]) {
 #endif
 #endif
 
-    
     // Init process
 	platform_data = platform_driver->init();
 	ticker_data = ticker_driver->init();
