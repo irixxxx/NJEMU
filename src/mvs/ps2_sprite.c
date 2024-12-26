@@ -53,6 +53,12 @@ static int clear_fix_texture;
 
 static uint16_t *scrbitmap;
 
+// In GSKit 0,0 is not the top left corner, it is the center of the top left pixel.
+static inline gs_xyz2 vertex_to_XYZ2_pixel_perfect(GSGLOBAL *gsGlobal, float x, float y, int z)
+{
+	return vertex_to_XYZ2(gsGlobal, x - 0.5, y - 0.5, z);
+}
+
 
 /*------------------------------------------------------------------------
 	FIX: ???/??8pixel????????
@@ -522,10 +528,10 @@ void blit_draw_fix(int x, int y, uint32_t code, uint16_t attr)
 	uint32_t v1 = v0 + 8;
 
 
-	vertices[0].xyz2 = vertex_to_XYZ2(gsGlobal, x0, y0, 0);
+	vertices[0].xyz2 = vertex_to_XYZ2_pixel_perfect(gsGlobal, x0, y0, 0);
 	vertices[0].uv = vertex_to_UV(atlas, u0, v0);
 
-	vertices[1].xyz2 = vertex_to_XYZ2(gsGlobal, x1, y1, 0);
+	vertices[1].xyz2 = vertex_to_XYZ2_pixel_perfect(gsGlobal, x1, y1, 0);
 	vertices[1].uv = vertex_to_UV(atlas, u1, v1);
 }
 
@@ -623,10 +629,10 @@ void blit_draw_spr(int x, int y, int w, int h, uint32_t code, uint16_t attr)
 	GSGLOBAL *gsGlobal = video_driver->getNativeObjects(video_data, 0);
 	GSTEXTURE *atlas = video_driver->getNativeObjects(video_data, 2);
 
-	vertices[0].xyz2 = vertex_to_XYZ2(gsGlobal, x0, y0, 0);
+	vertices[0].xyz2 = vertex_to_XYZ2_pixel_perfect(gsGlobal, x0, y0, 0);
 	vertices[0].uv = vertex_to_UV(atlas, u0, v0);
 
-	vertices[1].xyz2 = vertex_to_XYZ2(gsGlobal, x1, y1, 0);
+	vertices[1].xyz2 = vertex_to_XYZ2_pixel_perfect(gsGlobal, x1, y1, 0);
 	vertices[1].uv = vertex_to_UV(atlas, u1, v1);
 }
 

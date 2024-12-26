@@ -77,6 +77,7 @@ static GSTEXTURE *initializeTexture(GSGLOBAL *gsGlobal, int width, int height, v
 	tex->Height = height;
 	tex->PSM = GS_PSM_T8;
 	tex->ClutPSM = GS_PSM_CT16;
+	tex->Filter = GS_FILTER_NEAREST;
 	tex->Mem = mem;
 	tex->Vram = gsKit_vram_alloc(gsGlobal, gsKit_texture_size(width, height, GS_PSM_T8), GSKIT_ALLOC_USERBUFFER);
 	tex->ClutStorageMode = GS_CLUT_STORAGE_CSM2;
@@ -90,6 +91,7 @@ static GSTEXTURE *initializeRenderTexture(GSGLOBAL *gsGlobal, int width, int hei
 	tex->Width = width;
 	tex->Height = height;
 	tex->PSM = GS_PSM_CT16;
+	tex->Filter = GS_FILTER_NEAREST;
 	tex->Mem = 0;
 	tex->Vram = gsKit_vram_alloc(gsGlobal, gsKit_texture_size(width, height, GS_PSM_CT16), GSKIT_ALLOC_USERBUFFER);
 
@@ -229,7 +231,6 @@ static void ps2_start(void *data) {
 	dmaKit_init(D_CTRL_RELE_OFF, D_CTRL_MFD_OFF, D_CTRL_STS_UNSPEC, D_CTRL_STD_OFF, D_CTRL_RCYC_8, 1 << DMA_CHANNEL_GIF);
 	dmaKit_chan_init(DMA_CHANNEL_GIF);
 
-	gsKit_set_clamp(gsGlobal, GS_CMODE_REPEAT);
 
 	gsKit_vram_clear(gsGlobal);
 
