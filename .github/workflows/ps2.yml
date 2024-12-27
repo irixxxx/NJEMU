@@ -1,4 +1,4 @@
-name: PS2
+name: PS2 CMAKE
 
 on:
   push:
@@ -12,28 +12,44 @@ on:
 
 jobs:
   build:
+    name: ${{ matrix.target }} LARGE_MEMORY=${{ matrix.large_memory }} COMMAND_LIST=${{ matrix.command_list }} ADHOC=${{ matrix.adhoc }} SAVE_STATE=${{ matrix.save_state }} NO_GUI=${{ matrix.no_gui }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        psp_mode: [LARGE_MEMORY=0]
-        command_list: [COMMAND_LIST=0]
-        adhoc: [ADHOC=0]
-        save_state: [SAVE_STATE=0]
-        emulator: [BUILD_MVS=1]
+        target: [MVS] #TOOD: CPS1, CPS2, NCDZ
+        large_memory: [ON, OFF]
+        command_list: [OFF] #TODO: ON
+        adhoc: [OFF] #TODO: ON
+        save_state: [OFF] #TODO: OFF
+        no_gui: [ON] #TODO: OFF
+        exclude:
+          - target: NCDZ
+            adhoc: ON
+          - adhoc: ON
+            save_state: FALSE
+      fail-fast: false
 
     container: ps2dev/ps2dev:latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Install dependencies
       run: |
-        apk add build-base git bash
-    
+        apk add build-base git bash cmake
 
     - name: Compile project
       run: |
-        make -f Makefile.ps2 -j $(getconf _NPROCESSORS_ONLN) clean ${{ matrix.emulator }}
-        make -f Makefile.ps2 -j $(getconf _NPROCESSORS_ONLN) ${{ matrix.psp_mode }} ${{ matrix.command_list }} ${{ matrix.adhoc }} ${{ matrix.save_state }} ${{ matrix.emulator }}
+        mkdir build
+        cd build
+        cmake -DPLATFORM="PS2" \
+          -DCMAKE_TOOLCHAIN_FILE=$PS2DEV/share/ps2dev.cmake \
+          -DTARGET="${{ matrix.target }}" \
+          -DLARGE_MEMORY=${{ matrix.large_memory }} \
+          -DCOMMAND_LIST=${{ matrix.command_list }} \
+          -DADHOC=${{ matrix.adhoc }} \
+          -DSAVE_STATE=${{ matrix.save_state }} \
+          ..
+        make -j $(getconf _NPROCESSORS_ONLN)
 
     - name: Get short SHA
       id: slug
@@ -41,8 +57,8 @@ jobs:
 
     - name: Upload artifacts
       if: ${{ success() }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        name: NJEMU-${{ steps.slug.outputs.sha8 }}-${{ matrix.psp_mode }}-${{ matrix.command_list }}-${{ matrix.adhoc }}-${{ matrix.save_state }}-${{ matrix.emulator }}
+        name: NJEMU-${{ steps.slug.outputs.sha8 }}-${{ matrix.target }}-large_memory_${{ matrix.large_memory }}-command_list_${{ matrix.command_list }}-adhoc_${{ matrix.adhoc }}-save_state${{ matrix.save_state }}
         path: |
-          *.elf
+          build/*.elf

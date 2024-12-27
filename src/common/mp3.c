@@ -72,7 +72,7 @@ int option_mp3_volume;
 	MP3サンプルデータの範囲を修正
 --------------------------------------------------------*/
 
-INLINE int16_t MP3Limit(mad_fixed_t value)
+static inline int16_t MP3Limit(mad_fixed_t value)
 {
 	if (value >=  MAD_F_ONE) return 32767;
 	if (value <= -MAD_F_ONE) return -32767;

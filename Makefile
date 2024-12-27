@@ -13,9 +13,9 @@ BUILD_CPS2 = 0
 BUILD_MVS = 0
 BUILD_NCDZ = 0
 
-LARGE_MEMORY = 1
+LARGE_MEMORY = 0
 KERNEL_MODE = 0
-COMMAND_LIST = 1
+COMMAND_LIST = 0
 ADHOC = 0
 NO_GUI = 0
 SAVE_STATE = 0
@@ -162,7 +162,7 @@ OSOBJS += \
 endif
 
 OSOBJS += \
-	$(OS)/$(OS).o \
+	$(OS)/$(OS)_platform.o \
 	$(OS)/$(OS)_thread.o \
 	$(OS)/$(OS)_audio.o \
 	$(OS)/$(OS)_power.o \
@@ -211,9 +211,7 @@ endif
 # Compiler Defines
 #------------------------------------------------------------------------------
 
-CDEFS = -DINLINE='static __inline' \
-	-Dinline=__inline \
-	-D__inline__=__inline \
+CDEFS = \
 	-DBUILD_$(TARGET)=1 \
 	-DTARGET_STR='"$(TARGET)"' \
 	-DVERSION_STR='"$(VERSION_STR)"' \

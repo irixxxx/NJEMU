@@ -90,7 +90,7 @@ static unz_s unz;
 static int unzstatic_getByte(FILE *fin, int *pi)
 {
 	unsigned char c;
-	int err = fread(&c, 1, 1, fin);
+	size_t err = fread(&c, 1, 1, fin);
 
 	if (err == 1)
 	{
@@ -720,7 +720,7 @@ int unzOpenCurrentFile(unzFile file)
   return <0 with error code if there is an error
 	(UNZ_ERRNO for IO error, or zLib error for uncompress error)
 */
-int unzReadCurrentFile(unzFile file, void *buf, unsigned len)
+size_t unzReadCurrentFile(unzFile file, void *buf, size_t len)
 {
 	int err = UNZ_OK;
 	uInt iRead = 0;

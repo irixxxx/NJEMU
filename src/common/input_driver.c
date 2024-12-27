@@ -5,8 +5,10 @@
 ******************************************************************************/
 
 #include <stddef.h>
-#include "input_driver.h"
+#include <time.h>
 #include <stddef.h>
+
+#include "input_driver.h"
 #include "input_driver.h"
 #include "ticker_driver.h"
 #include "video_driver.h"
@@ -22,8 +24,8 @@ static uint32_t pad;
 static uint8_t pressed_check;
 static uint8_t pressed_count;
 static uint8_t pressed_delay;
-static TICKER curr_time;
-static TICKER prev_time;
+static uint64_t curr_time;
+static uint64_t prev_time;
 
 void *input_info;
 
@@ -102,14 +104,14 @@ void pad_update(void)
 			pressed_check = 1;
 			pressed_count = 0;
 			pressed_delay = 8;
-			prev_time = ticker_driver->ticker(NULL);
+			prev_time = ticker_driver->currentUs(ticker_data);
 		}
 		else
 		{
 			int count;
 
-			curr_time = ticker_driver->ticker(NULL);
-			count = (int)((curr_time - prev_time) / (TICKS_PER_SEC / 60));
+			curr_time = ticker_driver->currentUs(ticker_data);
+			count = (int)((curr_time - prev_time) / (CLOCKS_PER_SEC / 60));
 			prev_time = curr_time;
 
 			pressed_count += count;
@@ -165,11 +167,11 @@ bool pad_pressed_any(void)
 
 void pad_wait_clear(void)
 {
-	while (poll_gamepad())
-	{
-		video_driver->waitVsync(video_data);
-		if (!Loop) break;
-	}
+	// while (poll_gamepad())
+	// {
+	// 	video_driver->waitVsync(video_data);
+	// 	if (!Loop) break;
+	// }
 
 	pad = 0;
 	pressed_check = 0;
@@ -194,9 +196,9 @@ void pad_wait_press(int msec)
 	}
 	else
 	{
-		TICKER target = ticker_driver->ticker(NULL) + msec * (TICKS_PER_SEC / 1000);
+		uint64_t target = ticker_driver->currentUs(ticker_data) + (msec * 1000);
 
-		while (ticker_driver->ticker(NULL) < target)
+		while (ticker_driver->currentUs(ticker_data) < target)
 		{
 			video_driver->waitVsync(video_data);
 			if (poll_gamepad()) break;
@@ -221,6 +223,12 @@ input_driver_t input_null = {
 input_driver_t *input_drivers[] = {
 #ifdef PSP
 	&input_psp,
+#endif
+#ifdef PS2
+	&input_ps2,
+#endif
+#ifdef X86_64
+	&input_x86_64,
 #endif
 	&input_null,
 	NULL,

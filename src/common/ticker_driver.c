@@ -7,6 +7,8 @@
 #include <stddef.h>
 #include "ticker_driver.h"
 
+void *ticker_data;
+
 ticker_driver_t ticker_null = {
 	"null",
 	NULL,
@@ -17,6 +19,12 @@ ticker_driver_t ticker_null = {
 ticker_driver_t *ticker_drivers[] = {
 #ifdef PSP
 	&ticker_psp,
+#endif
+#ifdef PS2
+	&ticker_ps2,
+#endif
+#ifdef X86_64
+	&ticker_x86_64,
 #endif
 	&ticker_null,
 	NULL,

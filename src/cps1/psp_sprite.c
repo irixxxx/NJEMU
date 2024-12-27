@@ -13,7 +13,6 @@
 	íËêî/É}ÉNÉçìô
 ******************************************************************************/
 
-#define TEXTURE_HEIGHT		512
 #define SCROLLH_MAX_HEIGHT	192
 
 #define MAKE_KEY(code, attr)		(code | ((attr & 0x0f) << 28))
@@ -1441,7 +1440,8 @@ void blit_reset(int bank_scroll1, int bank_scroll2, int bank_scroll3, uint8_t *p
 {
 	int i;
 
-	scrbitmap   = (uint16_t *)video_driver->frameAddr(video_data, work_frame, 0, 0);
+	// TODO: FJTRUJY - Make this function more generic
+	scrbitmap  = (uint16_t *)video_driver->workFrame(video_data, SCRBITMAP);
 	tex_scrollh = scrbitmap + BUF_WIDTH * SCR_HEIGHT;
 	tex_object  = (uint8_t *)(tex_scrollh + BUF_WIDTH * SCROLLH_MAX_HEIGHT);
 	tex_scroll1 = tex_object  + BUF_WIDTH * TEXTURE_HEIGHT;
@@ -1525,7 +1525,7 @@ void blit_finish(void)
 		if (cps_flip_screen)
 			video_driver->copyRectFlip(video_data, work_frame, draw_frame, &cps_src_clip, &cps_clip[option_stretch]);
 		else
-			video_driver->copyRect(video_data, work_frame, draw_frame, &cps_src_clip, &cps_clip[option_stretch]);
+			video_driver->transferWorkFrame(video_data, &cps_src_clip, &cps_clip[option_stretch]);
 	}
 }
 

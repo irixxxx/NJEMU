@@ -30,7 +30,6 @@ struct font_t
 #define UI_COLOR(no)	ui_palette[no].r,ui_palette[no].g,ui_palette[no].b
 
 #define ui_fill_frame(frame, no)		video_driver->fillFrame(video_data, frame, MAKECOL32(ui_palette[no].r,ui_palette[no].g,ui_palette[no].b))
-#define ui_fill_rect(frame, no, rect)	video_driver->fillRect(video_data, frame, MAKECOL32(ui_palette[no].r,ui_palette[no].g,ui_palette[no].b), rect)
 
 
 /*------------------------------------------------------
@@ -48,13 +47,6 @@ extern const uint8_t shadow[9][8][4];
 
 // GBK �ե���ȥƩ`�֥�
 extern const uint16_t gbk_table[];
-
-
-/*------------------------------------------------------
-	��`�����󥿥ե��`�����ڻ�
-------------------------------------------------------*/
-
-void ui_init(void);
 
 
 /*------------------------------------------------------
@@ -105,7 +97,6 @@ void textfont_print(int sx, int sy, int r, int g, int b, const char *s, int flag
 	���������軭 (��`�����󥿥ե��`����)
 ------------------------------------------------------*/
 
-void small_icon(int sx, int sy, int r, int g, int b, int no);
 void small_icon_light(int sx, int sy, int r, int g, int b, int no);
 
 void large_icon(int sx, int sy, int r, int g, int b, int no);

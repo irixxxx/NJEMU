@@ -22,7 +22,7 @@ uint16_t ALIGN_DATA palettes[2][0x2000 / 2];
 uint8_t palette_bank;
 
 uint16_t *video_palette;
-uint16_t ALIGN16_DATA video_palettebank[2][0x2000 / 2];
+uint16_t ALIGN16_DATA video_palettebank[PALETTE_BANKS][PALETTE_BANK_SIZE];
 uint16_t ALIGN_DATA video_clut16[0x8000];
 
 uint8_t *gfx_pen_usage[3];
@@ -305,7 +305,7 @@ static void draw_sprites_hardware(int min_y, int max_y)
 }
 
 
-INLINE int sprite_on_scanline(int scanline, int y, int rows)
+static inline int sprite_on_scanline(int scanline, int y, int rows)
 {
 	/* check if the current scanline falls inside this sprite,
        two possible scenerios, wrap around or not */

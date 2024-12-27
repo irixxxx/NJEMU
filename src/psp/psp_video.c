@@ -30,6 +30,8 @@ static int pixel_format;
 ******************************************************************************/
 
 typedef struct psp_video {
+	// Base clut starting address
+	uint16_t *clut_base;
 } psp_video_t;
 
 /*--------------------------------------------------------
@@ -152,6 +154,12 @@ static void psp_setMode(void *data, int mode)
 #endif
 }
 
+static void psp_setClutBaseAddr(void *data, uint16_t *clut_base)
+{
+	psp_video_t *psp = (psp_video_t*)data;
+	psp->clut_base = clut_base;
+}
+
 /*--------------------------------------------------------
 	VSYNCを待つ
 --------------------------------------------------------*/
@@ -186,6 +194,30 @@ static void *psp_frameAddr(void *data, void *frame, int x, int y)
 	else
 #endif
 		return (void *)(((uint32_t)frame | 0x44000000) + ((x + (y << 9)) << 1));
+}
+
+static void *psp_workFrame(void *data, enum WorkBuffer buffer)
+{
+	uint16_t *scrbitmap_tmp  = (uint16_t *)psp_frameAddr(data, work_frame, 0, 0);
+	uint8_t *tex_spr0 = (uint8_t *)(scrbitmap_tmp + BUF_WIDTH * SCR_HEIGHT);
+	uint8_t *tex_spr1 = tex_spr0 + BUF_WIDTH * TEXTURE_HEIGHT;
+	uint8_t *tex_spr2 = tex_spr1 + BUF_WIDTH * TEXTURE_HEIGHT;
+	uint8_t *tex_fix = tex_spr2 + BUF_WIDTH * TEXTURE_HEIGHT;
+	switch (buffer)
+	{
+		case SCRBITMAP:
+			return scrbitmap_tmp;
+		case TEX_SPR0:
+			return tex_spr0;
+		case TEX_SPR1:
+			return tex_spr1;
+		case TEX_SPR2:
+			return tex_spr2;
+		case TEX_FIX:
+			return tex_fix;
+	}
+
+	return NULL;
 }
 
 
@@ -224,22 +256,6 @@ static void psp_fillFrame(void *data, void *frame, uint32_t color)
 	sceGuStart(GU_DIRECT, gulist);
 	sceGuDrawBufferList(pixel_format, frame, BUF_WIDTH);
 	sceGuScissor(0, 0, SCR_WIDTH, SCR_HEIGHT);
-	sceGuClearColor(color);
-	sceGuClear(GU_COLOR_BUFFER_BIT | GU_FAST_CLEAR_BIT);
-	sceGuFinish();
-	sceGuSync(0, GU_SYNC_FINISH);
-}
-
-
-/*--------------------------------------------------------
-	指定した矩形範囲を塗りつぶし
---------------------------------------------------------*/
-
-static void psp_fillRect(void *data, void *frame, uint32_t color, RECT *rect)
-{
-	sceGuStart(GU_DIRECT, gulist);
-	sceGuDrawBufferList(pixel_format, frame, BUF_WIDTH);
-	sceGuScissor(rect->left, rect->top, rect->right, rect->bottom);
 	sceGuClearColor(color);
 	sceGuClear(GU_COLOR_BUFFER_BIT | GU_FAST_CLEAR_BIT);
 	sceGuFinish();
@@ -312,7 +328,31 @@ static void psp_copyRect(void *data, void *src, void *dst, RECT *src_rect, RECT 
 	sceGuSync(0, GU_SYNC_FINISH);
 }
 
+static void psp_startWorkFrame(void *data, uint32_t color) {
+	sceGuStart(GU_DIRECT, gulist);
+	sceGuDrawBufferList(GU_PSM_5551, draw_frame, BUF_WIDTH);
+	sceGuScissor(0, 0, BUF_WIDTH, SCR_WIDTH);
+	sceGuClear(GU_COLOR_BUFFER_BIT | GU_FAST_CLEAR_BIT);
 
+	sceGuDrawBufferList(GU_PSM_5551, work_frame, BUF_WIDTH);
+	sceGuClear(GU_COLOR_BUFFER_BIT | GU_FAST_CLEAR_BIT);
+
+	sceGuScissor(24, 16, 336, 240);
+	sceGuClearColor(color);
+	sceGuClear(GU_COLOR_BUFFER_BIT | GU_FAST_CLEAR_BIT);
+
+	sceGuClearColor(0);
+	sceGuEnable(GU_ALPHA_TEST);
+	sceGuTexMode(GU_PSM_T8, 0, 0, GU_TRUE);
+	sceGuTexFilter(GU_NEAREST, GU_NEAREST);
+
+	sceGuFinish();
+	sceGuSync(0, GU_SYNC_FINISH);
+}
+
+static void psp_transferWorkFrame(void *data, RECT *src_rect, RECT *dst_rect) {
+	psp_copyRect(data, work_frame, draw_frame, src_rect, dst_rect);
+}
 /*--------------------------------------------------------
 	矩形範囲を左右反転してコピー
 --------------------------------------------------------*/
@@ -510,21 +550,52 @@ static void psp_drawTexture(void *data, uint32_t src_fmt, uint32_t dst_fmt, void
 	sceGuSync(0, GU_SYNC_FINISH);
 }
 
+static void *psp_getNativeObjects(void *data, int index) {
+	return NULL;
+}
+
+static void psp_uploadMem(void *data, enum WorkBuffer buffer) {
+}
+
+static void psp_uploadClut(void *data, uint16_t *bank, uint8_t bank_index) {
+}
+
+static void psp_blitTexture(void *data, enum WorkBuffer buffer, void *clut, uint8_t clut_index, uint32_t vertices_count, void *vertices) {
+	uint8_t *tex_fix = psp_workFrame(data, buffer);
+	sceGuStart(GU_DIRECT, gulist);
+	sceGuDrawBufferList(GU_PSM_5551, work_frame, BUF_WIDTH);
+	sceGuScissor(24, 16, 336, 240);
+	sceGuTexImage(0, 512, 512, BUF_WIDTH, tex_fix);
+	sceGuClutLoad(256/8, clut);
+
+	sceGuDrawArray(GU_SPRITES, TEXTURE_FLAGS, vertices_count, NULL, vertices);
+
+	sceGuFinish();
+	sceGuSync(0, GU_SYNC_FINISH);
+}
+
 
 video_driver_t video_psp = {
 	"psp",
 	psp_init,
 	psp_free,
 	psp_setMode,
+	psp_setClutBaseAddr,
 	psp_waitVsync,
 	psp_flipScreen,
 	psp_frameAddr,
+	psp_workFrame,
 	psp_clearScreen,
 	psp_clearFrame,
 	psp_fillFrame,
-	psp_fillRect,
+	psp_startWorkFrame,
+	psp_transferWorkFrame,
 	psp_copyRect,
 	psp_copyRectFlip,
 	psp_copyRectRotate,
 	psp_drawTexture,
+	psp_getNativeObjects,
+	psp_uploadMem,
+	psp_uploadClut,
+	psp_blitTexture,
 };

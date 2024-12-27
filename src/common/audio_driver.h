@@ -22,15 +22,17 @@ typedef struct audio_driver
 	/* Stops and frees driver data. */
    	void (*free)(void *data);
 	int32_t (*volumeMax)(void *data);
-	bool (*chSRCReserve)(void *data, int32_t samples, int32_t freqency, int32_t channels);
-	bool (*chReserve)(void *data, int32_t samplecount, int32_t format);
-	void (*srcOutputBlocking)(void *data, int32_t volume, void *buffer);
+	bool (*chSRCReserve)(void *data, uint16_t samples, int32_t frequency, uint8_t channels);
+	bool (*chReserve)(void *data, uint16_t samplecount, uint8_t channels);
+	void (*srcOutputBlocking)(void *data, int32_t volume, void *buffer, size_t size);
 	void (*outputPannedBlocking)(void *data, int leftvol, int rightvol, void *buf);
 	void (*release)(void *data);
 } audio_driver_t;
 
 
 extern audio_driver_t audio_psp;
+extern audio_driver_t audio_ps2;
+extern audio_driver_t audio_x86_64;
 extern audio_driver_t audio_null;
 
 extern audio_driver_t *audio_drivers[];

@@ -241,7 +241,7 @@ static void draw_sprites_hardware(uint32_t start, uint32_t end, int min_y, int m
 }
 
 
-INLINE int sprite_on_scanline(int scanline, int y, int rows)
+static inline int sprite_on_scanline(int scanline, int y, int rows)
 {
 	/* check if the current scanline falls inside this sprite,
        two possible scenerios, wrap around or not */
@@ -590,21 +590,22 @@ void neogeo_partial_screenrefresh(int current_line)
 
 int neogeo_loading_screenrefresh(int flag, int draw)
 {
-	static TICKER prev;
+	static uint64_t prev;
 	static int limit;
 
 	if (flag)
 	{
-		prev = ticker_driver->ticker(NULL) - TICKS_PER_SEC / FPS;
+		prev = ticker_driver->currentUs(ticker_data) - CLOCKS_PER_SEC / FPS;
 		limit = neogeo_cdspeed_limit;
 	}
 
 	if (limit)
 	{
-		TICKER target = prev + TICKS_PER_SEC / FPS;
-		TICKER curr = ticker_driver->ticker(NULL);
+		uint64_t target = prev + CLOCKS_PER_SEC / FPS;
+		uint64_t curr = ticker_driver->currentUs(ticker_data);
 
-		while (curr < target) curr = ticker_driver->ticker(NULL);
+		usSleep(target - curr);
+		curr = ticker_driver->currentUs(ticker_data);
 
 		prev = curr;
 	}

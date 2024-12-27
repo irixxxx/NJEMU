@@ -15,8 +15,8 @@
 struct zip_find_t
 {
 	char name[MAX_PATH];
-	uint32_t  length;
-	uint32_t  crc32;
+	size_t  length;
+	uint64_t  crc32;
 };
 
 int zip_open(const char *path);
@@ -26,10 +26,10 @@ int zip_findfirst(struct zip_find_t *file);
 int zip_findnext(struct zip_find_t *file);
 
 int zopen(const char *filename);
-int zread(int fd, void *buf, unsigned size);
+size_t zread(int fd, void *buf, size_t size);
 int zgetc(int fd);
 int zclose(int fd);
-int zsize(int fd);
+size_t zsize(int fd);
 #if (EMU_SYSTEM == NCDZ)
 int zlength(const char *filename);
 #endif

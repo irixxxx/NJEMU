@@ -62,12 +62,6 @@ struct Vertex
 	int16_t x, y, z;
 };
 
-typedef struct Vertex16_t
-{
-	uint32_t color;
-	int16_t x, y, z;
-} Vertex16;
-
 struct rectangle
 {
 	int min_x;
@@ -84,6 +78,14 @@ typedef struct rect_t
 	int16_t bottom;
 } RECT;
 
+enum WorkBuffer {
+	SCRBITMAP,
+	TEX_SPR0,
+	TEX_SPR1,
+	TEX_SPR2,
+	TEX_FIX,
+};
+
 typedef struct video_driver
 {
 	/* Human-readable identifier. */
@@ -96,23 +98,32 @@ typedef struct video_driver
 	/* Stops and frees driver data. */
    	void (*free)(void *data);
 	void (*setMode)(void *data, int mode);
+	void (*setClutBaseAddr)(void *data, uint16_t *clut_base);
 	void (*waitVsync)(void *data);
 	void (*flipScreen)(void *data, bool vsync);
 	void *(*frameAddr)(void *data, void *frame, int x, int y);
+	void *(*workFrame)(void *data, enum WorkBuffer buffer);
 	void (*clearScreen)(void *data);
 	void (*clearFrame)(void *data, void *frame);
 	void (*fillFrame)(void *data, void *frame, uint32_t color);
-	void (*fillRect)(void *data, void *frame, uint32_t color, RECT *rect);
+	void (*startWorkFrame)(void *data, uint32_t color);
+	void (*transferWorkFrame)(void *data, RECT *src_rect, RECT *dst_rect);
 	void (*copyRect)(void *data, void *src, void *dst, RECT *src_rect, RECT *dst_rect);
 	void (*copyRectFlip)(void *data, void *src, void *dst, RECT *src_rect, RECT *dst_rect);
 	void (*copyRectRotate)(void *data, void *src, void *dst, RECT *src_rect, RECT *dst_rect);
 	void (*drawTexture)(void *data, uint32_t src_fmt, uint32_t dst_fmt, void *src, void *dst, RECT *src_rect, RECT *dst_rect);
+	void *(*getNativeObjects)(void *data, int index);
+	void (*uploadMem)(void *data, enum WorkBuffer buffer);
+	void (*uploadClut)(void *data, uint16_t *bank, uint8_t bank_index);
+	void (*blitTexture)(void *data, enum WorkBuffer buffer, void *clut, uint8_t bank_index, uint32_t vertices_count, void *vertices);
 
 } video_driver_t;
 
 extern int platform_cpuclock;
 
 extern video_driver_t video_psp;
+extern video_driver_t video_ps2;
+extern video_driver_t video_x86_64;
 extern video_driver_t video_null;
 
 extern video_driver_t *video_drivers[];

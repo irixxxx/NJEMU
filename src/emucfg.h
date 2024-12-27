@@ -22,8 +22,8 @@
 #endif
 
 #define ALIGN16_DATA			__attribute__((aligned(16)))
-#define ALIGN_DATA				__attribute__((aligned(4)))
-#define MEM_ALIGN				4
+#define ALIGN_DATA				__attribute__((aligned(8)))
+#define TEXTURE_HEIGHT		512
 
 
 /******************************************************************************

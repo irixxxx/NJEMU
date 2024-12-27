@@ -100,6 +100,7 @@ static uint8_t spr_disable;
 ------------------------------------------------------------------------*/
 
 static uint16_t *clut;
+static uint8_t clut_index;
 
 static const uint32_t ALIGN_DATA color_table[16] =
 {
@@ -418,11 +419,11 @@ void blit_reset(void)
 {
 	int i;
 
-	scrbitmap  = (uint16_t *)video_driver->frameAddr(video_data, work_frame, 0, 0);
-	tex_spr[0] = (uint8_t *)(scrbitmap + BUF_WIDTH * SCR_HEIGHT);
-	tex_spr[1] = tex_spr[0] + BUF_WIDTH * TEXTURE_HEIGHT;
-	tex_spr[2] = tex_spr[1] + BUF_WIDTH * TEXTURE_HEIGHT;
-	tex_fix    = tex_spr[2] + BUF_WIDTH * TEXTURE_HEIGHT;
+	scrbitmap  = (uint16_t *)video_driver->workFrame(video_data, SCRBITMAP);
+	tex_spr[0] = video_driver->workFrame(video_data, TEX_SPR0);
+	tex_spr[1] = video_driver->workFrame(video_data, TEX_SPR1);
+	tex_spr[2] = video_driver->workFrame(video_data, TEX_SPR2);
+	tex_fix    = video_driver->workFrame(video_data, TEX_FIX);
 
 	for (i = 0; i < FIX_TEXTURE_SIZE; i++) fix_data[i].index = i;
 	for (i = 0; i < SPR_TEXTURE_SIZE; i++) spr_data[i].index = i;
@@ -430,7 +431,9 @@ void blit_reset(void)
 	clip_min_y = FIRST_VISIBLE_LINE;
 	clip_max_y = LAST_VISIBLE_LINE;
 
+	video_driver->setClutBaseAddr(video_data, (uint16_t *)&video_palettebank);
 	clut = (uint16_t *)PSP_UNCACHE_PTR(&video_palettebank[palette_bank]);
+	clut_index = palette_bank;
 
 	blit_clear_all_sprite();
 }
@@ -458,25 +461,7 @@ void blit_start(int start, int end)
 		if (clear_spr_texture) blit_clear_spr_sprite();
 		if (clear_fix_texture) blit_clear_fix_sprite();
 
-		sceGuStart(GU_DIRECT, gulist);
-		sceGuDrawBufferList(GU_PSM_5551, draw_frame, BUF_WIDTH);
-		sceGuScissor(0, 0, BUF_WIDTH, SCR_WIDTH);
-		sceGuClear(GU_COLOR_BUFFER_BIT | GU_FAST_CLEAR_BIT);
-
-		sceGuDrawBufferList(GU_PSM_5551, work_frame, BUF_WIDTH);
-		sceGuClear(GU_COLOR_BUFFER_BIT | GU_FAST_CLEAR_BIT);
-
-		sceGuScissor(24, 16, 336, 240);
-		sceGuClearColor(CNVCOL15TO32(video_palette[4095]));
-		sceGuClear(GU_COLOR_BUFFER_BIT | GU_FAST_CLEAR_BIT);
-
-		sceGuClearColor(0);
-		sceGuEnable(GU_ALPHA_TEST);
-		sceGuTexMode(GU_PSM_T8, 0, 0, GU_TRUE);
-		sceGuTexFilter(GU_NEAREST, GU_NEAREST);
-
-		sceGuFinish();
-		sceGuSync(0, GU_SYNC_FINISH);
+		video_driver->startWorkFrame(video_data, CNVCOL15TO32(video_palette[4095]));
 	}
 }
 
@@ -487,7 +472,7 @@ void blit_start(int start, int end)
 
 void blit_finish(void)
 {
-	video_driver->copyRect(video_data, work_frame, draw_frame, &mvs_src_clip, &mvs_clip[option_stretch]);
+	video_driver->transferWorkFrame(video_data, &mvs_src_clip, &mvs_clip[option_stretch]);
 }
 
 
@@ -497,7 +482,7 @@ void blit_finish(void)
 
 void blit_draw_fix(int x, int y, uint32_t code, uint16_t attr)
 {
-	s16 idx;
+	int16_t idx;
 	struct Vertex *vertices;
 	uint32_t key = MAKE_FIX_KEY(code, attr);
 
@@ -549,18 +534,9 @@ void blit_finish_fix(void)
 
 	if (!fix_num) return;
 
-	sceGuStart(GU_DIRECT, gulist);
-	sceGuDrawBufferList(GU_PSM_5551, work_frame, BUF_WIDTH);
-	sceGuScissor(24, 16, 336, 240);
-	sceGuTexImage(0, 512, 512, BUF_WIDTH, tex_fix);
-	sceGuClutLoad(256/8, clut);
-
 	vertices = (struct Vertex *)sceGuGetMemory(fix_num * sizeof(struct Vertex));
 	memcpy(vertices, vertices_fix, fix_num * sizeof(struct Vertex));
-	sceGuDrawArray(GU_SPRITES, TEXTURE_FLAGS, fix_num, NULL, vertices);
-
-	sceGuFinish();
-	sceGuSync(0, GU_SYNC_FINISH);
+	video_driver->blitTexture(video_data, TEX_FIX, clut, clut_index, fix_num, vertices);
 }
 
 
@@ -570,7 +546,7 @@ void blit_finish_fix(void)
 
 void blit_draw_spr(int x, int y, int w, int h, uint32_t code, uint16_t attr)
 {
-	s16 idx;
+	int16_t idx;
 	struct Vertex *vertices;
 	uint32_t key;
 

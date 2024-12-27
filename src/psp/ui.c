@@ -67,7 +67,7 @@ void load_background(int number)
 
 void show_background(void)
 {
-	video_driver->copyRect(video_data, work_frame, draw_frame, &full_rect, &full_rect);
+	video_driver->transferWorkFrame(video_data, &full_rect, &full_rect);
 }
 
 
@@ -157,7 +157,7 @@ int draw_volume_status(int draw)
 {
 	if (platform_driver->getDevkitVersion(platform_data) >= 0x03050210 && systembuttons_available)
 	{
-		static TICKER disp_end = 0;
+		static uint64_t disp_end = 0;
 		int volume = readMainVolume();
 		int update = 0;
 
@@ -166,14 +166,14 @@ int draw_volume_status(int draw)
 
 		if (readVolumeButtons())
 		{
-			disp_end = ticker_driver->ticker(NULL) + 2 * TICKS_PER_SEC;
+			disp_end = ticker_driver->currentUs(ticker_data) + 2 * CLOCKS_PER_SEC;
 			update = UI_FULL_REFRESH;
 			draw = 1;
 		}
 
 		if (disp_end != 0)
 		{
-			if (ticker_driver->ticker(NULL) < disp_end)
+			if (ticker_driver->currentUs(ticker_data) < disp_end)
 			{
 				if (draw)
 					draw_volume(volume);

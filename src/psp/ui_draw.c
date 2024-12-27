@@ -14,6 +14,12 @@
 	定数/マクロ
 ******************************************************************************/
 
+typedef struct Vertex16_t
+{
+	uint32_t color;
+	int16_t x, y, z;
+} Vertex16;
+
 #define MAKECOL16(r, g, b)	(((b >> 4) << 8) | ((g >> 4) << 4) | (r >> 4))
 #define GETR16(color)		(color & 0x0f)
 #define GETG16(color)		((color >> 4) & 0x0f)
@@ -539,7 +545,7 @@ static uint16_t gbk_get_code(const uint8_t *s, int *type)
 	フォントコード取得 (ユーザインタフェース)
 ------------------------------------------------------*/
 
-INLINE uint16_t uifont_get_code(const uint8_t *s, int *type)
+static inline uint16_t uifont_get_code(const uint8_t *s, int *type)
 {
 	uint8_t c1 = s[0];
 	uint8_t c2 = s[1];
@@ -944,7 +950,7 @@ static int internal_light_putc(struct font_t *font, int sx, int sy)
 	ユーザインタフェース用文字を描画
 ------------------------------------------------------*/
 
-INLINE void uifont_draw(int sx, int sy, int r, int g, int b, const char *s)
+static inline void uifont_draw(int sx, int sy, int r, int g, int b, const char *s)
 {
 	int type, res = 1;
 	uint16_t code;
@@ -1009,7 +1015,7 @@ INLINE void uifont_draw(int sx, int sy, int r, int g, int b, const char *s)
 	文字の影を描画 (ユーザインタフェース用)
 ------------------------------------------------------*/
 
-INLINE void uifont_draw_shadow(int sx, int sy, const char *s)
+static inline void uifont_draw_shadow(int sx, int sy, const char *s)
 {
 	int type, res = 1;
 	uint16_t code;
@@ -1123,7 +1129,7 @@ void uifont_print_shadow_center(int sy, int r, int g, int b, const char *s)
 	欧文文字列描画
 ------------------------------------------------------*/
 
-INLINE void latin1_draw(int sx, int sy, int r, int g, int b, const char *s)
+static inline void latin1_draw(int sx, int sy, int r, int g, int b, const char *s)
 {
 	int type, res = 1;
 	uint16_t code;
@@ -1209,7 +1215,7 @@ INLINE void latin1_draw(int sx, int sy, int r, int g, int b, const char *s)
 	日本語フォント描画
 ------------------------------------------------------*/
 
-INLINE void gbk_draw(int sx, int sy, int r, int g, int b, const char *s)
+static inline void gbk_draw(int sx, int sy, int r, int g, int b, const char *s)
 {
 	int type, res = 1;
 	uint16_t code;

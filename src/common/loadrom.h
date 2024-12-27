@@ -34,7 +34,7 @@ struct rom_t
 #if (EMU_SYSTEM != NCDZ)
 int file_open(const char *fname1, const char *fname2, const uint32_t crc, char *fname);
 void file_close(void);
-int file_read(void *buf, size_t length);
+size_t file_read(void *buf, size_t length);
 int file_getc(void);
 int rom_load(struct rom_t *rom, uint8_t *mem, int idx, int max);
 #endif

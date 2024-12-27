@@ -33,11 +33,24 @@ video_driver_t video_null = {
 	NULL,
 	NULL,
 	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
 };
 
 video_driver_t *video_drivers[] = {
 #ifdef PSP
 	&video_psp,
+#endif
+#ifdef PS2
+	&video_ps2,
+#endif
+#ifdef X86_64
+	&video_x86_64,
 #endif
 	&video_null,
 	NULL,

@@ -15,6 +15,9 @@
 #define MAX_SPRITES_PER_SCREEN	(381)
 #define MAX_SPRITES_PER_LINE	(96)
 
+#define PALETTE_BANK_SIZE		(0x2000 / 2)
+#define PALETTE_BANKS			(2)
+
 extern uint16_t neogeo_videoram[0x20000 / 2];
 extern uint16_t videoram_read_buffer;
 extern uint16_t videoram_offset;

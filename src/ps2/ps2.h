@@ -12,9 +12,9 @@
 #define MAX_PATH 256
 #endif
 
-#define SCR_WIDTH  640
-#define SCR_HEIGHT 480
-#define BUF_WIDTH  640
+#define SCR_WIDTH			480
+#define SCR_HEIGHT			272
+#define BUF_WIDTH			512
 
 #define REFRESH_RATE		(59.940059)		// (9000000Hz * 1) / (525 * 286)
 

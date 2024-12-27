@@ -2,26 +2,25 @@
 
 	sprite.c
 
-	MVS スプライトマネージャ
+	MVS 楼鹿楼脳楼茅楼陇楼脠楼脼楼脥漏`楼赂楼茫
 
 ******************************************************************************/
 
 #include "mvs.h"
 
+#include <gsKit.h>
+#include <gsInline.h>
 
 /******************************************************************************
-	定数/マクロ等
+	露篓脢媒/楼脼楼炉楼铆碌脠
 ******************************************************************************/
-
-#define TEXTURE_HEIGHT	512
 
 #define MAKE_FIX_KEY(code, attr)	(code | (attr << 28))
 #define MAKE_SPR_KEY(code, attr)	(code | ((attr & 0x0f00) << 20))
-#define PSP_UNCACHE_PTR(p)			(((uint32_t)(p)) | 0x40000000)
 
 
 /******************************************************************************
-	ローカル変数/構造体
+	??????/???
 ******************************************************************************/
 
 typedef struct sprite_t SPRITE;
@@ -36,14 +35,15 @@ struct sprite_t
 
 static RECT mvs_src_clip = { 24, 16, 24 + 304, 16 + 224 };
 
-static RECT mvs_clip[6] =
+static RECT mvs_clip[7] =
 {
-	{ 88, 24, 88 + 304, 24 + 224 },	// option_stretch = 0  (304x224 19:14)
-	{ 80, 16, 80 + 320, 16 + 240 },	// option_stretch = 1  (320x240  4:3)
-	{ 60,  1, 60 + 360,  1 + 270 },	// option_stretch = 2  (360x270  4:3)
-	{ 57,  1, 57 + 360,  1 + 270 },	// option_stretch = 3  (366x270 19:14)
-	{ 30,  1, 30 + 420,  1 + 270 },	// option_stretch = 4  (420x270 14:9)
-	{  0,  1,  0 + 480,  1 + 270 }	    // option_stretch = 5  (480x270 16:9)
+	{  0,  0,  0 + 640,  0 + 448 },	// option_stretch = 0  (640 x 448)
+	{ 88, 24, 88 + 304, 24 + 224 },	// option_stretch = 1  (304x224 19:14)
+	{ 80, 16, 80 + 320, 16 + 240 },	// option_stretch = 2  (320x240  4:3)
+	{ 60,  1, 60 + 360,  1 + 270 },	// option_stretch = 3  (360x270  4:3)
+	{ 57,  1, 57 + 360,  1 + 270 },	// option_stretch = 4  (366x270 19:14)
+	{ 30,  1, 30 + 420,  1 + 270 },	// option_stretch = 5  (420x270 14:9)
+	{  0,  1,  0 + 480,  1 + 270 }	    // option_stretch = 8  (480x270 16:9)
 };
 
 static int clip_min_y;
@@ -53,28 +53,37 @@ static int clear_fix_texture;
 
 static uint16_t *scrbitmap;
 
+// In GSKit 0,0 is not the top left corner, it is the center of the top left pixel.
+static inline gs_xyz2 vertex_to_XYZ2_pixel_perfect(GSGLOBAL *gsGlobal, float x, float y, int z)
+{
+	return vertex_to_XYZ2(gsGlobal, x - 0.5, y - 0.5, z);
+}
+
 
 /*------------------------------------------------------------------------
-	FIX: サイズ/位置8pixel固定のスプライト
+	FIX: ???/??8pixel????????
 ------------------------------------------------------------------------*/
 
 #define FIX_TEXTURE_SIZE	((BUF_WIDTH/8)*(TEXTURE_HEIGHT/8))
 #define FIX_HASH_MASK		0x1ff
 #define FIX_HASH_SIZE		0x200
 #define FIX_MAX_SPRITES		((320/8) * (240/8))
+#define TILE_8x8_PER_LINE	(BUF_WIDTH/8)
+#define TILE_16x16_PER_LINE	(BUF_WIDTH/16)
 
 static SPRITE ALIGN_DATA *fix_head[FIX_HASH_SIZE];
 static SPRITE ALIGN_DATA fix_data[FIX_TEXTURE_SIZE];
 static SPRITE *fix_free_head;
 
 static uint8_t *tex_fix;
-static struct Vertex ALIGN_DATA vertices_fix[FIX_MAX_SPRITES * 2];
+static bool tex_fix_changed;
+static GSPRIMUVPOINTFLAT ALIGN_DATA vertices_fix[FIX_MAX_SPRITES * 2];
 static uint16_t fix_num;
 static uint16_t fix_texture_num;
 
 
 /*------------------------------------------------------------------------
-	SPR: 可変サイズのスプライト
+	SPR: ???????????
 ------------------------------------------------------------------------*/
 
 #define SPR_TEXTURE_SIZE	((BUF_WIDTH/16)*((TEXTURE_HEIGHT*3)/16))
@@ -87,7 +96,7 @@ static SPRITE ALIGN_DATA spr_data[SPR_TEXTURE_SIZE];
 static SPRITE *spr_free_head;
 
 static uint8_t *tex_spr[3];
-static struct Vertex ALIGN_DATA vertices_spr[SPR_MAX_SPRITES * 2];
+static GSPRIMUVPOINTFLAT ALIGN_DATA vertices_spr[SPR_MAX_SPRITES * 2];
 static uint16_t ALIGN_DATA spr_flags[SPR_MAX_SPRITES];
 static uint16_t spr_num;
 static uint16_t spr_texture_num;
@@ -96,7 +105,7 @@ static uint8_t spr_disable;
 
 
 /*------------------------------------------------------------------------
-	カラールックアップテーブル
+	?????????????
 ------------------------------------------------------------------------*/
 
 static uint16_t *clut;
@@ -110,277 +119,266 @@ static const uint32_t ALIGN_DATA color_table[16] =
 };
 
 
+/******************************************************************************
+	FIX???????
+******************************************************************************/
+
 /*------------------------------------------------------------------------
-	'swizzle'テクスチャアドレス計算テーブル
+	FIX?????????????????
 ------------------------------------------------------------------------*/
 
-static const int ALIGN_DATA swizzle_table_8bit[16] =
+static int fix_get_sprite(uint32_t key)
 {
-	   0, 16, 16, 16, 16, 16, 16, 16,
-	3984, 16, 16, 16, 16, 16, 16, 16
-};
+	SPRITE *p = fix_head[key & FIX_HASH_MASK];
+
+	while (p)
+	{
+		if (p->key == key)
+		{
+			p->used = frames_displayed;
+			return p->index;
+	 	}
+		p = p->next;
+	}
+	return -1;
+}
+
+
+/*------------------------------------------------------------------------
+	FIX??????????????
+------------------------------------------------------------------------*/
+
+static int fix_insert_sprite(uint32_t key)
+{
+	uint16_t hash = key & FIX_HASH_MASK;
+	SPRITE *p = fix_head[hash];
+	SPRITE *q = fix_free_head;
+
+	if (!q) return -1;
+
+	fix_free_head = fix_free_head->next;
+
+	q->next = NULL;
+	q->key  = key;
+	q->used = frames_displayed;
+
+	if (!p)
+	{
+		fix_head[hash] = q;
+	}
+	else
+	{
+		while (p->next) p = p->next;
+		p->next = q;
+	}
+
+	fix_texture_num++;
+
+	return q->index;
+}
+
+
+/*------------------------------------------------------------------------
+	FIX????????????????????????
+------------------------------------------------------------------------*/
+
+static void fix_delete_sprite(void)
+{
+	int i;
+	SPRITE *p, *prev_p;
+
+	for (i = 0; i < FIX_HASH_SIZE; i++)
+	{
+		prev_p = NULL;
+		p = fix_head[i];
+
+		while (p)
+		{
+			if (frames_displayed != p->used)
+			{
+				fix_texture_num--;
+
+				if (!prev_p)
+				{
+					fix_head[i] = p->next;
+					p->next = fix_free_head;
+					fix_free_head = p;
+					p = fix_head[i];
+				}
+				else
+				{
+					prev_p->next = p->next;
+					p->next = fix_free_head;
+					fix_free_head = p;
+					p = prev_p->next;
+				}
+			}
+			else
+			{
+				prev_p = p;
+				p = p->next;
+			}
+		}
+	}
+}
 
 
 /******************************************************************************
-	FIXスプライト管理
+	SPR???????
 ******************************************************************************/
 
 /*------------------------------------------------------------------------
-	FIXテクスチャからスプライト番号を取得
+	SPR?????????????????
 ------------------------------------------------------------------------*/
 
-// static int fix_get_sprite(uint32_t key)
-// {
-// 	SPRITE *p = fix_head[key & FIX_HASH_MASK];
+static int spr_get_sprite(uint32_t key)
+{
+	SPRITE *p = spr_head[key & SPR_HASH_MASK];
 
-// 	while (p)
-// 	{
-// 		if (p->key == key)
-// 		{
-// 			p->used = frames_displayed;
-// 			return p->index;
-// 	 	}
-// 		p = p->next;
-// 	}
-// 	return -1;
-// }
+	while (p)
+	{
+		if (p->key == key)
+		{
+			if (p->used != frames_displayed)
+			{
+				update_cache(key << 7);
+				p->used = frames_displayed;
+			}
+			return p->index;
+		}
+		p = p->next;
+	}
+	return -1;
+}
 
 
 /*------------------------------------------------------------------------
-	FIXテクスチャにスプライトを登録
+	SPR??????????????
 ------------------------------------------------------------------------*/
 
-// static int fix_insert_sprite(uint32_t key)
-// {
-// 	uint16_t hash = key & FIX_HASH_MASK;
-// 	SPRITE *p = fix_head[hash];
-// 	SPRITE *q = fix_free_head;
+static int spr_insert_sprite(uint32_t key)
+{
+	uint16_t hash = key & SPR_HASH_MASK;
+	SPRITE *p = spr_head[hash];
+	SPRITE *q = spr_free_head;
 
-// 	if (!q) return -1;
+	if (!q) return -1;
 
-// 	fix_free_head = fix_free_head->next;
+	spr_free_head = spr_free_head->next;
 
-// 	q->next = NULL;
-// 	q->key  = key;
-// 	q->used = frames_displayed;
+	q->next = NULL;
+	q->key  = key;
+	q->used = frames_displayed;
 
-// 	if (!p)
-// 	{
-// 		fix_head[hash] = q;
-// 	}
-// 	else
-// 	{
-// 		while (p->next) p = p->next;
-// 		p->next = q;
-// 	}
+	if (!p)
+	{
+		spr_head[hash] = q;
+	}
+	else
+	{
+		while (p->next) p = p->next;
+		p->next = q;
+	}
 
-// 	fix_texture_num++;
+	spr_texture_num++;
 
-// 	return q->index;
-// }
+	return q->index;
+}
 
 
 /*------------------------------------------------------------------------
-	FIXテクスチャから一定時間を経過したスプライトを削除
-------------------------------------------------------------------------*/
-
-// static void fix_delete_sprite(void)
-// {
-// 	int i;
-// 	SPRITE *p, *prev_p;
-
-// 	for (i = 0; i < FIX_HASH_SIZE; i++)
-// 	{
-// 		prev_p = NULL;
-// 		p = fix_head[i];
-
-// 		while (p)
-// 		{
-// 			if (frames_displayed != p->used)
-// 			{
-// 				fix_texture_num--;
-
-// 				if (!prev_p)
-// 				{
-// 					fix_head[i] = p->next;
-// 					p->next = fix_free_head;
-// 					fix_free_head = p;
-// 					p = fix_head[i];
-// 				}
-// 				else
-// 				{
-// 					prev_p->next = p->next;
-// 					p->next = fix_free_head;
-// 					fix_free_head = p;
-// 					p = prev_p->next;
-// 				}
-// 			}
-// 			else
-// 			{
-// 				prev_p = p;
-// 				p = p->next;
-// 			}
-// 		}
-// 	}
-// }
-
-
-/******************************************************************************
-	SPRスプライト管理
-******************************************************************************/
-
-/*------------------------------------------------------------------------
-	SPRテクスチャからスプライト番号を取得
-------------------------------------------------------------------------*/
-
-// static int spr_get_sprite(uint32_t key)
-// {
-// 	SPRITE *p = spr_head[key & SPR_HASH_MASK];
-
-// 	while (p)
-// 	{
-// 		if (p->key == key)
-// 		{
-// 			if (p->used != frames_displayed)
-// 			{
-// 				update_cache(key << 7);
-// 				p->used = frames_displayed;
-// 			}
-// 			return p->index;
-// 		}
-// 		p = p->next;
-// 	}
-// 	return -1;
-// }
-
-
-/*------------------------------------------------------------------------
-	SPRテクスチャにスプライトを登録
-------------------------------------------------------------------------*/
-
-// static int spr_insert_sprite(uint32_t key)
-// {
-// 	uint16_t hash = key & SPR_HASH_MASK;
-// 	SPRITE *p = spr_head[hash];
-// 	SPRITE *q = spr_free_head;
-
-// 	if (!q) return -1;
-
-// 	spr_free_head = spr_free_head->next;
-
-// 	q->next = NULL;
-// 	q->key  = key;
-// 	q->used = frames_displayed;
-
-// 	if (!p)
-// 	{
-// 		spr_head[hash] = q;
-// 	}
-// 	else
-// 	{
-// 		while (p->next) p = p->next;
-// 		p->next = q;
-// 	}
-
-// 	spr_texture_num++;
-
-// 	return q->index;
-// }
-
-
-/*------------------------------------------------------------------------
-	SPRテクスチャから一定時間を経過したスプライトを削除
+	SPR????????????????????????
 ------------------------------------------------------------------------*/
 
 static void spr_delete_sprite(void)
 {
-	// int i;
-	// SPRITE *p, *prev_p;
+	int i;
+	SPRITE *p, *prev_p;
 
-	// for (i = 0; i < SPR_HASH_SIZE; i++)
-	// {
-	// 	prev_p = NULL;
-	// 	p = spr_head[i];
+	for (i = 0; i < SPR_HASH_SIZE; i++)
+	{
+		prev_p = NULL;
+		p = spr_head[i];
 
-	// 	while (p)
-	// 	{
-	// 		if (frames_displayed != p->used)
-	// 		{
-	// 			spr_texture_num--;
+		while (p)
+		{
+			if (frames_displayed != p->used)
+			{
+				spr_texture_num--;
 
-	// 			if (!prev_p)
-	// 			{
-	// 				spr_head[i] = p->next;
-	// 				p->next = spr_free_head;
-	// 				spr_free_head = p;
-	// 				p = spr_head[i];
-	// 			}
-	// 			else
-	// 			{
-	// 				prev_p->next = p->next;
-	// 				p->next = spr_free_head;
-	// 				spr_free_head = p;
-	// 				p = prev_p->next;
-	// 			}
-	// 		}
-	// 		else
-	// 		{
-	// 			prev_p = p;
-	// 			p = p->next;
-	// 		}
-	// 	}
-	// }
+				if (!prev_p)
+				{
+					spr_head[i] = p->next;
+					p->next = spr_free_head;
+					spr_free_head = p;
+					p = spr_head[i];
+				}
+				else
+				{
+					prev_p->next = p->next;
+					p->next = spr_free_head;
+					spr_free_head = p;
+					p = prev_p->next;
+				}
+			}
+			else
+			{
+				prev_p = p;
+				p = p->next;
+			}
+		}
+	}
 }
 
 
 /******************************************************************************
-	スプライト描画インタフェース関数
+	????????????????
 ******************************************************************************/
 
 /*------------------------------------------------------------------------
-	FIXスプライトを即座にクリアする
+	FIX??????????????
 ------------------------------------------------------------------------*/
 
 static void blit_clear_fix_sprite(void)
 {
-	// int i;
+	int i;
 
-	// for (i = 0; i < FIX_TEXTURE_SIZE - 1; i++)
-	// 	fix_data[i].next = &fix_data[i + 1];
+	for (i = 0; i < FIX_TEXTURE_SIZE - 1; i++)
+		fix_data[i].next = &fix_data[i + 1];
 
-	// fix_data[i].next = NULL;
-	// fix_free_head = &fix_data[0];
+	fix_data[i].next = NULL;
+	fix_free_head = &fix_data[0];
 
-	// memset(fix_head, 0, sizeof(SPRITE *) * FIX_HASH_SIZE);
+	memset(fix_head, 0, sizeof(SPRITE *) * FIX_HASH_SIZE);
 
-	// fix_texture_num = 0;
-	// clear_fix_texture = 0;
+	fix_texture_num = 0;
+	clear_fix_texture = 0;
 }
 
 
 /*------------------------------------------------------------------------
-	SPRスプライトを即座にクリアする
+	SPR??????????????
 ------------------------------------------------------------------------*/
 
 static void blit_clear_spr_sprite(void)
 {
-	// int i;
+	int i;
 
-	// for (i = 0; i < SPR_TEXTURE_SIZE - 1; i++)
-	// 	spr_data[i].next = &spr_data[i + 1];
+	for (i = 0; i < SPR_TEXTURE_SIZE - 1; i++)
+		spr_data[i].next = &spr_data[i + 1];
 
-	// spr_data[i].next = NULL;
-	// spr_free_head = &spr_data[0];
+	spr_data[i].next = NULL;
+	spr_free_head = &spr_data[0];
 
-	// memset(spr_head, 0, sizeof(SPRITE *) * SPR_HASH_SIZE);
+	memset(spr_head, 0, sizeof(SPRITE *) * SPR_HASH_SIZE);
 
-	// spr_texture_num = 0;
-	// clear_spr_texture = 0;
+	spr_texture_num = 0;
+	clear_spr_texture = 0;
 }
 
 
 /*------------------------------------------------------------------------
-	全てのスプライトを即座にクリアする
+	?????????????????
 ------------------------------------------------------------------------*/
 
 void blit_clear_all_sprite(void)
@@ -391,7 +389,7 @@ void blit_clear_all_sprite(void)
 
 
 /*------------------------------------------------------------------------
-	FIXスプライトのクリアフラグを立てる
+	FIX????????????????
 ------------------------------------------------------------------------*/
 
 void blit_set_fix_clear_flag(void)
@@ -401,7 +399,7 @@ void blit_set_fix_clear_flag(void)
 
 
 /*------------------------------------------------------------------------
-	SPRスプライトのクリアフラグを立てる
+	SPR????????????????
 ------------------------------------------------------------------------*/
 
 void blit_set_spr_clear_flag(void)
@@ -411,283 +409,316 @@ void blit_set_spr_clear_flag(void)
 
 
 /*------------------------------------------------------------------------
-	スプライト処理のリセット
+	????????????
 ------------------------------------------------------------------------*/
 
 void blit_reset(void)
 {
-	// int i;
+	int i;
 
-	// scrbitmap  = (uint16_t *)video_driver->frameAddr(video_data, work_frame, 0, 0);
-	// tex_spr[0] = (uint8_t *)(scrbitmap + BUF_WIDTH * SCR_HEIGHT);
-	// tex_spr[1] = tex_spr[0] + BUF_WIDTH * TEXTURE_HEIGHT;
-	// tex_spr[2] = tex_spr[1] + BUF_WIDTH * TEXTURE_HEIGHT;
-	// tex_fix    = tex_spr[2] + BUF_WIDTH * TEXTURE_HEIGHT;
+	scrbitmap  = (uint16_t *)video_driver->workFrame(video_data, SCRBITMAP);
+	tex_spr[0] = video_driver->workFrame(video_data, TEX_SPR0);
+	tex_spr[1] = video_driver->workFrame(video_data, TEX_SPR1);
+	tex_spr[2] = video_driver->workFrame(video_data, TEX_SPR2);
+	tex_fix    = video_driver->workFrame(video_data, TEX_FIX);
+	tex_fix_changed = false;
 
-	// for (i = 0; i < FIX_TEXTURE_SIZE; i++) fix_data[i].index = i;
-	// for (i = 0; i < SPR_TEXTURE_SIZE; i++) spr_data[i].index = i;
+	for (i = 0; i < FIX_TEXTURE_SIZE; i++) fix_data[i].index = i;
+	for (i = 0; i < SPR_TEXTURE_SIZE; i++) spr_data[i].index = i;
 
-	// clip_min_y = FIRST_VISIBLE_LINE;
-	// clip_max_y = LAST_VISIBLE_LINE;
+	clip_min_y = FIRST_VISIBLE_LINE;
+	clip_max_y = LAST_VISIBLE_LINE;
 
-	// clut = (uint16_t *)PSP_UNCACHE_PTR(&video_palettebank[palette_bank]);
+	video_driver->setClutBaseAddr(video_data, (uint16_t *)&video_palettebank);
+	clut = (uint16_t *)&video_palettebank[palette_bank];
+	video_driver->uploadClut(video_data, clut, palette_bank);
 
-	// blit_clear_all_sprite();
+	printf("===> palette_bank = %d\n", palette_bank);
+
+	blit_clear_all_sprite();
 }
 
 
 /*------------------------------------------------------------------------
-	画面の更新開始
+	???????
 ------------------------------------------------------------------------*/
 
 void blit_start(int start, int end)
 {
-	// clip_min_y = start;
-	// clip_max_y = end + 1;
+	clip_min_y = start;
+	clip_max_y = end + 1;
 
-	// spr_num   = 0;
-	// spr_index = 0;
+	spr_num   = 0;
+	spr_index = 0;
 
-	// if (start == FIRST_VISIBLE_LINE)
-	// {
-	// 	clut = (uint16_t *)PSP_UNCACHE_PTR(&video_palettebank[palette_bank]);
+	if (start == FIRST_VISIBLE_LINE)
+	{
+		clut = (uint16_t *)&video_palettebank[palette_bank];
+		video_driver->uploadClut(video_data, clut, palette_bank);
 
-	// 	fix_num = 0;
-	// 	spr_disable = 0;
+		fix_num = 0;
+		spr_disable = 0;
 
-	// 	if (clear_spr_texture) blit_clear_spr_sprite();
-	// 	if (clear_fix_texture) blit_clear_fix_sprite();
+		if (clear_spr_texture) blit_clear_spr_sprite();
+		if (clear_fix_texture) blit_clear_fix_sprite();
 
-	// 	sceGuStart(GU_DIRECT, gulist);
-	// 	sceGuDrawBufferList(GU_PSM_5551, draw_frame, BUF_WIDTH);
-	// 	sceGuScissor(0, 0, BUF_WIDTH, SCR_WIDTH);
-	// 	sceGuClear(GU_COLOR_BUFFER_BIT | GU_FAST_CLEAR_BIT);
-
-	// 	sceGuDrawBufferList(GU_PSM_5551, work_frame, BUF_WIDTH);
-	// 	sceGuClear(GU_COLOR_BUFFER_BIT | GU_FAST_CLEAR_BIT);
-
-	// 	sceGuScissor(24, 16, 336, 240);
-	// 	sceGuClearColor(CNVCOL15TO32(video_palette[4095]));
-	// 	sceGuClear(GU_COLOR_BUFFER_BIT | GU_FAST_CLEAR_BIT);
-
-	// 	sceGuClearColor(0);
-	// 	sceGuEnable(GU_ALPHA_TEST);
-	// 	sceGuTexMode(GU_PSM_T8, 0, 0, GU_TRUE);
-	// 	sceGuTexFilter(GU_NEAREST, GU_NEAREST);
-
-	// 	sceGuFinish();
-	// 	sceGuSync(0, GU_SYNC_FINISH);
-	// }
+		video_driver->startWorkFrame(video_data, CNVCOL15TO32(video_palette[4095]));
+	}
 }
 
 
 /*------------------------------------------------------------------------
-	画面の更新終了
+	???????
 ------------------------------------------------------------------------*/
 
 void blit_finish(void)
 {
-	video_driver->copyRect(video_data, work_frame, draw_frame, &mvs_src_clip, &mvs_clip[option_stretch]);
+	video_driver->transferWorkFrame(video_data, &mvs_src_clip, &mvs_clip[option_stretch]);
 }
 
 
 /*------------------------------------------------------------------------
-	FIXを描画リストに登録
+	FIX?????????
 ------------------------------------------------------------------------*/
 
 void blit_draw_fix(int x, int y, uint32_t code, uint16_t attr)
 {
-	// s16 idx;
-	// struct Vertex *vertices;
-	// uint32_t key = MAKE_FIX_KEY(code, attr);
+	int16_t idx;
+	GSPRIMUVPOINTFLAT *vertices;
+	uint32_t key = MAKE_FIX_KEY(code, attr);
 
-	// if ((idx = fix_get_sprite(key)) < 0)
-	// {
-	// 	uint32_t col, tile;
-	// 	uint8_t *src, *dst, lines = 8;
+	if ((idx = fix_get_sprite(key)) < 0)
+	{
+		uint32_t col, tile;
+		uint8_t *src, *dst, lines, row, column;
 
-	// 	if (fix_texture_num == FIX_TEXTURE_SIZE - 1)
-	// 		fix_delete_sprite();
+		tex_fix_changed = true;
 
-	// 	idx = fix_insert_sprite(key);
-	// 	dst = SWIZZLED8_8x8(tex_fix, idx);
-	// 	src = &fix_memory[code << 5];
-	// 	col = color_table[attr];
+		if (fix_texture_num == FIX_TEXTURE_SIZE - 1)
+			fix_delete_sprite();
 
-	// 	while (lines--)
-	// 	{
-	// 		tile = *(uint32_t *)(src + 0);
-	// 		*(uint32_t *)(dst +  0) = ((tile >> 0) & 0x0f0f0f0f) | col;
-	// 		*(uint32_t *)(dst +  4) = ((tile >> 4) & 0x0f0f0f0f) | col;
-	// 		src += 4;
-	// 		dst += 16;
-	// 	}
-	// }
+		idx = fix_insert_sprite(key);
+		src = &fix_memory[code << 5];
+		col = color_table[attr];
 
-	// vertices = &vertices_fix[fix_num];
-	// fix_num += 2;
+		row = idx / TILE_8x8_PER_LINE;
+		column = idx % TILE_8x8_PER_LINE;
+		for (lines = 0; lines < 8; lines++)
+		{
+			dst = &tex_fix[((row * 8) + lines) * BUF_WIDTH + (column * 8)];
+			tile = *(uint32_t *)(src + 0);
+			*(uint32_t *)(dst +  0) = ((tile >> 0) & 0x0f0f0f0f) | col;
+			*(uint32_t *)(dst +  4) = ((tile >> 4) & 0x0f0f0f0f) | col;
+			src += 4;
+		}
+	}
 
-	// vertices[0].x = vertices[1].x = x;
-	// vertices[0].y = vertices[1].y = y;
-	// vertices[0].u = vertices[1].u = (idx & 0x003f) << 3;
-	// vertices[0].v = vertices[1].v = (idx & 0x0fc0) >> 3;
+	GSGLOBAL *gsGlobal = video_driver->getNativeObjects(video_data, 0);
+	GSTEXTURE *atlas = video_driver->getNativeObjects(video_data, 5);
+	vertices = &vertices_fix[fix_num];
+	fix_num += 2;
 
-	// vertices[1].x += 8;
-	// vertices[1].y += 8;
-	// vertices[1].u += 8;
-	// vertices[1].v += 8;
+	uint32_t x0 = x;
+	uint32_t y0 = y;
+	uint32_t u0 = (idx & 0x003f) << 3;
+	uint32_t v0 = (idx & 0x0fc0) >> 3;
+	uint32_t x1 = x + 8;
+	uint32_t y1 = y + 8;
+	uint32_t u1 = u0 + 8;
+	uint32_t v1 = v0 + 8;
+
+
+	vertices[0].xyz2 = vertex_to_XYZ2_pixel_perfect(gsGlobal, x0, y0, 0);
+	vertices[0].uv = vertex_to_UV(atlas, u0, v0);
+
+	vertices[1].xyz2 = vertex_to_XYZ2_pixel_perfect(gsGlobal, x1, y1, 0);
+	vertices[1].uv = vertex_to_UV(atlas, u1, v1);
 }
 
 
 /*------------------------------------------------------------------------
-	FIX描画終了
+	FIX????
 ------------------------------------------------------------------------*/
 
 void blit_finish_fix(void)
 {
-	// struct Vertex *vertices;
-
-	// if (!fix_num) return;
-
-	// sceGuStart(GU_DIRECT, gulist);
-	// sceGuDrawBufferList(GU_PSM_5551, work_frame, BUF_WIDTH);
-	// sceGuScissor(24, 16, 336, 240);
-	// sceGuTexImage(0, 512, 512, BUF_WIDTH, tex_fix);
-	// sceGuClutLoad(256/8, clut);
-
-	// vertices = (struct Vertex *)sceGuGetMemory(fix_num * sizeof(struct Vertex));
-	// memcpy(vertices, vertices_fix, fix_num * sizeof(struct Vertex));
-	// sceGuDrawArray(GU_SPRITES, TEXTURE_FLAGS, fix_num, NULL, vertices);
-
-	// sceGuFinish();
-	// sceGuSync(0, GU_SYNC_FINISH);
+	if (!fix_num) return;
+	if (tex_fix_changed) {
+		video_driver->uploadMem(video_data, TEX_FIX);
+		tex_fix_changed = false;
+	}
+	video_driver->blitTexture(video_data, TEX_FIX, clut, palette_bank, fix_num, vertices_fix);
 }
 
 
 /*------------------------------------------------------------------------
-	SPRを描画リストに登録
+	SPR?????????
 ------------------------------------------------------------------------*/
 
 void blit_draw_spr(int x, int y, int w, int h, uint32_t code, uint16_t attr)
 {
-	// s16 idx;
-	// struct Vertex *vertices;
-	// uint32_t key;
+	int16_t idx;
+	GSPRIMUVPOINTFLAT *vertices;
+	gs_rgbaq color = color_to_RGBAQ(0x80, 0x80, 0x80, 0x80, 0);
+	uint32_t key;
 
-	// if (spr_disable) return;
+	if (spr_disable) return;
 
-	// key = MAKE_SPR_KEY(code, attr);
+	key = MAKE_SPR_KEY(code, attr);
 
-	// if ((idx = spr_get_sprite(key)) < 0)
-	// {
-	// 	uint32_t col, tile;
-	// 	uint8_t *src, *dst, lines = 16;
+	if ((idx = spr_get_sprite(key)) < 0)
+	{
+		uint32_t col, tile, offset;
+		uint8_t *src, *dst, lines, row, column;
 
-	// 	if (spr_texture_num == SPR_TEXTURE_SIZE - 1)
-	// 	{
-	// 		spr_delete_sprite();
+		if (spr_texture_num == SPR_TEXTURE_SIZE - 1)
+		{
+			spr_delete_sprite();
 
-	// 		if (spr_texture_num == SPR_TEXTURE_SIZE - 1)
-	// 		{
-	// 			spr_disable = 1;
-	// 			return;
-	// 		}
-	// 	}
+			if (spr_texture_num == SPR_TEXTURE_SIZE - 1)
+			{
+				spr_disable = 1;
+				return;
+			}
+		}
 
-	// 	idx = spr_insert_sprite(key);
-	// 	dst = SWIZZLED8_16x16(tex_spr[0], idx);
-	// 	src = &memory_region_gfx3[(*read_cache)(code << 7)];
-	// 	col = color_table[(attr >> 8) & 0x0f];
+		idx = spr_insert_sprite(key);
+		src = &memory_region_gfx3[(*read_cache)(code << 7)];
+		col = color_table[(attr >> 8) & 0x0f];
 
-	// 	while (lines--)
-	// 	{
-	// 		tile = *(uint32_t *)(src + 0);
-	// 		*(uint32_t *)(dst +  0) = ((tile >> 0) & 0x0f0f0f0f) | col;
-	// 		*(uint32_t *)(dst +  4) = ((tile >> 4) & 0x0f0f0f0f) | col;
-	// 		tile = *(uint32_t *)(src + 4);
-	// 		*(uint32_t *)(dst +  8) = ((tile >> 0) & 0x0f0f0f0f) | col;
-	// 		*(uint32_t *)(dst + 12) = ((tile >> 4) & 0x0f0f0f0f) | col;
-	// 		src += 8;
-	// 		dst += swizzle_table_8bit[lines];
-	// 	}
-	// }
+		row = idx / TILE_16x16_PER_LINE;
+		column = idx % TILE_16x16_PER_LINE;
+		for (lines = 0; lines < 16; lines++)
+		{
+			offset = ((row * 16) + lines) * BUF_WIDTH + (column * 16);
+			dst = &tex_spr[0][offset];
+			tile = *(uint32_t *)(src + 0);
+			*(uint32_t *)(dst +  0) = ((tile >> 0) & 0x0f0f0f0f) | col;
+			*(uint32_t *)(dst +  4) = ((tile >> 4) & 0x0f0f0f0f) | col;
+			tile = *(uint32_t *)(src + 4);
+			*(uint32_t *)(dst +  8) = ((tile >> 0) & 0x0f0f0f0f) | col;
+			*(uint32_t *)(dst + 12) = ((tile >> 4) & 0x0f0f0f0f) | col;
+			src += 8;
+		}
+	}
 
-	// vertices = &vertices_spr[spr_num];
-	// spr_num += 2;
+	vertices = &vertices_spr[spr_num];
+	spr_num += 2;
 
-	// spr_flags[spr_index] = (idx >> 10) | ((attr & 0xf000) >> 4);
-	// spr_index++;
+	spr_flags[spr_index] = (idx >> 10) | ((attr & 0xf000) >> 4);
+	spr_index++;
 
-	// vertices[0].x = vertices[1].x = x;
-	// vertices[0].y = vertices[1].y = y;
-	// vertices[0].u = vertices[1].u = (idx & 0x001f) << 4;
-	// vertices[0].v = vertices[1].v = (idx & 0x03e0) >> 1;
+	uint32_t x0 = x;
+	uint32_t y0 = y;
+	uint32_t u0 = (idx & 0x001f) << 4;
+	uint32_t v0 = (idx & 0x03e0) >> 1;
+	uint32_t x1 = x0 + w;
+	uint32_t y1 = y0 + h;
+	uint32_t u1 = u0;
+	uint32_t v1 = v0;
 
-	// attr ^= 0x03;
-	// vertices[(attr & 0x01) >> 0].u += 16;
-	// vertices[(attr & 0x02) >> 1].v += 16;
+	attr ^= 0x03;
+	uint32_t index_u = (attr & 0x01) >> 0;
+	uint32_t index_v = (attr & 0x02) >> 1;
 
-	// vertices[1].x += w;
-	// vertices[1].y += h;
+	u0 += index_u ? 0 : 16;
+	v0 += index_v ? 0 : 16;
+	u1 += index_u ? 16 : 0;
+	v1 += index_v ? 16 : 0;
+
+	GSGLOBAL *gsGlobal = video_driver->getNativeObjects(video_data, 0);
+	GSTEXTURE *atlas = video_driver->getNativeObjects(video_data, 2);
+
+	vertices[0].xyz2 = vertex_to_XYZ2_pixel_perfect(gsGlobal, x0, y0, 0);
+	vertices[0].uv = vertex_to_UV(atlas, u0, v0);
+
+	vertices[1].xyz2 = vertex_to_XYZ2_pixel_perfect(gsGlobal, x1, y1, 0);
+	vertices[1].uv = vertex_to_UV(atlas, u1, v1);
 }
 
 
 /*------------------------------------------------------------------------
-	SPR描画終了
+	SPR????
 ------------------------------------------------------------------------*/
+
+static enum WorkBuffer getWorkBufferForSPR(uint8_t index) {
+	// printf("getWorkBufferForSPR(%i)\n", index);
+	switch (index) {
+		case 0:
+			return TEX_SPR0;
+		case 1:
+			return TEX_SPR1;
+		case 2:
+			return TEX_SPR2;
+		default:
+			return TEX_SPR0;
+	}
+}
 
 void blit_finish_spr(void)
 {
-	// int i, total_sprites = 0;
-	// uint16_t flags, *pflags = spr_flags;
-	// struct Vertex *vertices, *vertices_tmp;
+	// // printf("blit_finish_spr\n");
+	int i, total_sprites = 0;
+	uint16_t flags, *pflags = spr_flags;
+	GSPRIMUVPOINTFLAT *vertices, *vertices_tmp;
+	uint16_t *clut_tmp;
+	enum WorkBuffer workBuffer;
 
-	// if (!spr_index) return;
+	if (!spr_index) return;
+	// printf("blit_finish_spr has spr_index\n");
 
-	// flags = *pflags;
+	GSPRIMUVPOINTFLAT vertex_buffer[spr_num];
 
-	// sceGuStart(GU_DIRECT, gulist);
-	// sceGuDrawBufferList(GU_PSM_5551, work_frame, BUF_WIDTH);
-	// sceGuScissor(24, clip_min_y, 336, clip_max_y);
-	// sceGuTexImage(0, 512, 512, BUF_WIDTH, tex_spr[flags & 3]);
-	// sceGuClutLoad(256/8, &clut[flags & 0xf00]);
+	bool memUploaded[4] = { 0 };
+	bool clutUploaded[16] = { 0 };
 
-	// vertices_tmp = vertices = (struct Vertex *)sceGuGetMemory(spr_num * sizeof(struct Vertex));
+	flags = *pflags;
+	workBuffer = getWorkBufferForSPR(flags & 3);
+	memUploaded[flags & 3] = true;
+	clutUploaded[(flags & 0xf00)/256] = true;
+	clut_tmp = &clut[flags & 0xf00];
+	video_driver->uploadMem(video_data, workBuffer);
 
-	// for (i = 0; i < spr_num; i += 2)
-	// {
-	// 	if (flags != *pflags)
-	// 	{
-	// 		if (total_sprites)
-	// 		{
-	// 			sceGuDrawArray(GU_SPRITES, TEXTURE_FLAGS, total_sprites, NULL, vertices);
-	// 			total_sprites = 0;
-	// 			vertices = vertices_tmp;
-	// 		}
+	vertices_tmp = vertices = &vertex_buffer[0];
 
-	// 		flags = *pflags;
-	// 		sceGuTexImage(0, 512, 512, BUF_WIDTH, tex_spr[flags & 3]);
-	// 		sceGuClutLoad(256/8, &clut[flags & 0xf00]);
-	// 	}
+	for (i = 0; i < spr_num; i += 2)
+	{
+		if (flags != *pflags)
+		{
+			if (total_sprites)
+			{
+				video_driver->blitTexture(video_data, workBuffer, clut_tmp, palette_bank, total_sprites, vertices);
+				total_sprites = 0;
+				vertices = vertices_tmp;
+			}
 
-	// 	vertices_tmp[0] = vertices_spr[i + 0];
-	// 	vertices_tmp[1] = vertices_spr[i + 1];
+			flags = *pflags;
+			workBuffer = getWorkBufferForSPR(flags & 3);
+			clut_tmp = &clut[flags & 0xf00];
+			if (memUploaded[flags & 3] == false) {
+				memUploaded[flags & 3] = true;
+				video_driver->uploadMem(video_data, workBuffer);
+			}
+			if (clutUploaded[(flags & 0xf00)/256] == false) {
+				clutUploaded[(flags & 0xf00)/256] = true;
+			}
+		}
 
-	// 	vertices_tmp += 2;
-	// 	total_sprites += 2;
-	// 	pflags++;
-	// }
+		vertices_tmp[0] = vertices_spr[i + 0];
+		vertices_tmp[1] = vertices_spr[i + 1];
 
-	// if (total_sprites)
-	// 	sceGuDrawArray(GU_SPRITES, TEXTURE_FLAGS, total_sprites, NULL, vertices);
+		vertices_tmp += 2;
+		total_sprites += 2;
+		pflags++;
+	}
 
-	// sceGuFinish();
-	// sceGuSync(0, GU_SYNC_FINISH);
+	if (total_sprites)
+		video_driver->blitTexture(video_data, workBuffer, clut_tmp, palette_bank, total_sprites, vertices);
 }
 
 
 /******************************************************************************
-	SPR ソフトウェア描画
+	SPR ????????
 ******************************************************************************/
 
 static void drawgfxline_fixed(uint32_t *src, uint16_t *dst, uint16_t *pal, int zoom);

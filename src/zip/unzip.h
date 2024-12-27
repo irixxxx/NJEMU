@@ -172,7 +172,7 @@ int unzCloseCurrentFile(unzFile file);
   Return UNZ_CRCERROR if all the file was read but the CRC is not good
 */
 
-int unzReadCurrentFile(unzFile file, void *buf, unsigned len);
+size_t unzReadCurrentFile(unzFile file, void *buf, size_t len);
 /*
   Read bytes from the current file (opened by unzOpenCurrentFile)
   buf contain buffer where data must be copied

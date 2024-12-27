@@ -59,7 +59,7 @@ static int32_t sound_update_thread(uint32_t args, void *argp)
 		else
 			memset(sound_buffer[flip], 0, SOUND_BUFFER_SIZE * 2);
 
-		audio_driver->srcOutputBlocking(game_audio, sound_volume, sound_buffer[flip]);
+		audio_driver->srcOutputBlocking(game_audio, sound_volume, sound_buffer[flip], SOUND_BUFFER_SIZE * sizeof(int16_t));
 		flip ^= 1;
 	}
 

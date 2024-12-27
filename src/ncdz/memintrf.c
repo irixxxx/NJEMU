@@ -80,7 +80,7 @@ static uint8_t *memory_allocate(int type, uint32_t length)
 		"CPU1","CPU2","GFX1","GFX2","SOUND1","USER1"
 	};
 
-	if ((mem = memalign(MEM_ALIGN, length)) == NULL)
+	if ((mem = malloc(length)) == NULL)
 	{
 		error_memory(region_name[type]);
 		return NULL;
@@ -105,7 +105,7 @@ static int build_zoom_tables(void)
 	uint8_t *tile_fullmode1;
 	int zoom_y;
 
-	if ((memory_region_user2 = memalign(MEM_ALIGN, 0x10000)) == NULL)
+	if ((memory_region_user2 = malloc(0x10000)) == NULL)
 	{
 		error_memory("REGION_USER2");
 		return 0;
@@ -376,7 +376,7 @@ int memory_init(void)
 	load_commandlist(game_name, NULL);
 #endif
 
-	power_driver->setCpuClock(NULL, platform_cpuclock);
+	power_driver->setCpuClock(power_data, platform_cpuclock);
 
 	{
 		uint32_t fd;

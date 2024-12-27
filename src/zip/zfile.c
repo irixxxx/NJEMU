@@ -20,7 +20,7 @@ static unzFile unzfile = NULL;
 static char basedir[MAX_PATH];
 static char *basedirend;
 static char zip_cache[4096];
-static int  zip_cached_len;
+static size_t  zip_cached_len;
 static int  zip_filepos;
 
 
@@ -31,7 +31,10 @@ static int  zip_filepos;
 /*------------------------------------------------------
 	ZIPファイルを開く
 ------------------------------------------------------*/
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpointer-to-int-cast"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wvoid-pointer-to-int-cast"
 int zip_open(const char *path)
 {
 	if (unzfile != NULL) zip_close();
@@ -45,7 +48,8 @@ int zip_open(const char *path)
 
 	return -1;
 }
-
+#pragma clang diagnostic pop
+#pragma GCC diagnostic pop
 
 /*------------------------------------------------------
 	ZIPファイルを閉じる
@@ -108,7 +112,10 @@ int zip_findnext(struct zip_find_t *file)
 /*------------------------------------------------------
 	ZIPファイル内のファイルを開く
 ------------------------------------------------------*/
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpointer-to-int-cast"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wvoid-pointer-to-int-cast"
 int zopen(const char *filename)
 {
 	zip_cached_len = 0;
@@ -128,6 +135,8 @@ int zopen(const char *filename)
 
 	return -1;
 }
+#pragma clang diagnostic pop
+#pragma GCC diagnostic pop
 
 
 /*------------------------------------------------------
@@ -151,7 +160,7 @@ int zclose(int fd)
 	ZIPファイル内のファイルを読み込む
 ------------------------------------------------------*/
 
-int zread(int fd, void *buf, unsigned size)
+size_t zread(int fd, void *buf, size_t size)
 {
 	if (unzfile == NULL)
 		return read(fd, buf, size);
@@ -184,13 +193,13 @@ int zgetc(int fd)
 	ZIPファイル内のファイルのサイズを取得
 ------------------------------------------------------*/
 
-int zsize(int fd)
+size_t zsize(int fd)
 {
 	unz_file_info info;
 
 	if (unzfile == NULL)
 	{
-		int len, pos = lseek(fd, 0, SEEK_CUR);
+        off_t len, pos = lseek(fd, 0, SEEK_CUR);
 
 		len = lseek(fd, 0, SEEK_END);
 		lseek(fd, pos, SEEK_CUR);

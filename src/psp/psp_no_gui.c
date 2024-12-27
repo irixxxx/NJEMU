@@ -33,12 +33,19 @@ int bgimage_type;
 int bgimage_blightness;
 #endif
 
-void msg_printf(const char *text, ...)
-{
+void msg_printf(const char *text, ...) {
+	// Let's use directly printf instead
+	va_list args;
+    va_start(args, text);
+
+    vprintf(text, args);  // Use vprintf to handle variable arguments
+
+    va_end(args);
 }
 
 void show_progress(const char *text)
 {
+	printf("show_progress: %s\n", text);
 }
 
 void update_progress(void)
@@ -98,7 +105,7 @@ void uifont_print_shadow(int sx, int sy, int r, int g, int b, const char *s) {
 }
 
 void textfont_print(int sx, int sy, int r, int g, int b, const char *s, int flag) {
-
+	printf("textfont_print: %s\n", s);
 }
 
 int uifont_get_string_width(const char *s) {
@@ -106,11 +113,11 @@ int uifont_get_string_width(const char *s) {
 }
 
 void uifont_print_shadow_center(int sy, int r, int g, int b, const char *s) {
-
+	printf("uifont_print_shadow_center: %s\n", s);
 }
 
 void uifont_print(int sx, int sy, int r, int g, int b, const char *s) {
-
+	printf("uifont_print: %s\n", s);
 }
 
 void small_icon_shadow(int sx, int sy, int r, int g, int b, int no) {

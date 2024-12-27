@@ -217,8 +217,8 @@ int32_t Cz80_Exec(cz80_struc *CPU, int32_t cycles)
 #endif
 	uint32_t Opcode;
 	uint32_t adr = 0;
-	uint32_t res;
-	uint32_t val;
+	uintptr_t res;
+	uintptr_t val;
 	union16 *data;
 
 	PC = CPU->PC;
@@ -312,7 +312,7 @@ uint32_t Cz80_Get_Reg(cz80_struc *CPU, int32_t regnum)
 {
 	switch (regnum)
 	{
-	case CZ80_PC:   return (CPU->PC - CPU->BasePC);
+	case CZ80_PC:   return (uint32_t)(CPU->PC - CPU->BasePC);
 	case CZ80_SP:   return zSP;
 	case CZ80_FA:   return zFA;
 	case CZ80_BC:   return zBC;

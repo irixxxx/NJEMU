@@ -32,7 +32,6 @@
 *.out
 *.app
 *.i*86
-*.x86_64
 *.hex
 
 # Debug files
@@ -57,3 +56,5 @@ dkms.conf
 *.pbp
 *.sfo
 *.prx
+
+build/

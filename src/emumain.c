@@ -46,9 +46,10 @@ uint32_t frames_displayed;
 int fatal_error;
 
 char launchDir[MAX_PATH];
-char screenshotDir[MAX_PATH];  // スクリーンショト保存PATH
+char screenshotDir[MAX_PATH];
 bool systembuttons_available;
 void *platform_data = NULL;
+void *power_data = NULL;
 
 /******************************************************************************
 	ローカル変数
@@ -58,8 +59,8 @@ static int frameskip;
 static int frameskipadjust;
 static int frameskip_counter;
 
-static TICKER last_skipcount0_time;
-static TICKER this_frame_base;
+static uint64_t last_skipcount0_time;
+static uint64_t this_frame_base;
 static int warming_up;
 
 static int frames_since_last_fps;
@@ -111,7 +112,7 @@ volatile int Sleep;
 
 static void show_fps(void)
 {
-	int sx;
+	size_t sx;
 	char buf[32];
 
 	sprintf(buf, "%s%2d %3d%% %2dfps",
@@ -121,7 +122,8 @@ static void show_fps(void)
 		frames_per_second);
 
 	sx = SCR_WIDTH - (strlen(buf) << 3);
-	small_font_print(sx, 0, buf, 1);
+	printf("%s\n", buf);
+	small_font_print((int)sx, 0, buf, 1);
 }
 
 
@@ -131,9 +133,9 @@ static void show_fps(void)
 
 static void show_battery_warning(void)
 {
-	if (!power_driver->isBatteryCharging(0))
+	if (!power_driver->isBatteryCharging(power_data))
 	{
-		int bat = power_driver->batteryLifePercent(0);
+		int bat = power_driver->batteryLifePercent(power_data);
 
 		if (bat < 10)
 		{
@@ -194,7 +196,7 @@ void autoframeskip_reset(void)
 	frames_since_last_fps = 0;
 
 	game_speed_percent = 100;
-	frames_per_second = REFRESH_RATE;
+	frames_per_second = (int) REFRESH_RATE;
 	frames_displayed = 0;
 
 	warming_up = 1;
@@ -235,7 +237,7 @@ void update_screen(void)
 	if (warming_up)
 	{
 		video_driver->waitVsync(video_data);
-		last_skipcount0_time = ticker_driver->ticker(NULL) - (int)((float)FRAMESKIP_LEVELS * TICKS_PER_FRAME);
+		last_skipcount0_time = ticker_driver->currentUs(ticker_data) - (int)((float)FRAMESKIP_LEVELS * TICKS_PER_FRAME);
 		warming_up = 0;
 	}
 
@@ -247,12 +249,12 @@ void update_screen(void)
 
 	if (!skipped_it)
 	{
-		TICKER curr = ticker_driver->ticker(NULL);
+		uint64_t curr = ticker_driver->currentUs(ticker_data);
 		int flip = 0;
 
 		if (option_speedlimit)
 		{
-			TICKER target = this_frame_base + (int)((float)frameskip_counter * TICKS_PER_FRAME);
+			uint64_t target = this_frame_base + (int)((float)frameskip_counter * TICKS_PER_FRAME);
 
 			if (option_vsync)
 			{
@@ -263,8 +265,8 @@ void update_screen(void)
 				}
 			}
 
-			while (curr < target)
-				curr = ticker_driver->ticker(NULL);
+			if (target > curr) usSleep(target - curr);
+			curr = ticker_driver->currentUs(ticker_data);
 		}
 		if (!flip) video_driver->flipScreen(video_data, 0);
 
@@ -272,11 +274,11 @@ void update_screen(void)
 
 		if (frameskip_counter == 0)
 		{
-			float seconds_elapsed = (float)(curr - last_skipcount0_time) * (1.0 / 1000000.0);
+			float seconds_elapsed = (float)(curr - last_skipcount0_time)/ 1000000.0;
 			float frames_per_sec = (float)frames_since_last_fps / seconds_elapsed;
 
-			game_speed_percent = (int)(100.0 * frames_per_sec / REFRESH_RATE + 0.5);
-			frames_per_second = (int)((float)rendered_frames_since_last_fps / seconds_elapsed + 0.5);
+			game_speed_percent = (int)(100.0 * frames_per_sec / (float)REFRESH_RATE);
+			frames_per_second = (int)((float)rendered_frames_since_last_fps / seconds_elapsed);
 
 			last_skipcount0_time = curr;
 			frames_since_last_fps = 0;
@@ -399,8 +401,6 @@ void show_fatal_error(void)
 	スクリーンショット保存
 ------------------------------------------------------*/
 
-extern char screenshotDir[MAX_PATH];  // スクリーンショト保存PATH
-
 void save_snapshot(void)
 {
 	char path[MAX_PATH];
@@ -443,37 +443,80 @@ void save_snapshot(void)
 
 
 int main(int argc, char *argv[]) {
+	printf("===> %s, %s:%i\n", __FUNCTION__, __FILE__, __LINE__);
+#if defined(NO_GUI)
+	// Some default values
+	option_speedlimit = 1;
+	option_vsync = 0;
+	option_showfps = 0;
+	option_sound_enable = 1;
+	option_samplerate = 2;
+	option_sound_volume = 10;
+	option_stretch = 0;
+
+#if defined(BUILD_MVS)
+	input_map[P1_UP] = PLATFORM_PAD_UP;
+	input_map[P1_DOWN] = PLATFORM_PAD_DOWN;
+	input_map[P1_LEFT] = PLATFORM_PAD_LEFT;
+	input_map[P1_RIGHT] = PLATFORM_PAD_RIGHT;
+	input_map[P1_BUTTONA] = PLATFORM_PAD_B1;
+	input_map[P1_BUTTONB] = PLATFORM_PAD_B2;
+	input_map[P1_BUTTONC] = PLATFORM_PAD_B3;
+	input_map[P1_BUTTOND] = PLATFORM_PAD_B4;
+	input_map[P1_START] = PLATFORM_PAD_START;
+	input_map[P1_COIN] = PLATFORM_PAD_SELECT;
+#endif
+#endif
+
+    // Init process
 	platform_data = platform_driver->init();
+	ticker_data = ticker_driver->init();
+	power_data = power_driver->init();
+	printf("===> %s, %s:%i\n", __FUNCTION__, __FILE__, __LINE__);
 
 	getcwd(launchDir, MAX_PATH - 1);
+	printf("===> %s, %s:%i\n", __FUNCTION__, __FILE__, __LINE__);
 	strcat(launchDir, "/");
+	printf("===> %s, %s:%i\n", __FUNCTION__, __FILE__, __LINE__);
 
 	memset(screenshotDir, 0x00, sizeof(screenshotDir));
 
 	// Call main platform-specific entry point
+	printf("===> %s, %s:%i\n", __FUNCTION__, __FILE__, __LINE__);
 	platform_driver->main(platform_data, argc, argv);
 
 	mkdir(screenshotDir,0777); // スクショ用フォルダ作成
 
-	power_driver->setLowestCpuClock(NULL);
+	printf("===> %s, %s:%i\n", __FUNCTION__, __FILE__, __LINE__);
+	power_driver->setLowestCpuClock(power_data);
+	printf("===> %s, %s:%i\n", __FUNCTION__, __FILE__, __LINE__);
 	ui_text_data = ui_text_driver->init();
+	printf("===> %s, %s:%i\n", __FUNCTION__, __FILE__, __LINE__);
 	pad_init();
+	printf("===> %s, %s:%i\n", __FUNCTION__, __FILE__, __LINE__);
 
-	#if VIDEO_32BPP
-	video_driver->setMode(video_data, 32);
-#else
 	video_data = video_driver->init();
+#if VIDEO_32BPP
+	video_driver->setMode(video_data, 32);
 #endif
 
+	printf("===> %s, %s:%i\n", __FUNCTION__, __FILE__, __LINE__);
 	// Platform system buttom
 	systembuttons_available = platform_driver->startSystemButtons(platform_data);
 
+	printf("===> %s, %s:%i\n", __FUNCTION__, __FILE__, __LINE__);
 	file_browser();
+	printf("===> %s, %s:%i\n", __FUNCTION__, __FILE__, __LINE__);
 	video_driver->free(video_data);
+	printf("===> %s, %s:%i\n", __FUNCTION__, __FILE__, __LINE__);
 	ui_text_driver->free(ui_text_data);
+	printf("===> %s, %s:%i\n", __FUNCTION__, __FILE__, __LINE__);
 	pad_exit();
+	printf("===> %s, %s:%i\n", __FUNCTION__, __FILE__, __LINE__);
 
 	// Platform exit
+	power_driver->free(power_data);
+	ticker_driver->free(ticker_data);
 	platform_driver->free(platform_data);
 
 	return 0;

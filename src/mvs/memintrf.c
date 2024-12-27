@@ -1222,7 +1222,8 @@ static int load_rom_info(const char *game_name)
 	char path[MAX_PATH];
 	char *buf;
 	char linebuf[256];
-	int i, size;
+	int i;
+    off_t size;
 	int rom_start = 0;
 	int region = 0;
 
@@ -1627,7 +1628,7 @@ int memory_init(void)
 	{
 		/* AdHoc通信時は一部オプションで固定の設定を使用 */
 		neogeo_raster_enable = 0;
-		platform_cpuclock    = power_driver->getHighestCpuClock(NULL);
+		platform_cpuclock    = power_driver->getHighestCpuClock(power_data);
 		option_vsync         = 0;
 		option_autoframeskip = 0;
 		option_frameskip     = 0;
@@ -1639,7 +1640,7 @@ int memory_init(void)
 	}
 #endif
 
-	power_driver->setCpuClock(NULL, platform_cpuclock);
+	power_driver->setCpuClock(power_data, platform_cpuclock);
 
 	msg_printf(TEXT(CHECKING_BIOS));
 
