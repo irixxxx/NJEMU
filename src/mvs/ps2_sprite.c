@@ -103,6 +103,10 @@ static uint16_t spr_texture_num;
 static uint16_t spr_index;
 static uint8_t spr_disable;
 
+static GSGLOBAL *gsGlobal;
+// All the textures has the same size, as this variable is used to calculate the vertexes.
+// SPR0, SPR1, SPR2 and FIX are all 512x512
+GSTEXTURE *atlas;
 
 /*------------------------------------------------------------------------
 	?????????????
@@ -433,6 +437,9 @@ void blit_reset(void)
 	clut = (uint16_t *)&video_palettebank[palette_bank];
 	video_driver->uploadClut(video_data, clut, palette_bank);
 
+	gsGlobal = video_driver->getNativeObjects(video_data, 0);
+	atlas = video_driver->getNativeObjects(video_data, 5);
+
 	printf("===> palette_bank = %d\n", palette_bank);
 
 	blit_clear_all_sprite();
@@ -513,8 +520,6 @@ void blit_draw_fix(int x, int y, uint32_t code, uint16_t attr)
 		}
 	}
 
-	GSGLOBAL *gsGlobal = video_driver->getNativeObjects(video_data, 0);
-	GSTEXTURE *atlas = video_driver->getNativeObjects(video_data, 5);
 	vertices = &vertices_fix[fix_num];
 	fix_num += 2;
 
@@ -625,9 +630,6 @@ void blit_draw_spr(int x, int y, int w, int h, uint32_t code, uint16_t attr)
 	v0 += index_v ? 0 : 16;
 	u1 += index_u ? 16 : 0;
 	v1 += index_v ? 16 : 0;
-
-	GSGLOBAL *gsGlobal = video_driver->getNativeObjects(video_data, 0);
-	GSTEXTURE *atlas = video_driver->getNativeObjects(video_data, 2);
 
 	vertices[0].xyz2 = vertex_to_XYZ2_pixel_perfect(gsGlobal, x0, y0, 0);
 	vertices[0].uv = vertex_to_UV(atlas, u0, v0);
