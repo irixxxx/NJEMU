@@ -523,7 +523,8 @@ static void psp2k_mem_free(void *mem)
 
 static int load_rom_cpu1(void)
 {
-	int i, res;
+	int i;
+    int64_t res;
 	char fname[32], *parent;
 
 	if ((memory_region_cpu1 = malloc(memory_length_cpu1)) == NULL)
@@ -630,7 +631,8 @@ static int load_rom_cpu1(void)
 
 static int load_rom_cpu2(void)
 {
-	int i, res;
+	int i;
+    int64_t res;
 	char fname[32], *parent;
 
 	if ((memory_region_cpu2 = malloc(memory_length_cpu2)) == NULL)
@@ -730,7 +732,7 @@ static int load_rom_cpu2(void)
 
 static int load_rom_gfx1(void)
 {
-	int res;
+	int64_t res;
 	char fname[32];
 
 	if ((memory_region_gfx1 = malloc(memory_length_gfx1)) == NULL)
@@ -788,7 +790,8 @@ static int load_rom_gfx2(void)
 	}
 	else
 	{
-		int i, res;
+		int i;
+        int64_t res;
 		char fname[32], *parent;
 
 		parent = strlen(parent_name) ? parent_name : (char *)bios_zip;
@@ -847,7 +850,8 @@ static int load_rom_gfx3(void)
 
 		if (memory_region_gfx3 != NULL)
 		{
-			int i, res;
+			int i;
+            int64_t res;
 			char fname[32], *parent;
 
 			memset(memory_region_gfx3, 0, memory_length_gfx3);
@@ -902,7 +906,7 @@ static int load_rom_gfx3(void)
 
 static int load_rom_gfx4(void)
 {
-	int res;
+	int64_t res;
 	char fname[32];
 
 	if ((memory_region_gfx4 = malloc(memory_length_gfx4)) == NULL)
@@ -990,7 +994,8 @@ static int load_rom_sound1(void)
 	}
 	else
 	{
-		int i, res;
+		int i;
+        int64_t res;
 		char fname[32], *parent;
 
 		parent = strlen(parent_name) ? parent_name : NULL;
@@ -1024,7 +1029,8 @@ static int load_rom_sound1(void)
 
 static int load_rom_sound2(void)
 {
-	int i, res;
+	int i;
+    int64_t res;
 	char fname[32], *parent;
 
 	if (memory_length_sound2 == 0 || !option_sound_enable || disable_sound)
@@ -1070,7 +1076,7 @@ static int load_rom_sound2(void)
 
 static int load_rom_user1(int reload)
 {
-	int res;
+	int64_t res;
 	char fname[32];
 	char *parent;
 	uint32_t patch = 0;
@@ -1172,7 +1178,8 @@ static int load_rom_user1(int reload)
 #if !RELEASE
 static int load_rom_user2(void)
 {
-	int i, res;
+	int i;
+    int64_t res;
 	char fname[32], *parent;
 
 	if (memory_length_user2 == 0)
@@ -1563,7 +1570,7 @@ static int load_rom_info(const char *game_name)
 
 int memory_init(void)
 {
-	int res;
+	int64_t res;
 
 	memory_region_cpu1   = NULL;
 	memory_region_cpu2   = NULL;

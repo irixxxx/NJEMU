@@ -18,7 +18,7 @@ void swab(const void *restrict src, void *restrict dest, ssize_t nbytes);
 	ローカル変数
 ******************************************************************************/
 
-static int rom_fd = -1;
+static int64_t rom_fd = -1;
 
 
 /******************************************************************************
@@ -29,7 +29,7 @@ static int rom_fd = -1;
 	ZIPファイルからファイルを検索し開く
 --------------------------------------------------------*/
 
-int file_open(const char *fname1, const char *fname2, const uint32_t crc, char *fname)
+int64_t file_open(const char *fname1, const char *fname2, const uint32_t crc, char *fname)
 {
 	int i, found = 0;
 	struct zip_find_t file;
@@ -72,7 +72,7 @@ int file_open(const char *fname1, const char *fname2, const uint32_t crc, char *
 			{
 				if (fname)
 				{
-					int fd;
+					int64_t fd;
 
 					if ((fd = zopen(fname)) != -1)
 					{

@@ -32,7 +32,7 @@ struct rom_t
 };
 
 #if (EMU_SYSTEM != NCDZ)
-int file_open(const char *fname1, const char *fname2, const uint32_t crc, char *fname);
+int64_t file_open(const char *fname1, const char *fname2, const uint32_t crc, char *fname);
 void file_close(void);
 size_t file_read(void *buf, size_t length);
 int file_getc(void);

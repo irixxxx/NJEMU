@@ -300,7 +300,7 @@ static void upload_file(int fileno, uint32_t offset, uint32_t length)
 static int load_file(int fileno)
 {
 	struct filelist_t *file = &filelist[fileno];
-	int f;
+	int64_t f;
 	uint32_t length, next = 0;
 
 #ifdef SAVE_STATE
@@ -676,7 +676,8 @@ void cdrom_shutdown(void)
 int cdrom_process_ipl(void)
 {
 	struct filelist_t *file = &filelist[0];
-    int i, j, f;
+    int i, j;
+    int64_t f;
     uint32_t length;
     char linebuf[32], *buf, *p, *ext;
 	char region_chr[3] = { 'J','U','E' };
@@ -1231,7 +1232,7 @@ static void cdrom_state_load_file(int type, const char *fname, int bank, uint32_
 {
 	struct filelist_t *file = &filelist[0];
 	int ftype[3] = { FIX_TYPE, SPR_TYPE, PCM_TYPE };
-	int f;
+	int64_t f;
 	uint32_t next = 0;
 
 	if ((f = zopen(fname)) == -1)

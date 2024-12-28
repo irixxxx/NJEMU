@@ -141,7 +141,8 @@ static void title_draw_spr(int sx, int sy, uint8_t *spr, uint16_t *palette, int 
 
 static int load_title(const char *path, int number)
 {
-	int i, fd, region, tileno, x, y, found = 0;
+	int i, region, tileno, x, y, found = 0;
+	int64_t fd;
 	uint8_t  title_spr[0x1680];
 	uint16_t palette[0x5a0 >> 1];
 #if VIDEO_32BPP
@@ -499,7 +500,7 @@ static int set_file_flags(const char *path, int number)
 #if (EMU_SYSTEM == NCDZ)
 	if (files[number]->type == FTYPE_ZIP)
 	{
-		int fd;
+		int64_t fd;
 		char zipname[MAX_PATH];
 
 		sprintf(zipname, "%s/%s", path, files[number]->name);

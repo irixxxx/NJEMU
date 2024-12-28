@@ -98,7 +98,8 @@ int neogeo_check_game(void)
 {
 	FILE *fp;
 	char fname[16], path[MAX_PATH], linebuf[128];
-	int i, fd, found = 0, NGH_number;
+	int i, found = 0, NGH_number;
+	int64_t fd;
 
 	neogeo_ngh = 0;
 	hack_irq = 0;

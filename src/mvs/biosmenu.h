@@ -46,8 +46,8 @@ enum
 
 extern const char *bios_zip;
 extern const char *bios_name[BIOS_MAX];
-extern const char *sfix_name;
-extern const char *lorom_name;
+extern char sfix_name[];
+extern char lorom_name[];
 
 extern const uint32_t bios_crc[BIOS_MAX];
 extern const uint32_t sfix_crc;

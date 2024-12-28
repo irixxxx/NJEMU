@@ -114,8 +114,8 @@ const uint32_t sfix_crc  = 0xc2ea0cfd;//old 0x354029fc
 const uint32_t lorom_crc = 0x5a86cff2;//old 0xe09e253c
 
 const char *bios_zip   = "neogeo";
-const char *sfix_name  = "sfix.sfx";
-const char *lorom_name = "000-lo.lo";
+char sfix_name[16]  = "sfix.sfx";
+char lorom_name[16] = "000-lo.lo";
 
 
 /******************************************************************************
@@ -133,7 +133,7 @@ static uint8_t bios_exist[BIOS_MAX];
 	エラーメッセージ表示
 ------------------------------------------------------*/
 
-static void bios_error(const char *rom_name, int error, int flag)
+static void bios_error(const char *rom_name, int64_t error, int flag)
 {
 	char mes[128];
 
@@ -157,7 +157,8 @@ static void bios_error(const char *rom_name, int error, int flag)
 
 static int bios_check(int flag)
 {
-	int i, err, count = 0, check_max = DEBUG_BIOS;
+	int i, count = 0, check_max = DEBUG_BIOS;
+    int64_t err;
 	char *fname;
 
 	if (!flag) ui_popup_reset();

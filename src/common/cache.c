@@ -68,7 +68,7 @@ static cache_t *tail;
 
 static int num_cache;
 static uint16_t ALIGN_DATA blocks[MAX_CACHE_BLOCKS];
-static int cache_fd;
+static int64_t cache_fd;
 
 #if (EMU_SYSTEM == MVS)
 #ifndef LARGE_MEMORY
@@ -206,8 +206,8 @@ static int fill_cache(void)
 		p->block = block;
 		blocks[block] = p->idx;
 
-		lseek(cache_fd, block << BLOCK_SHIFT, SEEK_SET);
-		read(cache_fd, &GFX_MEMORY[p->idx << BLOCK_SHIFT], BLOCK_SIZE);
+		lseek((int32_t)cache_fd, block << BLOCK_SHIFT, SEEK_SET);
+		read((int32_t)cache_fd, &GFX_MEMORY[p->idx << BLOCK_SHIFT], BLOCK_SIZE);
 
 		head = p->next;
 		head->prev = NULL;
@@ -368,11 +368,11 @@ static uint32_t read_cache_rawfile(uint32_t offset)
 		blocks[new_block] = p->idx;
 
 #if (EMU_SYSTEM == MVS)
-		lseek(cache_fd, new_block << BLOCK_SHIFT, SEEK_SET);
+		lseek((int32_t)cache_fd, new_block << BLOCK_SHIFT, SEEK_SET);
 #else
-		lseek(cache_fd, block_offset[new_block], SEEK_SET);
+		lseek((int32_t)cache_fd, block_offset[new_block], SEEK_SET);
 #endif
-		read(cache_fd, &GFX_MEMORY[p->idx << BLOCK_SHIFT], BLOCK_SIZE);
+		read((int32_t)cache_fd, &GFX_MEMORY[p->idx << BLOCK_SHIFT], BLOCK_SIZE);
 	}
 	else p = &cache_data[idx];
 
@@ -837,7 +837,7 @@ void cache_shutdown(void)
 #endif
 	if (cache_fd != -1)
 	{
-		close(cache_fd);
+		close((int32_t)cache_fd);
 		cache_fd = -1;
 	}
 #else
@@ -869,7 +869,7 @@ void cache_sleep(int flag)
 		if (flag)
 		{
 #if (EMU_SYSTEM == MVS)
-			close(cache_fd);
+			close((int32_t)cache_fd);
 #ifndef LARGE_MEMORY
 			if (pcm_cache_enable) close(pcm_fd);
 #endif

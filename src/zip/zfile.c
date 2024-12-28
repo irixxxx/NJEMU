@@ -23,6 +23,9 @@ static char zip_cache[4096];
 static size_t  zip_cached_len;
 static int  zip_filepos;
 
+// TODO: FJTRUJY The scope of this functions are wrong as they are mixing the zip and file operations.
+// Additionally we have required to use int64_t as file descriptor, to be compatible with 64-bit systems.
+
 
 /******************************************************************************
 	グローバル関数
@@ -116,7 +119,7 @@ int zip_findnext(struct zip_find_t *file)
 #pragma GCC diagnostic ignored "-Wpointer-to-int-cast"
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wvoid-pointer-to-int-cast"
-int zopen(const char *filename)
+int64_t zopen(const char *filename)
 {
 	zip_cached_len = 0;
 
@@ -126,12 +129,12 @@ int zopen(const char *filename)
 
 		strcpy(basedirend, filename);
 		fd = open(basedir, O_RDONLY, 0777);
-		return (fd < 0) ? -1 : (int)fd;
+		return (fd < 0) ? -1 : (long)fd;
 	}
 
 	if (unzLocateFile(unzfile, filename) == UNZ_OK)
 		if (unzOpenCurrentFile(unzfile) == UNZ_OK)
-			return (int)unzfile;
+			return (long)unzfile;
 
 	return -1;
 }
@@ -143,13 +146,13 @@ int zopen(const char *filename)
 	ZIPファイル内のファイルを閉じる
 ------------------------------------------------------*/
 
-int zclose(int fd)
+int zclose(int64_t fd)
 {
 	zip_cached_len = 0;
 
 	if (unzfile == NULL)
 	{
-		if (fd != -1) close(fd);
+		if (fd != -1) close((int32_t)fd);
 		return 0;
 	}
 	return unzCloseCurrentFile(unzfile);
@@ -160,10 +163,10 @@ int zclose(int fd)
 	ZIPファイル内のファイルを読み込む
 ------------------------------------------------------*/
 
-size_t zread(int fd, void *buf, size_t size)
+size_t zread(int64_t fd, void *buf, size_t size)
 {
 	if (unzfile == NULL)
-		return read(fd, buf, size);
+		return read((int32_t)fd, buf, size);
 
 	return unzReadCurrentFile(unzfile, buf, size);
 }
@@ -173,12 +176,12 @@ size_t zread(int fd, void *buf, size_t size)
 	ZIPファイル内のファイルから1バイト読み込む
 ------------------------------------------------------*/
 
-int zgetc(int fd)
+int zgetc(int64_t fd)
 {
 	if (zip_cached_len == 0)
 	{
 		if (unzfile == NULL)
-			zip_cached_len = read(fd, zip_cache, 4096);
+			zip_cached_len = read((int32_t)fd, zip_cache, 4096);
 		else
 			zip_cached_len = unzReadCurrentFile(unzfile, zip_cache, 4096);
 		if (zip_cached_len == 0) return EOF;
@@ -193,16 +196,16 @@ int zgetc(int fd)
 	ZIPファイル内のファイルのサイズを取得
 ------------------------------------------------------*/
 
-size_t zsize(int fd)
+size_t zsize(int64_t fd)
 {
 	unz_file_info info;
 
 	if (unzfile == NULL)
 	{
-        off_t len, pos = lseek(fd, 0, SEEK_CUR);
+        off_t len, pos = lseek((int32_t)fd, 0, SEEK_CUR);
 
-		len = lseek(fd, 0, SEEK_END);
-		lseek(fd, pos, SEEK_CUR);
+		len = lseek((int32_t)fd, 0, SEEK_END);
+		lseek((int32_t)fd, pos, SEEK_CUR);
 
 		return len;
 	}
@@ -221,7 +224,8 @@ size_t zsize(int fd)
 #if (EMU_SYSTEM == NCDZ)
 int zlength(const char *filename)
 {
-	int fd, length;
+	int64_t fd;
+	int length;
 
 	if ((fd = zopen(filename)) != -1)
 	{
