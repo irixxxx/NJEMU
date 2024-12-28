@@ -15,8 +15,8 @@
 	¶¨Êý/¥Þ¥¯¥íµÈ
 ******************************************************************************/
 
-#define MAKE_FIX_KEY(code, attr)	(code | (attr << 28))
-#define MAKE_SPR_KEY(code, attr)	(code | ((attr & 0x0f00) << 20))
+#define MAKE_FIX_KEY(code, attr)	(uint32_t)(code | (((uint32_t)attr) << 28))
+#define MAKE_SPR_KEY(code, attr)	(uint32_t)(code | (((uint32_t)(attr & 0x0f00)) << 20))
 
 
 /******************************************************************************
