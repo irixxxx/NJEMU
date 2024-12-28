@@ -140,10 +140,10 @@ void gsKit_clearRenderTexture(GSGLOBAL *gsGlobal, gs_rgbaq color, GSTEXTURE *tex
 	gsKit_set_test(gsGlobal, 0);
 }
 
-static inline void gsKit_setRegFrame(GSGLOBAL *gsGlobal, uint32_t fbp, uint32_t width, uint8_t psm) {
+static inline void gsKit_setRegFrame(GSGLOBAL *gsGlobal, uint32_t fbp, uint32_t width, uint32_t height, uint8_t psm) {
 	u64 *p_data;
 	u64 *p_store;
-	int qsize = 1;
+	int qsize = 2;
 
 	p_store = p_data = gsKit_heap_alloc(gsGlobal, qsize, (qsize*16), GIF_AD);
 
@@ -155,16 +155,19 @@ static inline void gsKit_setRegFrame(GSGLOBAL *gsGlobal, uint32_t fbp, uint32_t 
 
 	*p_data++ = GS_SETREG_FRAME_1(fbp / 8192, width / 64, psm, 0);
 	*p_data++ = GS_FRAME_1;
+
+	*p_data++ = GS_SETREG_SCISSOR_1(0, width - 1, 0, height - 1);
+	*p_data++ = GS_SCISSOR_1;
 }
 
 static inline void gsKit_renderToScreen(GSGLOBAL *gsGlobal)
 {
-	gsKit_setRegFrame(gsGlobal, gsGlobal->ScreenBuffer[gsGlobal->ActiveBuffer & 1], gsGlobal->Width, gsGlobal->PSM);
+	gsKit_setRegFrame(gsGlobal, gsGlobal->ScreenBuffer[gsGlobal->ActiveBuffer & 1], gsGlobal->Width, gsGlobal->Height, gsGlobal->PSM);
 }
 
 static inline void gsKit_renderToTexture(GSGLOBAL *gsGlobal, GSTEXTURE *texture)
 {
-	gsKit_setRegFrame(gsGlobal, texture->Vram, texture->Width, texture->PSM);
+	gsKit_setRegFrame(gsGlobal, texture->Vram, texture->Width, texture->Height, texture->PSM);
 }
 
 /* Copy of gsKit_sync_flip, but without the 'sync' */
