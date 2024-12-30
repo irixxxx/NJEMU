@@ -7,26 +7,13 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-#ifdef WIN32
-#define COBJMACROS
-#include <windows.h>
-#include <shlobj.h>
-#include <conio.h>
-#endif
-#include <stdio.h>
-#include <string.h>
-#include <dirent.h>
-#include <malloc.h>
-#include <zlib.h>
-#include "zfile.h"
+#include <stdint.h>
+#include <stddef.h>
 
 #ifndef MAX_PATH
 #define MAX_PATH	512
 #endif
 
-#ifdef WIN32
-#define DELIMITER	'\\'
-#else
 #define DELIMITER	'/'
 #endif
 
@@ -56,6 +43,7 @@ extern char cache_name[16];
 
 void error_memory(const char *mem_name);
 void error_file(const char *rom_name);
+void error_crc(const char *rom_name);
 void error_rom(const char *rom_name);
 
 int file_open(const char *fname1, const char *fname2, const uint32_t crc, char *fname);
@@ -67,20 +55,3 @@ int rom_load(struct rom_t *rom, uint8_t *mem, int idx, int max);
 
 int str_cmp(const char *s1, const char *s2);
 void check_byte_order(void);
-
-
-/*--------------------------------------------------------
-	Windows�p
---------------------------------------------------------*/
-
-#ifdef WIN32
-extern int is_win9x;
-
-void check_windows_version(void);
-int file_dialog(HWND hwnd, LPCSTR filter, char *fname, uint32_t flags);
-int folder_dialog(HWND hwnd, char *path);
-void convert_delimiter(char *path);
-#endif
-
-
-#endif /* COMMON_H */

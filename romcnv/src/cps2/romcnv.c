@@ -6,8 +6,15 @@
 
 ******************************************************************************/
 
-#include "romcnv.h"
+#include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
+#include "romcnv.h"
+#include "zfile.h"
 
 #define SPRITE_BLANK		0x00
 #define SPRITE_TRANSPARENT	0x02
@@ -1149,11 +1156,6 @@ int main(int argc, char *argv[])
 {
 	char *p, path[MAX_PATH];
 	int i, path_found = 0, all = 0, zip = 0, res = 1;
-#ifdef WIN32
-	int pause = 1;
-
-	check_windows_version();
-#endif
 	check_byte_order();
 
 #ifdef CHINESE
@@ -1178,37 +1180,23 @@ int main(int argc, char *argv[])
 			{
 				zip = 1;
 			}
-#ifdef WIN32
-			else if (!strcasecmp(argv[i], "-batch"))
-			{
-				pause = 0;
-			}
-			else if (strchr(argv[i], ':') != NULL || strchr(argv[i], DELIMITER) != NULL)
-#else
 			else if (strchr(argv[i], DELIMITER) != NULL)
-#endif
 			{
 				path_found = i;
 			}
 		}
 	}
 
-#ifndef WIN32
 	if (!path_found)
 	{
 		printf("usage: romcnv_cps2 fullpath%cgamename.zip [-zip]\n", DELIMITER);
 		printf("  or   romcnv_cps2 fullpath -all [-zip]\n\n", DELIMITER);
 		return 0;
 	}
-#endif
 
 	if (chdir("cache") != 0)
 	{
-#ifdef UNIX
 		if (mkdir("cache", 0777) != 0)
-#else
-		if (mkdir("cache") != 0)
-#endif
 		{
 #ifdef CHINESE
 			printf("错误: 无法创建\"cache\"目录.\n");
@@ -1220,46 +1208,14 @@ int main(int argc, char *argv[])
 	}
 	else chdir("..");
 
-#ifdef WIN32
-	strcpy(launchDir, argv[0]);
-	convert_delimiter(launchDir);
-
-	if ((p = strrchr(launchDir, delimiter)) != NULL)
-	{
-		*(p + 1) = '\0';
-	}
-	else
-	{
-		getcwd(launchDir, MAX_PATH);
-
-		convert_delimiter(launchDir);
-		if (is_win9x)
-			strcat(launchDir, "\\");
-		else
-			strcat(launchDir, "/");
-	}
-#else
 	getcwd(launchDir, MAX_PATH);
 	strcat(launchDir, "/");
-#endif
 
 	if (all)
 	{
-#ifdef WIN32
-		if (!folder_dialog(NULL, zip_dir)) goto error;
-		convert_delimiter(zip_dir);
-
-		strcpy(game_dir, zip_dir);
-
-		if (is_win9x)
-			strcat(game_dir, "\\");
-		else
-			strcat(game_dir, "/");
-#else
 		strcpy(zip_dir, argv[path_found]);
 		strcpy(game_dir, zip_dir);
 		strcat(game_dir, "/");
-#endif
 
 		for (i = 0; CPS2_cacheinfo[i].name; i++)
 		{
@@ -1311,27 +1267,7 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
-#ifdef WIN32
-		if (!path_found)
-		{
-#ifdef CHINESE
-			printf("请选择ROM文件.\n");
-#else
-			printf("Please select ROM file.\n");
-#endif
-
-			if (!file_dialog(NULL, "zip file (*.zip)\0*.zip\0", game_dir, OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY))
-				goto error;
-		}
-		else
-		{
-			strcpy(path, argv[path_found]);
-			strcpy(game_dir, strtok(path, "\""));
-		}
-		convert_delimiter(game_dir);
-#else
 		strcpy(game_dir, argv[path_found]);
-#endif
 
 		if ((p = strrchr(game_dir, delimiter)) != NULL)
 		{
@@ -1383,11 +1319,7 @@ int main(int argc, char *argv[])
 			else
 				res = create_raw_cache(game_name);
 		}
-#ifdef WIN32
-		if (res && pause)
-#else
 		if (res)
-#endif
 		{
 #ifdef CHINESE
 			printf("完成.\n");
@@ -1402,16 +1334,5 @@ int main(int argc, char *argv[])
 	}
 
 error:
-#ifdef WIN32
-	if (pause)
-	{
-#ifdef CHINESE
-		printf("请按任意键退出.\n");
-#else
-		printf("Press any key to exit.\n");
-#endif
-		getch();
-	}
-#endif
 	return res;
 }

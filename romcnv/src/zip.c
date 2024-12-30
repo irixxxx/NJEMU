@@ -8,21 +8,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "zlib/zlib.h"
-#include "zlib/zutil.h"
+#include <zlib.h>
+#include <errno.h>
+
 #include "zip.h"
-
-#ifdef STDC
-#  include <stddef.h>
-#  include <string.h>
-#  include <stdlib.h>
-#endif
-#ifdef NO_ERRNO_H
-	extern int errno;
-#else
-#   include <errno.h>
-#endif
-
 
 /* compile with -Dstatic if your debugger can't find static symbols */
 
@@ -239,11 +228,7 @@ static int write_datablock(FILE *fout, linkedlist_data *ll)
    nbByte == 1, 2 or 4 (byte, short or long)
 */
 
-static int zipstatic_putValue OF((FILE *file, uLong x, int nbByte));
-static int zipstatic_putValue (file, x, nbByte)
-	FILE *file;
-	uLong x;
-	int nbByte;
+static int zipstatic_putValue(FILE *file, uLong x, int nbByte)
 {
 	unsigned char buf[4];
 	int n;
@@ -257,11 +242,7 @@ static int zipstatic_putValue (file, x, nbByte)
 		return ZIP_OK;
 }
 
-static void zipstatic_putValue_inmemory OF((void* dest, uLong x, int nbByte));
-static void zipstatic_putValue_inmemory (dest, x, nbByte)
-	void* dest;
-	uLong x;
-	int nbByte;
+static void zipstatic_putValue_inmemory(void* dest, uLong x, int nbByte)
 {
 	unsigned char* buf=(unsigned char*)dest;
 	int n;
@@ -470,7 +451,7 @@ int zipOpenNewFileInZip(
 		zi->ci.stream.zfree = (free_func)0;
 		zi->ci.stream.opaque = (voidpf)0;
 
-		err = deflateInit2(&zi->ci.stream, level, Z_DEFLATED, -MAX_WBITS, DEF_MEM_LEVEL, 0);
+		err = deflateInit2(&zi->ci.stream, level, Z_DEFLATED, -MAX_WBITS, 8, 0);
 		if (err == Z_OK)
 			zi->ci.stream_initialised = 1;
 	}

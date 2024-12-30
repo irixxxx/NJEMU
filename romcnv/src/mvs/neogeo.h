@@ -289,6 +289,7 @@ enum
 
 /*----------- defined in machine/neocrypt.c -----------*/
 
+void neogeo_sfix_decrypt(void);
 void kof99_neogeo_gfx_decrypt(int extra_xor);
 void kof2000_neogeo_gfx_decrypt(int extra_xor);
 void svcpcb_gfx_decrypt(void);

@@ -1,8 +1,7 @@
 #ifndef ROMCNV_H
 #define ROMCNV_H
 
-#include "common.h"
-#include "neogeo.h"
+#include <stdint.h>
 
 extern uint8_t *memory_region_gfx2;
 extern uint8_t *memory_region_gfx3;
