@@ -13,7 +13,7 @@ typedef struct x86_64_audio {
 
 static void *x86_64_init(void) {
 	x86_64_audio_t *x86_64 = (x86_64_audio_t*)calloc(1, sizeof(x86_64_audio_t));
-    SDL_Init(SDL_INIT_AUDIO);
+    SDL_InitSubSystem(SDL_INIT_AUDIO);
 	return x86_64;
 }
 
@@ -27,7 +27,7 @@ static void x86_64_free(void *data) {
 }
 
 static int32_t x86_64_volumeMax(void *data) {
-	return SDL_MIX_MAXVOLUME;
+	return 32767;
 }
 
 static bool x86_64_chSRCReserve(void *data, uint16_t samples, int32_t frequency, uint8_t channels) {
@@ -38,11 +38,11 @@ static bool x86_64_chSRCReserve(void *data, uint16_t samples, int32_t frequency,
     desired.freq = frequency;
     desired.format = AUDIO_S16SYS; // Floating-point audio format
     desired.channels = channels;
-    desired.samples = samples;
+    desired.samples = samples; //frequency/10000 * 1024;
     desired.callback = NULL; // No callback; we use blocking audio
 
     x86_64->device = SDL_OpenAudioDevice(NULL, 0, &desired, &obtained, SDL_AUDIO_ALLOW_ANY_CHANGE);
-    if (x86_64->device == 0) {
+    if (x86_64->device <= 0) {
         fprintf(stderr, "Failed to open audio device: %s\n", SDL_GetError());
         return false;
     }
@@ -58,7 +58,7 @@ static bool x86_64_chSRCReserve(void *data, uint16_t samples, int32_t frequency,
         return false;
     }
     
-//    SDL_PauseAudioDevice(x86_64->device, 0); // Start audio playback
+    SDL_PauseAudioDevice(x86_64->device, 0); // Start audio playback
     return true;
 }
 
@@ -89,22 +89,24 @@ static void x86_64_srcOutputBlocking(void *data, int32_t volume, void *buffer, s
         return;
     }
     
-    int available = SDL_AudioStreamAvailable(x86_64->stream);
-
     // Add data to the stream for conversion
-    if (SDL_AudioStreamPut(x86_64->stream, buffer, available) < 0) {
+    if (SDL_AudioStreamPut(x86_64->stream, buffer, size) < 0) {
         fprintf(stderr, "Failed to queue audio stream data: %s\n", SDL_GetError());
         return;
     }
 
-    SDL_AudioStreamFlush(x86_64->stream);
-
+    int available = SDL_AudioStreamAvailable(x86_64->stream);
     void *out_buffer = malloc(available);
-    int len = SDL_AudioStreamGet(x86_64->stream, out_buffer, SDL_AudioStreamAvailable(x86_64->stream));
+
+    int len = SDL_AudioStreamGet(x86_64->stream, out_buffer, available);
     if (len > 0) {
         SDL_QueueAudio(x86_64->device, out_buffer, len);
     }
     free(out_buffer);
+
+    // SDL queuing is not limited, so make sure to wait until is it empty enough again
+    while (SDL_GetQueuedAudioSize(x86_64->device) > size * 8)
+        SDL_Delay(100);
 }
 
 static void x86_64_outputPannedBlocking(void *data, int leftvol, int rightvol, void *buf) {
@@ -124,6 +126,10 @@ static void x86_64_outputPannedBlocking(void *data, int leftvol, int rightvol, v
     }
 
     SDL_QueueAudio(x86_64->device, float_buffer, samples * sizeof(float));
+
+    // SDL queuing is not limited, so make sure to wait until is it empty enough again
+    while (SDL_GetQueuedAudioSize(x86_64->device) > samples*sizeof(int16_t) * 8)
+        SDL_Delay(100);
 }
 
 audio_driver_t audio_x86_64 = {
