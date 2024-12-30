@@ -275,6 +275,10 @@ static void ps2_start(void *data) {
 	ps2->clearScreenColor = color_to_RGBAQ(0x00, 0x00, 0x00, 0x0, 0);
 
 	ui_init();
+
+	gsKit_queue_exec(gsGlobal);
+	gsKit_finish();
+	gsKit_flip(gsGlobal);
 }
 
 static void *ps2_init(void)

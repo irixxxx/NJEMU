@@ -87,7 +87,12 @@ void file_browser(void) {
 #if USE_CACHE
 	sprintf(cache_dir, "%scache", "/");
 #endif
-	strcpy(game_name, "PBOBBL2N");
+	// Get the game name from a file called game_name.ini
+	FILE *fp = fopen("game_name.ini", "r");
+	if (fp) {
+		fgets(game_name, 255, fp);
+		fclose(fp);
+	}
 
 	emu_main();
 }
