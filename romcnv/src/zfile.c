@@ -1,13 +1,17 @@
-#include "romcnv.h"
+#include <fcntl.h>
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
+#include <zfile.h>
+#include <zlib.h>
+
 #include "unzip.h"
 #include "zip.h"
-#include <time.h>
 
 
 #define ZIP_NOTOPEN		0
 #define ZIP_READOPEN	1
 #define ZIP_WRITEOPEN	2
-
 
 static zipFile zipfile = NULL;
 
@@ -17,10 +21,10 @@ static char zip_cache[4096];
 static int  zip_cached_len;
 static int  zip_filepos;
 static int  zip_mode = ZIP_NOTOPEN;
-static int  zip_fd = -1;
+static int64_t zip_fd = -1;
 
 
-int zip_open(const char *path, const char *mode)
+int64_t zip_open(const char *path, const char *mode)
 {
 	if (zipfile) zip_close();
 
@@ -29,7 +33,7 @@ int zip_open(const char *path, const char *mode)
 		zip_mode = ZIP_READOPEN;
 
 		if ((zipfile = unzOpen(path)) != NULL)
-			return (int)zipfile;
+			return (int64_t)zipfile;
 
 		strcpy(basedir, path);
 
@@ -41,7 +45,7 @@ int zip_open(const char *path, const char *mode)
 		if ((zipfile = zipOpen(path, 0)) != NULL)
 		{
 			zip_mode = ZIP_WRITEOPEN;
-			return (int)zipfile;
+			return (int64_t)zipfile;
 		}
 	}
 
@@ -74,7 +78,7 @@ int zip_findfirst(struct zip_find_t *file)
 		{
 			unz_file_info info;
 
-			unzGetCurrentFileInfo(zipfile, &info, file->name, MAX_PATH, NULL, 0, NULL, 0);
+			unzGetCurrentFileInfo(zipfile, &info, file->name, MAX_PATH);
 			file->length = info.uncompressed_size;
 			file->crc32 = info.crc;
 			return 1;
@@ -92,7 +96,7 @@ int zip_findnext(struct zip_find_t *file)
 		{
 			unz_file_info info;
 
-			unzGetCurrentFileInfo(zipfile, &info, file->name, MAX_PATH, NULL, 0, NULL, 0);
+			unzGetCurrentFileInfo(zipfile, &info, file->name, MAX_PATH);
 			file->length = info.uncompressed_size;
 			file->crc32 = info.crc;
 			return 1;
@@ -102,7 +106,7 @@ int zip_findnext(struct zip_find_t *file)
 }
 
 
-int zopen(const char *filename)
+int64_t zopen(const char *filename)
 {
 	zip_cached_len = 0;
 
@@ -115,15 +119,15 @@ int zopen(const char *filename)
 			strcpy(basedirend, filename);
 			if ((fp = fopen(basedir, "rb")) != NULL)
 			{
-				zip_fd = (int)fp;
+				zip_fd = (int64_t) fp;
 				return zip_fd;
 			}
 			return -1;
 		}
 
-		if (unzLocateFile(zipfile, filename, 0) == UNZ_OK)
+		if (unzLocateFile(zipfile, filename) == UNZ_OK)
 			if (unzOpenCurrentFile(zipfile) == UNZ_OK)
-				return (int)zipfile;
+				return (int64_t)zipfile;
 	}
 	else
 	{
@@ -144,13 +148,13 @@ int zopen(const char *filename)
 		zip_info.tmz_date.tm_year = nowtime->tm_year;
 
 		if (zipOpenNewFileInZip(zipfile, filename, &zip_info, NULL, 0, NULL, 0, NULL, Z_DEFLATED, 9) == ZIP_OK)
-			return (int)zipfile;
+			return (int64_t)zipfile;
 	}
 	return -1;
 }
 
 
-int zclose(int fd)
+int zclose(int64_t fd)
 {
 	zip_cached_len = 0;
 
@@ -171,7 +175,7 @@ int zclose(int fd)
 }
 
 
-int zread(int fd, void *buf, unsigned size)
+size_t zread(int64_t fd, void *buf, unsigned size)
 {
 	if (zip_mode == ZIP_READOPEN)
 	{
@@ -184,7 +188,7 @@ int zread(int fd, void *buf, unsigned size)
 }
 
 
-int zwrite(int fd, void *buf, unsigned size)
+int zwrite(int64_t fd, void *buf, unsigned size)
 {
 	if (zip_mode == ZIP_WRITEOPEN)
 	{
@@ -194,7 +198,7 @@ int zwrite(int fd, void *buf, unsigned size)
 }
 
 
-int zgetc(int fd)
+int zgetc(int64_t fd)
 {
 	if (zip_mode == ZIP_READOPEN)
 	{
@@ -213,7 +217,7 @@ int zgetc(int fd)
 }
 
 
-int zsize(int fd)
+size_t zsize(int64_t fd)
 {
 	if (zip_mode == ZIP_READOPEN)
 	{
@@ -231,7 +235,7 @@ int zsize(int fd)
 			return len;
 		}
 
-		unzGetCurrentFileInfo(zipfile, &info, NULL, 0, NULL, 0, NULL, 0);
+		unzGetCurrentFileInfo(zipfile, &info, NULL, 0);
 
 		return info.uncompressed_size;
 	}
@@ -239,13 +243,13 @@ int zsize(int fd)
 }
 
 
-int zcrc(int fd)
+int zcrc(int64_t fd)
 {
 	if (zipfile && zip_mode == ZIP_READOPEN)
 	{
 		unz_file_info info;
 
-		unzGetCurrentFileInfo(zipfile, &info, NULL, 0, NULL, 0, NULL, 0);
+		unzGetCurrentFileInfo(zipfile, &info, NULL, 0);
 
 		return info.crc;
 	}

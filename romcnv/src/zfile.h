@@ -5,6 +5,9 @@
 #define MAX_PATH	512
 #endif
 
+#include <stdint.h>
+#include <stddef.h>
+
 struct zip_find_t
 {
 	char name[MAX_PATH];
@@ -12,18 +15,18 @@ struct zip_find_t
 	uint32_t crc32;
 };
 
-int zip_open(const char *path, const char *mode);
+int64_t zip_open(const char *path, const char *mode);
 void zip_close(void);
 
 int zip_findfirst(struct zip_find_t *file);
 int zip_findnext(struct zip_find_t *file);
 
-int zopen(const char *filename);
-int zread(int fd, void *buf, unsigned size);
-int zwrite(int fd, void *buf, unsigned size);
-int zgetc(int fd);
-int zclose(int fd);
-int zsize(int fd);
-int zcrc(int fd);
+int64_t zopen(const char *filename);
+size_t zread(int64_t fd, void *buf, unsigned size);
+int zwrite(int64_t fd, void *buf, unsigned size);
+int zgetc(int64_t fd);
+int zclose(int64_t fd);
+size_t zsize(int64_t fd);
+int zcrc(int64_t fd);
 
 #endif /* ZFILEH */

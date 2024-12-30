@@ -56,7 +56,6 @@ option(SAVE_STATE "Save State" OFF)
 option(UI_32BPP "UI 32BPP" ON)
 option(RELEASE "Release" OFF)
 option(SYSTEM_BUTTONS "System Buttons" OFF)
-option(DEBUG "Debug" ON)
 option(USE_ASAN "Use ASAN" OFF)
 
 # Add options to compiler definitions

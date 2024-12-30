@@ -4,7 +4,13 @@
 
 ******************************************************************************/
 
+#include <stdio.h>
+#include <string.h>
+
 #include "common.h"
+#include "zfile.h"
+
+void swab(const void *restrict src, void *restrict dest, ssize_t nbytes);
 
 enum
 {
@@ -297,137 +303,3 @@ void check_byte_order(void)
 	else
 		lsb_first = 0;
 }
-
-
-/******************************************************************************
-	Windows用関数
-******************************************************************************/
-
-#ifdef WIN32
-
-int is_win9x = 0;
-
-/*--------------------------------------------------------
-	Windowsのバージョンチェック
---------------------------------------------------------*/
-
-void check_windows_version(void)
-{
-	OSVERSIONINFO osvi;
-
-	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-	GetVersionEx(&osvi);
-
-	if (osvi.dwMajorVersion == 4)
-	{
-		is_win9x  = 1;
-		delimiter = '\\';
-	}
-}
-
-
-/*--------------------------------------------------------
-	ファイルダイアログ処理
---------------------------------------------------------*/
-
-int file_dialog(HWND hwnd, LPCSTR filter, char *fname, uint32_t flags)
-{
-	OPENFILENAME OFN;
-
-	memset(&OFN, 0, sizeof(OPENFILENAME));
-	OFN.lStructSize = sizeof(OPENFILENAME);
-	OFN.hwndOwner   = hwnd;
-	OFN.lpstrFilter = filter;
-	OFN.lpstrFile   = fname;
-	OFN.nMaxFile    = MAX_PATH*2;
-	OFN.Flags       = flags;
-#ifdef CHINESE
-	OFN.lpstrTitle  = "选择zip压缩的ROM文件.";
-#else
-	OFN.lpstrTitle  = "Select zipped ROM file.";
-#endif
-	return GetOpenFileName(&OFN);
-}
-
-
-/*--------------------------------------------------------
-	フォルダダイアログを表示
---------------------------------------------------------*/
-
-int folder_dialog(HWND hwnd, char *path)
-{
-	BROWSEINFO BINFO;
-	LPITEMIDLIST pidl;
-	LPMALLOC pMalloc;
-	int res = 0;
-
-	if (SUCCEEDED(SHGetMalloc(&pMalloc)))
-	{
-		memset(&BINFO, 0, sizeof(BINFO));
-		BINFO.hwndOwner = hwnd;
-#ifdef CHINESE
-		BINFO.lpszTitle = "选择ROM文件夹";
-#else
-		BINFO.lpszTitle = "Select ROM folder";
-#endif
-		BINFO.ulFlags = BIF_RETURNONLYFSDIRS;
-
-		pidl = SHBrowseForFolder(&BINFO);
-		if (pidl)
-		{
-			res = SHGetPathFromIDList(pidl, path);
-			IMalloc_Free(pMalloc, pidl);
-		}
-		IMalloc_Release(pMalloc);
-	}
-	return res;
-}
-
-
-/*--------------------------------------------------------
-	デリミタを変換
---------------------------------------------------------*/
-#ifdef CHINESE
-#define isgbk1(c)	(((c) >= 0x81 && (c) <= 0xfe))
-
-void convert_delimiter(char *path)
-{
-	if (!is_win9x)
-	{
-		char *p = path;
-		int i, len = strlen(path);
-
-		for (i = 0; i < len; i++)
-		{
-			if (*p == '\\')
-			{
-				if (i == 0 || !isgbk1(*(uint8_t *)(p - 0)))
-					*p = '/';
-			}
-			p++;
-		}
-	}
-}
-#else
-#define issjis1(c)	(((c) >= 0x81 && (c) <= 0x9f) | ((c) >= 0xe0 && (c) <= 0xfc))
-
-void convert_delimiter(char *path)
-{
-	if (!is_win9x)
-	{
-		char *p = path;
-		int i, len = strlen(path);
-
-		for (i = 0; i < len; i++)
-		{
-			if (*p == '\\')
-			{
-				if (i == 0 || !issjis1(*(uint8_t *)(p - 1)))
-					*p = '/';
-			}
-			p++;
-		}
-	}
-}
-#endif
-#endif /* WIN32 */
