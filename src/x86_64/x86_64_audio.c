@@ -81,7 +81,7 @@ static void x86_64_release(void *data) {
     }
 }
 
-static void x86_64_srcOutputBlocking(void *data, int32_t volume, void *buffer, size_t size) {
+static void x86_64_srcOutputBlocking(void *data, int32_t volume, void *buffer, uint32_t size) {
     x86_64_audio_t *x86_64 = (x86_64_audio_t*)data;
 
     if (!x86_64->device || !x86_64->stream) {

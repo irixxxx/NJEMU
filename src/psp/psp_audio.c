@@ -38,7 +38,7 @@ static void psp_release(void *data) {
 	psp_audio_t *psp = (psp_audio_t*)data;
 }
 
-static void psp_srcOutputBlocking(void *data, int32_t volume, void *buffer, size_t size) {
+static void psp_srcOutputBlocking(void *data, int32_t volume, void *buffer, uint32_t size) {
 	sceAudioSRCOutputBlocking(volume, buffer);
 }
 

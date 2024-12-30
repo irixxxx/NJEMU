@@ -24,7 +24,7 @@ typedef struct audio_driver
 	int32_t (*volumeMax)(void *data);
 	bool (*chSRCReserve)(void *data, uint16_t samples, int32_t frequency, uint8_t channels);
 	bool (*chReserve)(void *data, uint16_t samplecount, uint8_t channels);
-	void (*srcOutputBlocking)(void *data, int32_t volume, void *buffer, size_t size);
+	void (*srcOutputBlocking)(void *data, int32_t volume, void *buffer, uint32_t size);
 	void (*outputPannedBlocking)(void *data, int leftvol, int rightvol, void *buf);
 	void (*release)(void *data);
 } audio_driver_t;
