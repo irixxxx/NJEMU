@@ -57,6 +57,7 @@ option(UI_32BPP "UI 32BPP" ON)
 option(RELEASE "Release" OFF)
 option(SYSTEM_BUTTONS "System Buttons" OFF)
 option(USE_ASAN "Use ASAN" OFF)
+option(USE_PG "Use Performance Graph" OFF)
 
 # Add options to compiler definitions
 if (NO_GUI)
@@ -83,6 +84,11 @@ add_definitions(-DVERSION_STR="${VERSION_STR}")
 add_definitions(-DTARGET_STR="${TARGET}")
 
 # Set compiler flags
+if (USE_PG)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pg")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pg")
+endif()
 
 # Common Warning options
 set(WARNING_OPTIONS
