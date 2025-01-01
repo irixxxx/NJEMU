@@ -90,6 +90,15 @@ if (USE_PG)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pg")
 endif()
 
+# Enable interprocedural optimization LTO
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+
+# Common Flags options
+set(COMMON_FLAGS
+    -ffast-math 
+    -fsingle-precision-constant
+)
+
 # Common Warning options
 set(WARNING_OPTIONS
     -Werror
@@ -248,7 +257,7 @@ file(COPY ${RESOURCE_DIR} DESTINATION ${DESTINATION_DIR})
 
 message(STATUS "Resources copied to the build directory: ${DESTINATION_DIR}")
 
-target_compile_options(${TARGET} PUBLIC ${WARNING_OPTIONS} ${ASAN_OPTIONS})
+target_compile_options(${TARGET} PUBLIC ${COMMON_FLAGS} ${WARNING_OPTIONS} ${ASAN_OPTIONS})
 target_link_options(${TARGET} PUBLIC ${ASAN_OPTIONS})
 
 # Add platform specific libraries
