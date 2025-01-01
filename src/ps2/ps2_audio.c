@@ -60,7 +60,12 @@ static void ps2_release(void *data) {
 
 static void ps2_srcOutputBlocking(void *data, int32_t volume, void *buffer, uint32_t size) {
 	ps2_audio_t *ps2 = (ps2_audio_t*)data;
-	audsrv_wait_audio(size);
+	int available = 0;
+	
+	while (available < size) {
+		audsrv_wait_audio(size);
+		available = audsrv_available();
+	}
 	audsrv_play_audio(buffer, size);
 }
 
