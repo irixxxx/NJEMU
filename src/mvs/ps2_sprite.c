@@ -53,12 +53,6 @@ static int clear_fix_texture;
 
 static uint16_t *scrbitmap;
 
-// In GSKit 0,0 is not the top left corner, it is the center of the top left pixel.
-static inline gs_xyz2 vertex_to_XYZ2_pixel_perfect(GSGLOBAL *gsGlobal, float x, float y, int z)
-{
-	return vertex_to_XYZ2(gsGlobal, x - 0.5, y - 0.5, z);
-}
-
 
 /*------------------------------------------------------------------------
 	FIX: ???/??8pixel????????
@@ -107,6 +101,12 @@ static GSGLOBAL *gsGlobal;
 // All the textures has the same size, as this variable is used to calculate the vertexes.
 // SPR0, SPR1, SPR2 and FIX are all 512x512
 GSTEXTURE *atlas;
+
+// In GSKit 0,0 is not the top left corner, it is the center of the top left pixel.
+static inline gs_xyz2 vertex_to_XYZ2_pixel_perfect(float x, float y)
+{
+	return vertex_to_XYZ2(gsGlobal, x - 0.5, y - 0.5, 0);
+}
 
 /*------------------------------------------------------------------------
 	?????????????
@@ -533,10 +533,10 @@ void blit_draw_fix(int x, int y, uint32_t code, uint16_t attr)
 	uint32_t v1 = v0 + 8;
 
 
-	vertices[0].xyz2 = vertex_to_XYZ2_pixel_perfect(gsGlobal, x0, y0, 0);
+	vertices[0].xyz2 = vertex_to_XYZ2_pixel_perfect(x0, y0);
 	vertices[0].uv = vertex_to_UV(atlas, u0, v0);
 
-	vertices[1].xyz2 = vertex_to_XYZ2_pixel_perfect(gsGlobal, x1, y1, 0);
+	vertices[1].xyz2 = vertex_to_XYZ2_pixel_perfect(x1, y1);
 	vertices[1].uv = vertex_to_UV(atlas, u1, v1);
 }
 
@@ -564,7 +564,6 @@ void blit_draw_spr(int x, int y, int w, int h, uint32_t code, uint16_t attr)
 {
 	int16_t idx;
 	GSPRIMUVPOINTFLAT *vertices;
-	gs_rgbaq color = color_to_RGBAQ(0x80, 0x80, 0x80, 0x80, 0);
 	uint32_t key;
 
 	if (spr_disable) return;
@@ -631,10 +630,10 @@ void blit_draw_spr(int x, int y, int w, int h, uint32_t code, uint16_t attr)
 	u1 += index_u ? 16 : 0;
 	v1 += index_v ? 16 : 0;
 
-	vertices[0].xyz2 = vertex_to_XYZ2_pixel_perfect(gsGlobal, x0, y0, 0);
+	vertices[0].xyz2 = vertex_to_XYZ2_pixel_perfect(x0, y0);
 	vertices[0].uv = vertex_to_UV(atlas, u0, v0);
 
-	vertices[1].xyz2 = vertex_to_XYZ2_pixel_perfect(gsGlobal, x1, y1, 0);
+	vertices[1].xyz2 = vertex_to_XYZ2_pixel_perfect(x1, y1);
 	vertices[1].uv = vertex_to_UV(atlas, u1, v1);
 }
 
