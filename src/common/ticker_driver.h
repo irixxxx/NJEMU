@@ -27,13 +27,6 @@ typedef struct ticker_driver
 
 } ticker_driver_t;
 
-static inline void usSleep(uint64_t us) {
-	struct timespec tv = { 0 };
-    tv.tv_sec = us / 1000000;
-    tv.tv_nsec = (us % 1000000) * 1000;
-    nanosleep(&tv, NULL);
-}
-
 extern ticker_driver_t ticker_psp;
 extern ticker_driver_t ticker_ps2;
 extern ticker_driver_t ticker_x86_64;

@@ -7,6 +7,7 @@
 ******************************************************************************/
 
 #include "emumain.h"
+#include <unistd.h>
 
 
 #define FRAMESKIP_LEVELS	12
@@ -265,7 +266,7 @@ void update_screen(void)
 				}
 			}
 
-			if (target > curr) usSleep(target - curr);
+			if (target > curr) usleep(target - curr);
 			curr = ticker_driver->currentUs(ticker_data);
 		}
 		if (!flip) video_driver->flipScreen(video_data, 0);
