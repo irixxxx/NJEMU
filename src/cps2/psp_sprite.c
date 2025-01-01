@@ -518,7 +518,7 @@ static int32_t object_get_sprite(uint32_t key)
 			if (p->used != frames_displayed)
 			{
 #if USE_CACHE
-				update_cache(key << 7);
+				if (update_cache) update_cache(key << 7);
 #endif
 				p->used = frames_displayed;
 			}
@@ -628,7 +628,7 @@ static int32_t scroll1_get_sprite(uint32_t key)
 			if (p->used != frames_displayed)
 			{
 #if USE_CACHE
-				update_cache(key << 6);
+				if (update_cache) update_cache(key << 6);
 #endif
 				p->used = frames_displayed;
 			}
@@ -738,7 +738,7 @@ static int32_t scroll2_get_sprite(uint32_t key)
 			if (p->used != frames_displayed)
 			{
 #if USE_CACHE
-				update_cache(key << 7);
+				if (update_cache) update_cache(key << 7);
 #endif
 				p->used = frames_displayed;
 			}
@@ -848,7 +848,7 @@ static int32_t scroll3_get_sprite(uint32_t key)
 			if (p->used != frames_displayed)
 			{
 #if USE_CACHE
-				update_cache(key << 9);
+				if (update_cache) update_cache(key << 9);
 #endif
 				p->used = frames_displayed;
 			}
@@ -1108,7 +1108,7 @@ void blit_update_object(int16_t x, int16_t y, uint32_t code, uint16_t attr)
 				if (p->used != frames_displayed)
 				{
 #if USE_CACHE
-					update_cache(key << 7);
+					if (update_cache) update_cache(key << 7);
 #endif
 					p->used = frames_displayed;
 				}
@@ -1387,7 +1387,7 @@ void blit_update_scroll1(int16_t x, int16_t y, uint32_t code, uint16_t attr)
 			if (p->used != frames_displayed)
 			{
 #if USE_CACHE
-				update_cache(key << 6);
+				if (update_cache) update_cache(key << 6);
 #endif
 				p->used = frames_displayed;
 			}
@@ -1555,7 +1555,7 @@ void blit_update_scroll2(int16_t x, int16_t y, uint32_t code, uint16_t attr)
 				if (p->used != frames_displayed)
 				{
 #if USE_CACHE
-					update_cache(key << 7);
+					if (update_cache) update_cache(key << 7);
 #endif
 					p->used = frames_displayed;
 				}
@@ -1728,7 +1728,7 @@ void blit_update_scroll3(int16_t x, int16_t y, uint32_t code, uint16_t attr)
 			if (p->used != frames_displayed)
 			{
 #if USE_CACHE
-				update_cache(key << 9);
+				if (update_cache) update_cache(key << 9);
 #endif
 				p->used = frames_displayed;
 			}

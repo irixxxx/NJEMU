@@ -456,17 +456,6 @@ static uint32_t read_cache_zipfile(uint32_t offset)
 /*------------------------------------------------------
 	キャッシュのデータを更新する
 
-	キャッシュを使用しない、または全て読み込んだ場合。
-------------------------------------------------------*/
-
-static inline void update_cache_disable(uint32_t offset)
-{
-}
-
-
-/*------------------------------------------------------
-	キャッシュのデータを更新する
-
 	指定されたデータをキャッシュの最後尾に回します。
 	キャッシュを管理しない場合は不要。
 ------------------------------------------------------*/
@@ -524,7 +513,7 @@ void cache_init(void)
 	cache_type = CACHE_NOTFOUND;
 	read_cache = read_cache_static;
 #endif
-	update_cache = update_cache_disable;
+	update_cache = NULL;
 
 	for (i = 0; i < MAX_CACHE_BLOCKS; i++)
 		blocks[i] = BLOCK_NOT_CACHED;

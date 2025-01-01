@@ -245,7 +245,7 @@ static int spr_get_sprite(uint32_t key)
 		{
 			if (p->used != frames_displayed)
 			{
-				update_cache(key << 7);
+				if (update_cache) update_cache(key << 7);
 				p->used = frames_displayed;
 			}
 			return p->index;
