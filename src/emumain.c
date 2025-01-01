@@ -66,8 +66,8 @@ static int warming_up;
 
 static int frames_since_last_fps;
 static int rendered_frames_since_last_fps;
-static int game_speed_percent;
-static int frames_per_second;
+static float game_speed_percent;
+static float frames_per_second;
 
 static int snap_no = -1;
 
@@ -116,7 +116,7 @@ static void show_fps(void)
 	size_t sx;
 	char buf[32];
 
-	sprintf(buf, "%s%2d %3d%% %2dfps",
+	sprintf(buf, "%s%2d %.2f%% %.2ffps",
 		option_autoframeskip ? "auto" : "fskp",
 		frameskip,
 		game_speed_percent,
@@ -197,7 +197,7 @@ void autoframeskip_reset(void)
 	frames_since_last_fps = 0;
 
 	game_speed_percent = 100;
-	frames_per_second = (int) REFRESH_RATE;
+	frames_per_second = REFRESH_RATE;
 	frames_displayed = 0;
 
 	warming_up = 1;
@@ -278,8 +278,8 @@ void update_screen(void)
 			float seconds_elapsed = (float)(curr - last_skipcount0_time)/ 1000000.0;
 			float frames_per_sec = (float)frames_since_last_fps / seconds_elapsed;
 
-			game_speed_percent = (int)(100.0 * frames_per_sec / (float)REFRESH_RATE);
-			frames_per_second = (int)((float)rendered_frames_since_last_fps / seconds_elapsed);
+			frames_per_second = ((float)rendered_frames_since_last_fps / seconds_elapsed);
+			game_speed_percent = (frames_per_second / (float)FPS) * 100;
 
 			last_skipcount0_time = curr;
 			frames_since_last_fps = 0;
