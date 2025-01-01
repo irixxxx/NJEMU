@@ -25,18 +25,17 @@
 
 /* turn black GS Screen */
 #define GS_BLACK GS_SETREG_RGBA(0x00, 0x00, 0x00, 0x80)
-/* Generic tint color */
-#define GS_TEXT GS_SETREG_RGBA(0x80, 0x80, 0x80, 0x80)
-/* Size of Persistent drawbuffer (Single Buffered) */
-#define RENDER_QUEUE_PER_POOLSIZE 1024 * 256 // 256K of persistent renderqueue
-/* Size of Oneshot drawbuffer (Double Buffered, so it uses this size * 2) */
-#define RENDER_QUEUE_OS_POOLSIZE 1024 * 1024 * 2 // 2048K of oneshot renderqueue
 
 #define CLUT_WIDTH 256
 #define CLUT_HEIGHT 1
 #define CLUT_BANK_HEIGHT 16
 #define CLUT_BANKS_COUNT 2
 #define CLUT_CBW (CLUT_WIDTH >> 6)
+
+/* 6000000 Hz pixel clock / 384 H / 264 V = 59.1856060~ Hz */
+/* Render width must be 64 pixel multiple,  */
+#define RENDER_SCREEN_WIDTH 384
+#define RENDER_SCREEN_HEIGHT 264
 
 typedef struct ps2_video {
 	gs_rgbaq vertexColor;
@@ -253,7 +252,7 @@ static void ps2_start(void *data) {
 	ps2->fix = (uint8_t*)malloc(textureSize);
 
 	// Initialize textures
-	ps2->scrbitmap = initializeRenderTexture(gsGlobal, BUF_WIDTH, SCR_HEIGHT);
+	ps2->scrbitmap = initializeRenderTexture(gsGlobal, RENDER_SCREEN_WIDTH, RENDER_SCREEN_HEIGHT);
 	ps2->tex_spr0 = initializeTexture(gsGlobal, BUF_WIDTH, TEXTURE_HEIGHT, ps2->spr0);
 	ps2->tex_spr1 = initializeTexture(gsGlobal, BUF_WIDTH, TEXTURE_HEIGHT, ps2->spr1);
 	ps2->tex_spr2 = initializeTexture(gsGlobal, BUF_WIDTH, TEXTURE_HEIGHT, ps2->spr2);
@@ -462,10 +461,10 @@ static void ps2_transferWorkFrame(void *data, RECT *src_rect, RECT *dst_rect)
 
 	uint8_t textureVertexCount = 2;
 	GSPRIMUVPOINTFLAT textureVertex[textureVertexCount];
-	textureVertex[0].xyz2 = vertex_to_XYZ2(ps2->gsGlobal, dst_rect->left, dst_rect->top, 0);
+	textureVertex[0].xyz2 = vertex_to_XYZ2(ps2->gsGlobal, dst_rect->left - 0.5, dst_rect->top - 0.5, 0);
 	textureVertex[0].uv = vertex_to_UV(ps2->scrbitmap, src_rect->left, src_rect->top);
 
-	textureVertex[1].xyz2 = vertex_to_XYZ2(ps2->gsGlobal, dst_rect->right, dst_rect->bottom, 0);
+	textureVertex[1].xyz2 = vertex_to_XYZ2(ps2->gsGlobal, dst_rect->right - 0.5, dst_rect->bottom - 0.5, 0);
 	textureVertex[1].uv = vertex_to_UV(ps2->scrbitmap, src_rect->right, src_rect->bottom);
 
 	gsKit_renderToScreen(ps2->gsGlobal);
