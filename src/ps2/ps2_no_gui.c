@@ -85,7 +85,7 @@ void file_browser(void) {
 	Loop = LOOP_EXEC;
 	strcpy(game_dir, "roms");
 #if USE_CACHE
-	sprintf(cache_dir, "%scache", "/");
+	sprintf(cache_dir, "cache");
 #endif
 	// Get the game name from a file called game_name.ini
 	FILE *fp = fopen("game_name.ini", "r");
