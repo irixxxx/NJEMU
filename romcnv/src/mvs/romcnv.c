@@ -7,6 +7,7 @@
 ******************************************************************************/
 
 #include <ctype.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -426,7 +427,7 @@ static int load_rom_sound1(void)
 static int build_game_list(void)
 {
 	FILE *fp;
-	char path[MAX_PATH];
+	char path[PATH_MAX];
 	char buf[256];
 	int num_games = 0;
 
@@ -461,7 +462,7 @@ static int build_game_list(void)
 static int load_rom_info(const char *game_name)
 {
 	FILE *fp;
-	char path[MAX_PATH];
+	char path[PATH_MAX];
 	char buf[256];
 	int rom_start = 0;
 	int region = 0;
@@ -1006,7 +1007,7 @@ static int create_raw_cache(char *game_name)
 {
 	FILE *fp;
 	char version[8];
-	char fname[MAX_PATH];
+	char fname[PATH_MAX];
 
 	sprintf(version, "MVS_V%d%d\0", VERSION_MAJOR, VERSION_MINOR);
 
@@ -1091,7 +1092,7 @@ error:
 
 int main(int argc, char *argv[])
 {
-	char *p, path[MAX_PATH];
+	char *p, path[PATH_MAX];
 	int i, path_found = 0, all = 0, zip = 0, res = 1;
 	check_byte_order();
 #ifdef CHINESE
@@ -1145,7 +1146,7 @@ int main(int argc, char *argv[])
 	}
 	else chdir("..");
 
-	getcwd(launchDir, MAX_PATH);
+	getcwd(launchDir, PATH_MAX);
 	strcat(launchDir, "/");
 
 	if (all)

@@ -7,6 +7,7 @@
 ******************************************************************************/
 
 #include <fcntl.h>
+#include <limits.h>
 #include <zlib.h>
 #include "ncdz.h"
 
@@ -251,7 +252,7 @@ static int load_bios(void)
 	int32_t fd;
 	const char *bios_name = "neocd.bin";
 	const char *lorom_name = "000-lo.lo";
-	char path[MAX_PATH];
+	char path[PATH_MAX];
 
 	sprintf(path, "%s%s", launchDir, bios_name);
 
@@ -380,7 +381,7 @@ int memory_init(void)
 
 	{
 		uint32_t fd;
-		char path[MAX_PATH];
+		char path[PATH_MAX];
 
 		sprintf(path, "%s%s", launchDir, "backup.bin");
 
@@ -402,7 +403,7 @@ int memory_init(void)
 void memory_shutdown(void)
 {
 	int32_t fd;
-	char path[MAX_PATH];
+	char path[PATH_MAX];
 
 	sprintf(path, "%s%s", launchDir, "backup.bin");
 

@@ -1,4 +1,5 @@
 #include <fcntl.h>
+#include <limits.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -15,7 +16,7 @@
 
 static zipFile zipfile = NULL;
 
-static char basedir[MAX_PATH];
+static char basedir[PATH_MAX];
 static char *basedirend;
 static char zip_cache[4096];
 static int  zip_cached_len;
@@ -78,7 +79,7 @@ int zip_findfirst(struct zip_find_t *file)
 		{
 			unz_file_info info;
 
-			unzGetCurrentFileInfo(zipfile, &info, file->name, MAX_PATH);
+			unzGetCurrentFileInfo(zipfile, &info, file->name, PATH_MAX);
 			file->length = info.uncompressed_size;
 			file->crc32 = info.crc;
 			return 1;
@@ -96,7 +97,7 @@ int zip_findnext(struct zip_find_t *file)
 		{
 			unz_file_info info;
 
-			unzGetCurrentFileInfo(zipfile, &info, file->name, MAX_PATH);
+			unzGetCurrentFileInfo(zipfile, &info, file->name, PATH_MAX);
 			file->length = info.uncompressed_size;
 			file->crc32 = info.crc;
 			return 1;

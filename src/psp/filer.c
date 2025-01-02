@@ -7,6 +7,7 @@
 ******************************************************************************/
 
 #include <fcntl.h>
+#include <limits.h>
 #include <zlib.h>
 #include <ctype.h>
 #include <psptypes.h>
@@ -41,7 +42,7 @@ enum PspModel
 	グローバル変数
 ******************************************************************************/
 
-char startupDir[MAX_PATH];
+char startupDir[PATH_MAX];
 
 
 /******************************************************************************
@@ -59,7 +60,7 @@ struct dirent
 static struct dirent *files[MAX_ENTRY];
 static SceIoDirent dir;
 
-static char curr_dir[MAX_PATH];
+static char curr_dir[PATH_MAX];
 static int nfiles;
 
 #if (EMU_SYSTEM == NCDZ)
@@ -67,7 +68,7 @@ static int nfiles;
 static int neocddir;
 static int has_mp3;
 static int bios_error;
-static char zipped_rom[MAX_PATH];
+static char zipped_rom[PATH_MAX];
 
 #else
 
@@ -148,7 +149,7 @@ static int load_title(const char *path, int number)
 #if VIDEO_32BPP
 	uint32_t palette32[0x5a0 >> 1];
 #endif
-	char title_path[MAX_PATH], region_chr[3] = {'j','u','e'};
+	char title_path[PATH_MAX], region_chr[3] = {'j','u','e'};
 
 	zip_open(path);
 
@@ -241,7 +242,7 @@ static void show_title(int sx, int sy)
 static void check_neocd_bios(void)
 {
 	FILE *fp;
-	char path[MAX_PATH];
+	char path[PATH_MAX];
 	uint8_t *temp_mem;
 
 	bios_error = 0;
@@ -289,7 +290,7 @@ static void check_neocd_bios(void)
 static int load_zipname(void)
 {
 	FILE *fp;
-	char path[MAX_PATH], buf[256];
+	char path[PATH_MAX], buf[256];
 	int found = 0;
 
 	if (ui_text_driver->getLanguage(ui_text_data) == LANG_JAPANESE)
@@ -387,7 +388,7 @@ static void free_zipname(void)
 static char *get_zipname(const char *name, int *flag)
 {
 	int i, length;
-	char fname[MAX_PATH];
+	char fname[PATH_MAX];
 
 	strcpy(fname, name);
 	*strrchr(fname, '.') = '\0';
@@ -424,7 +425,7 @@ static char *get_zipname(const char *name, int *flag)
 static void checkDir(const char *name)
 {
 	int fd, found;
-	char path[MAX_PATH];
+	char path[PATH_MAX];
 
 	memset(&dir, 0, sizeof(dir));
 
@@ -501,7 +502,7 @@ static int set_file_flags(const char *path, int number)
 	if (files[number]->type == FTYPE_ZIP)
 	{
 		int64_t fd;
-		char zipname[MAX_PATH];
+		char zipname[PATH_MAX];
 
 		sprintf(zipname, "%s/%s", path, files[number]->name);
 		zip_open(zipname);
@@ -733,7 +734,7 @@ static void modify_display_path(char *path, char *org_path, int max_width)
 	if (uifont_get_string_width(path) > max_width)
 	{
 		int i, j, num_dir = 0;
-		char temp[MAX_PATH], *dir[256];
+		char temp[PATH_MAX], *dir[256];
 
 		strcpy(temp, path);
 
@@ -830,7 +831,7 @@ char *find_file(char *pattern, char *path)
 void delete_files(const char *dirname, const char *pattern)
 {
 	int fd, i, len1, len2;
-	char path[MAX_PATH];
+	char path[PATH_MAX];
 
 	memset(&dir, 0, sizeof(dir));
 
@@ -849,7 +850,7 @@ void delete_files(const char *dirname, const char *pattern)
 		{
 			if (strncasecmp(&dir.d_name[i], pattern, len1) == 0)
 			{
-				char path2[MAX_PATH];
+				char path2[PATH_MAX];
 
 				sprintf(path2, "%s/%s", path, dir.d_name);
 				remove(path2);
@@ -870,7 +871,7 @@ void delete_files(const char *dirname, const char *pattern)
 void find_state_file(uint8_t *slot)
 {
 	int fd, len;
-	char path[MAX_PATH], pattern[16];
+	char path[PATH_MAX], pattern[16];
 
 	memset(&dir, 0, sizeof(dir));
 
@@ -1085,7 +1086,7 @@ void file_browser(void)
 
 		if (update & UI_FULL_REFRESH)
 		{
-			char path[MAX_PATH];
+			char path[PATH_MAX];
 
 			modify_display_path(path, curr_dir, 368);
 
@@ -1119,7 +1120,7 @@ void file_browser(void)
 						if (files[sel]->flag & GAME_HAS_TITLE)
 						{
 							int flag;
-							char name[MAX_PATH];
+							char name[PATH_MAX];
 
 							sprintf(path, "%s/%s", curr_dir, files[sel]->name);
 
@@ -1272,7 +1273,7 @@ void file_browser(void)
 			case FTYPE_UPPERDIR:
 				if (strcmp(curr_dir, "ms0:") != 0)
 				{
-					char old_dir[MAX_PATH];
+					char old_dir[PATH_MAX];
 
 					p = strrchr(curr_dir, '/');
 					strcpy(old_dir, p + 1);

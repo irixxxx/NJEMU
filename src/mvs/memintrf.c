@@ -7,6 +7,7 @@
 ******************************************************************************/
 
 #include <fcntl.h>
+#include <limits.h>
 #include "mvs.h"
 
 #define M68K_AMASK 0x00ffffff
@@ -1226,7 +1227,7 @@ static int load_rom_user2(void)
 static int load_rom_info(const char *game_name)
 {
 	int32_t fd;
-	char path[MAX_PATH];
+	char path[PATH_MAX];
 	char *buf;
 	char linebuf[256];
 	int i;

@@ -6,8 +6,9 @@
 
 ******************************************************************************/
 
-#include "emumain.h"
 #include <unistd.h>
+#include <limits.h>
+#include "emumain.h"
 
 
 #define FRAMESKIP_LEVELS	12
@@ -20,9 +21,9 @@
 char game_name[16];
 char parent_name[16];
 
-char game_dir[MAX_PATH];
+char game_dir[PATH_MAX];
 #if USE_CACHE
-char cache_dir[MAX_PATH];
+char cache_dir[PATH_MAX];
 char cache_parent_name[16];
 #endif
 
@@ -46,8 +47,8 @@ int machine_sound_type;
 uint32_t frames_displayed;
 int fatal_error;
 
-char launchDir[MAX_PATH];
-char screenshotDir[MAX_PATH];
+char launchDir[PATH_MAX];
+char screenshotDir[PATH_MAX];
 bool systembuttons_available;
 void *platform_data = NULL;
 void *power_data = NULL;
@@ -404,7 +405,7 @@ void show_fatal_error(void)
 
 void save_snapshot(void)
 {
-	char path[MAX_PATH];
+	char path[PATH_MAX];
 
 	sound_mute(1);
 #if (EMU_SYSTEM == NCDZ)
@@ -475,7 +476,7 @@ int main(int argc, char *argv[]) {
 	power_data = power_driver->init();
 	printf("===> %s, %s:%i\n", __FUNCTION__, __FILE__, __LINE__);
 
-	getcwd(launchDir, MAX_PATH - 1);
+	getcwd(launchDir, PATH_MAX - 1);
 	printf("===> %s, %s:%i\n", __FUNCTION__, __FILE__, __LINE__);
 	strcat(launchDir, "/");
 	printf("===> %s, %s:%i\n", __FUNCTION__, __FILE__, __LINE__);

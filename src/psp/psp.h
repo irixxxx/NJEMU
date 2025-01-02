@@ -9,10 +9,6 @@
 #ifndef PSP_MAIN_H
 #define PSP_MAIN_H
 
-#ifndef MAX_PATH
-#define MAX_PATH 256
-#endif
-
 #include "emucfg.h"
 
 #include <psptypes.h>

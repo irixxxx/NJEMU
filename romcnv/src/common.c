@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <limits.h>
 
 #include "common.h"
 #include "zfile.h"
@@ -30,9 +31,9 @@ int lsb_first;
 int rom_fd;
 char delimiter = '/';
 
-char game_dir[MAX_PATH];
-char zip_dir[MAX_PATH];
-char launchDir[MAX_PATH];
+char game_dir[PATH_MAX];
+char zip_dir[PATH_MAX];
+char launchDir[PATH_MAX];
 
 char game_name[16];
 char parent_name[16];
@@ -103,7 +104,7 @@ int file_open(const char *fname1, const char *fname2, const uint32_t crc, char *
 {
 	int found = 0, res = -1;
 	struct zip_find_t file;
-	char path[MAX_PATH];
+	char path[PATH_MAX];
 
 	file_close();
 

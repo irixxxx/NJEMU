@@ -7,6 +7,7 @@
 ******************************************************************************/
 
 #include <fcntl.h>
+#include <limits.h>
 #include "mvs.h"
 
 void swab(const void *restrict src, void *restrict dest, ssize_t nbytes);
@@ -55,7 +56,7 @@ static const char *bios[] =
 static int neogeo_init(void)
 {
 	int32_t fd;
-	char path[MAX_PATH];
+	char path[PATH_MAX];
 
 #ifdef ADHOC
 	if (!adhoc_enable)
@@ -151,7 +152,7 @@ static void neogeo_reset(void)
 static void neogeo_exit(void)
 {
 	int32_t fd;
-	char path[MAX_PATH];
+	char path[PATH_MAX];
 
 	video_driver->setMode(video_data, 32);
 	video_driver->clearScreen(video_data);

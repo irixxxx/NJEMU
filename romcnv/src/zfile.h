@@ -1,16 +1,13 @@
 #ifndef ZFILE_H
 #define ZFILE_H
 
-#ifndef MAX_PATH
-#define MAX_PATH	512
-#endif
-
+#include <limits.h>
 #include <stdint.h>
 #include <stddef.h>
 
 struct zip_find_t
 {
-	char name[MAX_PATH];
+	char name[PATH_MAX];
 	uint32_t length;
 	uint32_t crc32;
 };

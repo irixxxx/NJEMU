@@ -6,6 +6,7 @@
 
 ******************************************************************************/
 
+#include <limits.h>
 #include "psp.h"
 #include "emumain.h"
 
@@ -131,7 +132,7 @@ static cfg_type default_options[] =
 static cfg2_type default_options2[] =
 {
 	{ CFG_NONE,	"[Directory Settings]", 				},
-	{ CFG_STR,	"StartupDir", startupDir,	MAX_PATH	},
+	{ CFG_STR,	"StartupDir", startupDir,	PATH_MAX	},
 	{ CFG_NONE, NULL, }
 };
 
@@ -435,7 +436,7 @@ static int save_inifile(const char *path, cfg_type *cfg, cfg2_type *cfg2)
 void load_settings(void)
 {
 	int i;
-	char path[MAX_PATH];
+	char path[PATH_MAX];
 
 	for (i = 0; default_options[i].name; i++)
 	{
@@ -500,7 +501,7 @@ void load_settings(void)
 
 void save_settings(void)
 {
-	char path[MAX_PATH];
+	char path[PATH_MAX];
 
 	sprintf(path, "%s%s", launchDir, inifile_name);
 
@@ -515,7 +516,7 @@ void save_settings(void)
 void load_gamecfg(const char *name)
 {
 	int i;
-	char path[MAX_PATH];
+	char path[PATH_MAX];
 	cfg_type *gamecfg;
 
 	sprintf(path, "%sconfig/%s.ini", launchDir, name);
@@ -570,7 +571,7 @@ void load_gamecfg(const char *name)
 
 void save_gamecfg(const char *name)
 {
-	char path[MAX_PATH];
+	char path[PATH_MAX];
 	cfg_type *gamecfg;
 
 	sprintf(path, "%sconfig/%s.ini", launchDir, name);

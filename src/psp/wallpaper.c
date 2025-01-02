@@ -7,7 +7,7 @@
 ******************************************************************************/
 
 #include "psp.h"
-
+#include <limits.h>
 
 /******************************************************************************
 	ÉOÉçÅ[ÉoÉãïœêî
@@ -91,7 +91,7 @@ void set_wallpaper(void)
 void load_wallpaper(void)
 {
 	int i, size;
-	char path[MAX_PATH];
+	char path[PATH_MAX];
 	FILE *fp;
 	const char *wp_name[NUM_WALLPAPERS] =
 	{

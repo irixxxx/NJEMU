@@ -6,8 +6,9 @@
 
 ******************************************************************************/
 
-#include "ncdz.h"
 #include <ctype.h>
+#include <limits.h>
+#include "ncdz.h"
 
 void swab(const void *restrict src, void *restrict dest, ssize_t nbytes);
 
@@ -138,7 +139,7 @@ static int get_filetype(const char *ext)
 
 static void show_loading_image(void)
 {
-	char path[MAX_PATH];
+	char path[PATH_MAX];
 
 	video_driver->clearScreen(video_data);
 

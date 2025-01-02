@@ -9,7 +9,9 @@
 #ifndef PSP_FILEBROWSER_H
 #define PSP_FILEBROWSER_H
 
-extern char startupDir[MAX_PATH];
+#include <limits.h>
+
+extern char startupDir[PATH_MAX];
 
 int file_exist(const char *path);
 char *find_file(char *pattern, char *path);

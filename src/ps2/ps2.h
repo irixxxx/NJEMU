@@ -8,10 +8,6 @@
 #ifndef PS2_MAIN_H
 #define PS2_MAIN_H
 
-#ifndef MAX_PATH
-#define MAX_PATH 256
-#endif
-
 #define SCR_WIDTH			480
 #define SCR_HEIGHT			272
 #define BUF_WIDTH			512

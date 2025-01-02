@@ -6,8 +6,9 @@
 
 ******************************************************************************/
 
-#include <sys/unistd.h>
 #include <fcntl.h>
+#include <limits.h>
+#include <sys/unistd.h>
 #include "emumain.h"
 
 void swab(const void *restrict src, void *restrict dest, ssize_t nbytes);
@@ -33,7 +34,7 @@ int64_t file_open(const char *fname1, const char *fname2, const uint32_t crc, ch
 {
 	int i, found = 0;
 	struct zip_find_t file;
-	char path[MAX_PATH];
+	char path[PATH_MAX];
 
 	for (i = 0; i < 3; i++)
 	{
@@ -149,7 +150,7 @@ int file_getc(void)
 int cachefile_open(int type)
 {
 	int32_t fd = -1;
-	char path[MAX_PATH];
+	char path[PATH_MAX];
 
 	switch (type)
 	{

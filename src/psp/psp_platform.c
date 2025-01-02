@@ -7,6 +7,7 @@
 ******************************************************************************/
 
 #include <fcntl.h>
+#include <limits.h>
 #include <pspsdk.h>
 #include <pspctrl.h>
 #include <pspimpose_driver.h>
@@ -27,7 +28,7 @@ typedef struct psp_platform {
 	SceUID modID;
 	int32_t devkit_version;
 #if SYSTEM_BUTTONS
-	char prx_path[MAX_PATH];
+	char prx_path[PATH_MAX];
 #endif
 } psp_platform_t;
 
@@ -55,7 +56,7 @@ static SceKernelCallbackFunction PowerCallback(int unknown, int pwrflags, void *
 
 		if (psp2k_mem_left < 0x400000)
 		{
-			char path[MAX_PATH];
+			char path[PATH_MAX];
 			SceUID fd;
 
 			sprintf(path, "%sresume.bin", launchDir);
@@ -76,7 +77,7 @@ static SceKernelCallbackFunction PowerCallback(int unknown, int pwrflags, void *
 
 		if (psp2k_mem_left < 0x400000)
 		{
-			char path[MAX_PATH];
+			char path[PATH_MAX];
 			SceUID fd;
 
 			sprintf(path, "%sresume.bin", launchDir);

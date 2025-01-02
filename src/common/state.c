@@ -9,8 +9,9 @@
 #ifdef SAVE_STATE
 
 #include <fcntl.h>
-#include <zlib.h>
+#include <limits.h>
 #include <time.h>
+#include <zlib.h>
 #include "emumain.h"
 
 typedef struct {
@@ -187,7 +188,7 @@ int state_save(int slot)
 {
 	int32_t fd = -1;
    	stateTime nowtime;
-	char path[MAX_PATH];
+	char path[PATH_MAX];
 	char error_mes[128];
 	char buf[128];
 #if (EMU_SYSTEM == NCDZ)
@@ -383,7 +384,7 @@ int state_load(int slot)
 #else
 	FILE *fp;
 #endif
-	char path[MAX_PATH];
+	char path[PATH_MAX];
 	char error_mes[128];
 	char buf[128];
 #if (EMU_SYSTEM == NCDZ)
@@ -654,7 +655,7 @@ void state_make_thumbnail(void)
 int state_load_thumbnail(int slot)
 {
 	FILE *fp;
-	char path[MAX_PATH];
+	char path[PATH_MAX];
 
 	clear_thumbnail();
 

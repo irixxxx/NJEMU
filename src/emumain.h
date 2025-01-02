@@ -9,6 +9,7 @@
 #ifndef EMUMAIN_H
 #define EMUMAIN_H
 
+#include <limits.h>
 #include <stdbool.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -19,10 +20,6 @@
 #include <stdlib.h>
 #include "emucfg.h"
 #include "main_ui_draw.h"
-
-#ifndef MAX_PATH
-#define MAX_PATH 256
-#endif
 
 enum
 {
@@ -221,17 +218,17 @@ extern UI_PALETTE ui_palette[UI_PAL_MAX];
 #include "ncdz/ncdz.h"
 #endif
 
-extern char launchDir[MAX_PATH];
-extern char screenshotDir[MAX_PATH];
+extern char launchDir[PATH_MAX];
+extern char screenshotDir[PATH_MAX];
 extern bool systembuttons_available;
 
 extern char game_name[16];
 extern char parent_name[16];
-extern char game_dir[MAX_PATH];
+extern char game_dir[PATH_MAX];
 
 #if USE_CACHE
 extern char cache_parent_name[16];
-extern char cache_dir[MAX_PATH];
+extern char cache_dir[PATH_MAX];
 #endif
 
 extern int option_showfps;

@@ -6,6 +6,7 @@
 
 ******************************************************************************/
 
+#include <limits.h>
 #include "cps1.h"
 
 
@@ -628,7 +629,7 @@ static struct EEPROM_interface pang3_eeprom_interface =
 
 static void cps1_nvram_read_write(int read_or_write)
 {
-	char path[MAX_PATH];
+	char path[PATH_MAX];
 	FILE *fp;
 
 	sprintf(path, "%snvram/%s.nv", launchDir, game_name);

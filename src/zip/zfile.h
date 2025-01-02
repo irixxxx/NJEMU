@@ -10,11 +10,13 @@
 #define ZFILE_H
 
 #include <stdint.h>
+#include <limits.h>
+#include <stddef.h>
 #include "emucfg.h"
 
 struct zip_find_t
 {
-	char name[MAX_PATH];
+	char name[PATH_MAX];
 	size_t  length;
 	uint64_t  crc32;
 };

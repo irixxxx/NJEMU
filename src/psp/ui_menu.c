@@ -6,6 +6,7 @@
 
 ******************************************************************************/
 
+#include <limits.h>
 #include "emumain.h"
 
 #define MENU_BLANK	{ LF, }
@@ -2218,7 +2219,7 @@ static void state_delete_slot(void)
 {
 	if (messagebox(MB_DELETESTATE))
 	{
-		char path[MAX_PATH];
+		char path[PATH_MAX];
 
 		sprintf(path, "%sstate/%s.sv%d", launchDir, game_name, state_sel);
 		if (remove(path) < 0)

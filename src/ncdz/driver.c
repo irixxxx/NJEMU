@@ -6,6 +6,7 @@
 
 ******************************************************************************/
 
+#include <limits.h>
 #include "ncdz.h"
 
 void swab(const void *restrict src, void *restrict dest, ssize_t nbytes);
@@ -97,7 +98,7 @@ static void raster_interrupt_aof2(int line);
 int neogeo_check_game(void)
 {
 	FILE *fp;
-	char fname[16], path[MAX_PATH], linebuf[128];
+	char fname[16], path[PATH_MAX], linebuf[128];
 	int i, found = 0, NGH_number;
 	int64_t fd;
 

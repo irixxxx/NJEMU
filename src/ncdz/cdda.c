@@ -6,6 +6,7 @@
 
 ******************************************************************************/
 
+#include <limits.h>
 #include "ncdz.h"
 
 
@@ -79,7 +80,7 @@ void cdda_play(int track)
 
 		if ((fname = find_file(pattern, mp3_dir)))
 		{
-			char path[MAX_PATH];
+			char path[PATH_MAX];
 
 			sprintf(path, "%s/%s", mp3_dir, fname);
 			mp3_play(path);
@@ -301,7 +302,7 @@ STATE_LOAD( cdda )
 
 			if ((fname = find_file(pattern, mp3_dir)))
 			{
-				char path[MAX_PATH];
+				char path[PATH_MAX];
 
 				sprintf(path, "%s/%s", mp3_dir, fname);
 				mp3_seek_set(path, frame);

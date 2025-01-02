@@ -9,6 +9,8 @@
 #ifndef COMMON_MP3_H
 #define COMMON_MP3_H
 
+#include <limits.h>
+
 enum
 {
 	MP3_STOP = 0,
@@ -18,7 +20,7 @@ enum
 	MP3_SLEEP
 };
 
-extern char mp3_dir[MAX_PATH];
+extern char mp3_dir[PATH_MAX];
 extern int option_mp3_enable;
 extern int option_mp3_volume;
 

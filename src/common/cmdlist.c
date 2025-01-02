@@ -6,6 +6,7 @@
 
 ******************************************************************************/
 
+#include <limits.h>
 #include "emumain.h"
 
 
@@ -173,7 +174,7 @@ static int check_text_encode(char *buf, int size)
 void load_commandlist(const char *game_name, const char *parent_name)
 {
 	FILE *fp;
-	char path[MAX_PATH];
+	char path[PATH_MAX];
 	char lf, *p, *buf, linebuf[512];//256
 	const char *name = game_name;
 	int i, found, line, item;
@@ -803,7 +804,7 @@ void commandlist(int flag)
 int commandlist_size_reduction(void)
 {
 	FILE *fp;
-	char path[MAX_PATH], path2[MAX_PATH];
+	char path[PATH_MAX], path2[PATH_MAX];
 	char *p, linebuf[512], rom_name[512][16];//256
 	int i, j, l, found = 0, total_roms = 0;
 	int num_games, charset, progress;

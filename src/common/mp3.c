@@ -7,6 +7,7 @@
 ******************************************************************************/
 
 #include <fcntl.h>
+#include <limits.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
@@ -30,7 +31,7 @@
 	ローカル変数
 ******************************************************************************/
 
-static char MP3_file[MAX_PATH];
+static char MP3_file[PATH_MAX];
 
 static volatile int mp3_active;
 static volatile int mp3_running;
@@ -58,7 +59,7 @@ static int32_t mp3_fd = -1;
 	グローバル変数
 ******************************************************************************/
 
-char mp3_dir[MAX_PATH];
+char mp3_dir[PATH_MAX];
 
 int option_mp3_enable;
 int option_mp3_volume;

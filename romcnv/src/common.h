@@ -9,10 +9,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
-
-#ifndef MAX_PATH
-#define MAX_PATH	512
-#endif
+#include <limits.h>
 
 #define DELIMITER	'/'
 #endif
@@ -33,9 +30,9 @@ extern int lsb_first;
 extern int rom_fd;
 extern char delimiter;
 
-extern char game_dir[MAX_PATH];
-extern char zip_dir[MAX_PATH];
-extern char launchDir[MAX_PATH];
+extern char game_dir[PATH_MAX];
+extern char zip_dir[PATH_MAX];
+extern char launchDir[PATH_MAX];
 
 extern char game_name[16];
 extern char parent_name[16];

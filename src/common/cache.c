@@ -6,6 +6,7 @@
 
 ******************************************************************************/
 
+#include <limits.h>
 #include "emumain.h"
 
 #if USE_CACHE
@@ -83,7 +84,7 @@ static int32_t pcm_fd;
 #endif
 #else
 static int cache_type;
-static char spr_cache_name[MAX_PATH];
+static char spr_cache_name[PATH_MAX];
 #endif
 
 
@@ -910,7 +911,7 @@ uint8_t *cache_alloc_state_buffer(int32_t size)
 #endif
 	{
 		int32_t fd;
-		char path[MAX_PATH];
+		char path[PATH_MAX];
 
 #ifdef LARGE_MEMORY
 		cache_alloc_type = 0;
@@ -939,7 +940,7 @@ void cache_free_state_buffer(int32_t size)
 #endif
 	{
 		uint32_t fd;
-		char path[MAX_PATH];
+		char path[PATH_MAX];
 
 		sprintf(path, "%sstate/cache.tmp", launchDir);
 
