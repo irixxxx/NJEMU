@@ -827,13 +827,13 @@ static GSTEXTURE *ps2_getTexture(void *data, enum WorkBuffer buffer) {
 static void ps2_uploadMem(void *data, enum WorkBuffer buffer) {
 	ps2_video_t *ps2 = (ps2_video_t*)data;
 	GSTEXTURE *tex = ps2_getTexture(data, buffer);
-   	gsKit_texture_send(tex->Mem, tex->Width, tex->Height, tex->Vram, tex->PSM, tex->TBW, GS_CLUT_TEXTURE);
+   	gsKit_texture_send_inline(ps2->gsGlobal, tex->Mem, tex->Width, tex->Height, tex->Vram, tex->PSM, tex->TBW, GS_CLUT_TEXTURE);
 }
 
 static void ps2_uploadClut(void *data, uint16_t *bank, uint8_t bank_index) {
 	ps2_video_t *ps2 = (ps2_video_t*)data;
 	void *vram = ps2_vramClutForBankIndex(data, bank_index);
-   	gsKit_texture_send((u32 *)bank, CLUT_WIDTH, CLUT_HEIGHT * CLUT_BANK_HEIGHT, (u32)vram, GS_PSM_CT16, 1, GS_CLUT_PALLETE);
+   	gsKit_texture_send_inline(ps2->gsGlobal, (u32 *)bank, CLUT_WIDTH, CLUT_HEIGHT * CLUT_BANK_HEIGHT, (u32)vram, GS_PSM_CT16, 1, GS_CLUT_PALLETE);
 }
 
 static void ps2_blitTexture(void *data, enum WorkBuffer buffer, void *clut, uint8_t bank_index, uint32_t vertices_count, void *vertices) {
