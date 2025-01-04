@@ -7,6 +7,7 @@
 ******************************************************************************/
 
 #include <limits.h>
+#include <sys/param.h>
 #include "emumain.h"
 
 #if USE_CACHE
@@ -729,7 +730,7 @@ int cache_start(void)
 #endif
 
 		{
-			for (i = GFX_SIZE >> BLOCK_SHIFT; i >= MIN_CACHE_SIZE; i--)
+			for (i = MIN(GFX_SIZE >> BLOCK_SHIFT, MAX_CACHE_SIZE); i >= MIN_CACHE_SIZE; i--)
 			{
 				if ((GFX_MEMORY = (uint8_t *)malloc((i << BLOCK_SHIFT) + CACHE_SAFETY)) != NULL)
 				{
