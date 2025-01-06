@@ -556,7 +556,7 @@ void blit_draw_spr(int x, int y, int w, int h, uint32_t code, uint16_t attr)
 
 	if ((idx = spr_get_sprite(key)) < 0)
 	{
-		uint32_t col, tile;
+		uint32_t col, tile, gfx3_offset;
 		uint8_t *src, *dst, lines = 16;
 
 		if (spr_texture_num == SPR_TEXTURE_SIZE - 1)
@@ -572,7 +572,8 @@ void blit_draw_spr(int x, int y, int w, int h, uint32_t code, uint16_t attr)
 
 		idx = spr_insert_sprite(key);
 		dst = SWIZZLED8_16x16(tex_spr[0], idx);
-		src = &memory_region_gfx3[(*read_cache)(code << 7)];
+		gfx3_offset = read_cache ? read_cache(code << 7) : code << 7;
+		src = &memory_region_gfx3[gfx3_offset];
 		col = color_table[(attr >> 8) & 0x0f];
 
 		while (lines--)
@@ -930,12 +931,12 @@ static void drawgfxline_fixed_flip_opaque(uint32_t *src, uint16_t *dst, uint16_t
 
 void blit_draw_spr_line(int x, int y, int zoom_x, int sprite_y, uint32_t code, uint16_t attr, uint8_t opaque)
 {
-	uint32_t src = (*read_cache)(code << 7);
+	uint32_t gfx3_offset = read_cache ? read_cache(code << 7): code << 7;
 	uint32_t dst = (y << 9) + x;
 	uint8_t flag = (attr & 1) | (opaque & SPRITE_OPAQUE) | ((zoom_x & 0x10) >> 2);
 
 	if (attr & 0x0002) sprite_y ^= 0x0f;
-	src += sprite_y << 3;
+	gfx3_offset += sprite_y << 3;
 
-	(*drawgfxline[flag])((uint32_t *)&memory_region_gfx3[src], &scrbitmap[dst], &video_palette[(attr >> 8) << 4], zoom_x);
+	(*drawgfxline[flag])((uint32_t *)&memory_region_gfx3[gfx3_offset], &scrbitmap[dst], &video_palette[(attr >> 8) << 4], zoom_x);
 }

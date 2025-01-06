@@ -317,21 +317,6 @@ static int fill_cache(void)
 	return 1;
 }
 
-
-/*------------------------------------------------------
-	キャッシュを使用しない
-
-	データが全てメモリに格納されている場合
-------------------------------------------------------*/
-
-#if (EMU_SYSTEM == MVS)
-static uint32_t read_cache_disable(uint32_t offset)
-{
-	return offset;
-}
-#endif
-
-
 /*------------------------------------------------------
 	アドレス変換のみ行う
 
@@ -510,7 +495,7 @@ void cache_init(void)
 	cache_fd = -1;
 
 #if (EMU_SYSTEM == MVS)
-	read_cache = read_cache_disable;
+	read_cache = NULL;
 #else
 	cache_type = CACHE_NOTFOUND;
 	read_cache = read_cache_static;
