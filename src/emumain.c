@@ -90,6 +90,8 @@ static const uint8_t skiptable[FRAMESKIP_LEVELS][FRAMESKIP_LEVELS] =
 	{ 0,1,1,1,1,1,1,1,1,1,1,1 }
 };
 
+static int show_frames_each_second = 0;
+
 /******************************************************************************
 	グローバル変数/構造体
 ******************************************************************************/
@@ -222,6 +224,11 @@ uint8_t skip_this_frame(void)
 void update_screen(void)
 {
 	uint8_t skipped_it = skiptable[frameskip][frameskip_counter];
+
+	if (show_frames_each_second && (frames_displayed % 60) == 0)
+	{
+		show_fps();
+	}
 
 	if (!skipped_it)
 	{
@@ -455,6 +462,7 @@ int main(int argc, char *argv[]) {
 	option_samplerate = 2;
 	option_sound_volume = 10;
 	option_stretch = 0;
+	show_frames_each_second = 0;
 
 #if defined(BUILD_MVS)
 	input_map[P1_UP] = PLATFORM_PAD_UP;
