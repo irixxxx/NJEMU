@@ -96,6 +96,7 @@ set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 # Common Flags options
 set(COMMON_FLAGS
     -ffast-math 
+    -O3
 )
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     list(APPEND COMMON_FLAGS
