@@ -132,11 +132,17 @@ elseif (PLATFORM STREQUAL "PS2")
         -Wno-format
     )
 elseif (PLATFORM STREQUAL "X86_64")
-    list(APPEND WARNING_OPTIONS
-        -Wno-unused-command-line-argument
-        -Wno-invalid-source-encoding
-        -Wno-shorten-64-to-32
-    )
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        list(APPEND WARNING_OPTIONS
+            -Wno-unused-result
+        )
+    else()
+        list(APPEND WARNING_OPTIONS
+            -Wno-unused-command-line-argument
+            -Wno-invalid-source-encoding
+            -Wno-shorten-64-to-32
+        )
+    endif()
 endif()
 
 # Include directories
