@@ -135,6 +135,7 @@ elseif (PLATFORM STREQUAL "X86_64")
     list(APPEND WARNING_OPTIONS
         -Wno-unused-command-line-argument
         -Wno-invalid-source-encoding
+        -Wno-shorten-64-to-32
     )
 endif()
 
