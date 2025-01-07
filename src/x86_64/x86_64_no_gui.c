@@ -82,14 +82,19 @@ int ui_show_popup(int draw) {
 }
 
 void file_browser(void) {
-	Loop = LOOP_EXEC;
-	strcpy(game_dir, "roms");
+    Loop = LOOP_EXEC;
+    strcpy(game_dir, "roms");
 #if USE_CACHE
-	sprintf(cache_dir, "%scache", "/");
+    sprintf(cache_dir, "cache");
 #endif
-	strcpy(game_name, "PBOBBL2N");
+    // Get the game name from a file called game_name.ini
+    FILE *fp = fopen("game_name.ini", "r");
+    if (fp) {
+        fgets(game_name, 255, fp);
+        fclose(fp);
+    }
 
-	emu_main();
+    emu_main();
 }
 
 void small_font_print(int sx, int sy, const char *s, int bg) {
