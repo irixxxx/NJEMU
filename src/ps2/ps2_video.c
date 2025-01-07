@@ -40,6 +40,7 @@
 typedef struct ps2_video {
 	gs_rgbaq vertexColor;
 	gs_rgbaq clearScreenColor;
+	gs_texclut currentTexclut;
 	GSGLOBAL *gsGlobal;
 	bool drawExtraInfo;
 
@@ -65,11 +66,23 @@ typedef struct ps2_video {
 
 	void *vram_cluts;
 	uint32_t clut_vram_size;
+	uint32_t finish_callback_id;
 } ps2_video_t;
+
+static uint32_t finish_sema_id = 0;
 
 /*--------------------------------------------------------
 	ƒrƒfƒIˆ—‰Šú‰»
 --------------------------------------------------------*/
+
+static int finish_handler(void)
+{
+   iSignalSema(finish_sema_id);
+
+   ExitHandler();
+   return 0;
+}
+
 static GSTEXTURE *initializeTexture(GSGLOBAL *gsGlobal, int width, int height, void *mem) {
 	GSTEXTURE *tex = (GSTEXTURE *)calloc(1, sizeof(GSTEXTURE));
 	tex->Width = width;
@@ -169,6 +182,36 @@ static inline void gsKit_renderToTexture(GSGLOBAL *gsGlobal, GSTEXTURE *texture)
 	gsKit_setRegFrame(gsGlobal, texture->Vram, texture->Width, texture->Height, texture->PSM);
 }
 
+void gsKit_setactive_queue(GSGLOBAL *gsGlobal)
+{
+	u64 *p_data;
+	u64 *p_store;
+
+	p_data = p_store = (u64 *)gsGlobal->dma_misc;
+
+	*p_data++ = GIF_TAG( 4, 1, 0, 0, GSKIT_GIF_FLG_PACKED, 1 );
+	*p_data++ = GIF_AD;
+
+	// Context 1
+
+	*p_data++ = GS_SETREG_SCISSOR_1( 0, gsGlobal->Width - 1, 0, gsGlobal->Height - 1 );
+	*p_data++ = GS_SCISSOR_1;
+
+	*p_data++ = GS_SETREG_FRAME_1( gsGlobal->ScreenBuffer[gsGlobal->ActiveBuffer & 1] / 8192,
+                                 gsGlobal->Width / 64, gsGlobal->PSM, 0 );
+	*p_data++ = GS_FRAME_1;
+
+	// Context 2
+
+	*p_data++ = GS_SETREG_SCISSOR_1( 0, gsGlobal->Width - 1, 0, gsGlobal->Height - 1 );
+	*p_data++ = GS_SCISSOR_2;
+
+	*p_data++ = GS_SETREG_FRAME_1( gsGlobal->ScreenBuffer[gsGlobal->ActiveBuffer & 1] / 8192,
+                                 gsGlobal->Width / 64, gsGlobal->PSM, 0 );
+	*p_data++ = GS_FRAME_2;
+}
+
+
 /* Copy of gsKit_sync_flip, but without the 'sync' */
 static inline void gsKit_flip(GSGLOBAL *gsGlobal)
 {
@@ -183,7 +226,79 @@ static inline void gsKit_flip(GSGLOBAL *gsGlobal)
       }
    }
 
-   gsKit_setactive(gsGlobal);
+   gsKit_setactive_queue(gsGlobal);
+}
+
+static inline u32 lzw(u32 val)
+{
+	u32 res;
+	__asm__ __volatile__ ("   plzcw   %0, %1    " : "=r" (res) : "r" (val));
+	return(res);
+}
+
+static inline void gsKit_wait_finish(GSGLOBAL *gsGlobal)
+{
+	if (!gsGlobal->FirstFrame)
+    	WaitSema(finish_sema_id);
+
+   	while (PollSema(finish_sema_id) >= 0);
+}
+
+static inline void gsKit_set_tw_th(const GSTEXTURE *Texture, int *tw, int *th)
+{
+	*tw = 31 - (lzw(Texture->Width) + 1);
+	if(Texture->Width > (1<<*tw))
+		(*tw)++;
+
+	*th = 31 - (lzw(Texture->Height) + 1);
+	if(Texture->Height > (1<<*th))
+		(*th)++;
+}
+
+static inline void gskit_prim_list_sprite_texture_uv_flat_color2(GSGLOBAL *gsGlobal, const GSTEXTURE *Texture, gs_rgbaq color, int count, const GSPRIMUVPOINTFLAT *vertices)
+{
+	u64* p_data;
+	u64* p_store;
+	int tw, th;
+
+	int qsize = (count * 2) + 3;
+	int bytes = count * sizeof(GSPRIMUVPOINTFLAT);
+
+	gsKit_set_tw_th(Texture, &tw, &th);
+
+	p_store = p_data = gsKit_heap_alloc(gsGlobal, qsize, (qsize*16), GIF_AD);
+
+	if(p_store == gsGlobal->CurQueue->last_tag)
+	{
+		*p_data++ = GIF_TAG_AD(qsize);
+		*p_data++ = GIF_AD;
+	}
+
+	if(Texture->VramClut == 0)
+	{
+		*p_data++ = GS_SETREG_TEX0(Texture->Vram/256, Texture->TBW, Texture->PSM,
+			tw, th, gsGlobal->PrimAlphaEnable, 0,
+			0, 0, 0, 0, GS_CLUT_STOREMODE_NOLOAD);
+	}
+	else
+	{
+		*p_data++ = GS_SETREG_TEX0(Texture->Vram/256, Texture->TBW, Texture->PSM,
+			tw, th, gsGlobal->PrimAlphaEnable, 0,
+			Texture->VramClut/256, Texture->ClutPSM, Texture->ClutStorageMode, 0, GS_CLUT_STOREMODE_LOAD);
+	}
+	*p_data++ = GS_TEX0_1 + gsGlobal->PrimContext;
+
+	*p_data++ = GS_SETREG_PRIM( GS_PRIM_PRIM_SPRITE, 0, 1, gsGlobal->PrimFogEnable,
+				gsGlobal->PrimAlphaEnable, gsGlobal->PrimAAEnable,
+				1, gsGlobal->PrimContext, 0);
+
+	*p_data++ = GS_PRIM;
+
+	// Copy color
+	memcpy(p_data, &color, sizeof(gs_rgbaq));
+	p_data += 2; // Advance 2 u64, which is 16 bytes the gs_rgbaq struct size
+	// Copy vertices
+	memcpy(p_data, vertices, bytes);
 }
 
 static void *ps2_workFrame(void *data, enum WorkBuffer buffer)
@@ -207,11 +322,19 @@ static void *ps2_workFrame(void *data, enum WorkBuffer buffer)
 }
 
 static void ps2_start(void *data) {
+	ee_sema_t sema;
 	ps2_video_t *ps2 = (ps2_video_t*)data;
 
 	GSGLOBAL *gsGlobal;
 	
 	gsGlobal = gsKit_init_global();
+
+
+   	sema.init_count = 0;
+   	sema.max_count  = 1;
+   	sema.option     = 0;
+
+   	finish_sema_id   = CreateSema(&sema);
 
 	gsGlobal->Mode = GS_MODE_NTSC;
     gsGlobal->Height = 448;
@@ -278,6 +401,7 @@ static void ps2_start(void *data) {
 	gsKit_queue_exec(gsGlobal);
 	gsKit_finish();
 	gsKit_flip(gsGlobal);
+	ps2->finish_callback_id = gsKit_add_finish_handler(finish_handler);
 }
 
 static void *ps2_init(void)
@@ -298,6 +422,9 @@ static void ps2_exit(ps2_video_t *ps2) {
 	gsKit_clear(ps2->gsGlobal, GS_BLACK);
 	gsKit_vram_clear(ps2->gsGlobal);
 	gsKit_deinit_global(ps2->gsGlobal);
+	gsKit_remove_finish_handler(ps2->finish_callback_id);
+	if (finish_sema_id >= 0)
+    	DeleteSema(finish_sema_id);
 	
 	free(ps2->scrbitmap);
 	ps2->scrbitmap = NULL;
@@ -374,8 +501,8 @@ static void ps2_flipScreen(void *data, bool vsync)
 {
 	ps2_video_t *ps2 = (ps2_video_t*)data;
 
+	gsKit_wait_finish(ps2->gsGlobal);
 	gsKit_queue_exec(ps2->gsGlobal);
-	gsKit_finish();
 
 	if (vsync) {
 		gsKit_sync_flip(ps2->gsGlobal);
@@ -451,6 +578,7 @@ static void ps2_startWorkFrame(void *data, uint32_t color) {
 	uint8_t red = color >> 0;
 	gs_rgbaq ps2_color = color_to_RGBAQ(red, green, blue, alpha, 0);
 
+	gsKit_set_texfilter(ps2->gsGlobal, ps2->scrbitmap->Filter);
 	gsKit_renderToTexture(ps2->gsGlobal, ps2->scrbitmap);
 	gsKit_clearRenderTexture(ps2->gsGlobal, ps2_color, ps2->scrbitmap);
 }
@@ -468,7 +596,8 @@ static void ps2_transferWorkFrame(void *data, RECT *src_rect, RECT *dst_rect)
 	textureVertex[1].uv = vertex_to_UV(ps2->scrbitmap, src_rect->right, src_rect->bottom);
 
 	gsKit_renderToScreen(ps2->gsGlobal);
-	gskit_prim_list_sprite_texture_uv_flat_color(ps2->gsGlobal, ps2->scrbitmap, ps2->vertexColor, textureVertexCount, textureVertex);
+	gsKit_set_texfilter(ps2->gsGlobal, ps2->scrbitmap->Filter);
+	gskit_prim_list_sprite_texture_uv_flat_color2(ps2->gsGlobal, ps2->scrbitmap, ps2->vertexColor, textureVertexCount, textureVertex);
 
 
 
@@ -843,8 +972,11 @@ static void ps2_blitTexture(void *data, enum WorkBuffer buffer, void *clut, uint
 	tex->VramClut = (u32)ps2_vramClutForBankIndex(data, bank_index);
 	gs_texclut texclut = ps2_textclutForParameters(data, clut, bank_index);
 
-	gsKit_set_texclut(ps2->gsGlobal, texclut);
-	gskit_prim_list_sprite_texture_uv_flat_color(ps2->gsGlobal, tex, ps2->vertexColor, vertices_count, vertices);
+	if (ps2->currentTexclut.specification.cov != texclut.specification.cov) {
+		ps2->currentTexclut = texclut;
+		gsKit_set_texclut(ps2->gsGlobal, texclut);
+	}
+	gskit_prim_list_sprite_texture_uv_flat_color2(ps2->gsGlobal, tex, ps2->vertexColor, vertices_count, vertices);
 }
 
 
