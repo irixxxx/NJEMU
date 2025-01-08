@@ -154,38 +154,56 @@ include_directories(
 
 # Common source files
 set(COMMON_SRC
+    emumain.h
     emumain.c
+    zip/zfile.h
     zip/zfile.c
+    zip/unzip.h
     zip/unzip.c
+    sound/sndintrf.h
     sound/sndintrf.c
+    common/cache.h
     common/cache.c
+    common/loadrom.h
     common/loadrom.c
+    common/thread_driver.h
     common/thread_driver.c
+    common/audio_driver.h
     common/audio_driver.c
+    common/power_driver.h
     common/power_driver.c
+    common/ticker_driver.h
     common/ticker_driver.c
+    common/input_driver.h
     common/input_driver.c
+    common/video_driver.h
     common/video_driver.c
+    common/ui_text_driver.h
     common/ui_text_driver.c
+    common/platform_driver.h
     common/platform_driver.c
+    common/sound.h
     common/sound.c
 )
 
 # Additional source files based on options
 if (ADHOC)
     set(COMMON_SRC ${COMMON_SRC}
+        common/adhoc.h
         common/adhoc.c
     )
 endif()
 
 if (COMMAND_LIST)
     set(COMMON_SRC ${COMMON_SRC}
+        common/cmdlist.h
         common/cmdlist.c
     )
 endif()
 
 if (SAVE_STATE)
     set(COMMON_SRC ${COMMON_SRC}
+        common/state.h
         common/state.c
     )
 endif()
@@ -200,6 +218,7 @@ endif()
 
 
 set(OS_SRC ${OS_SRC}
+    ${PLATFORM_LOWER}/${PLATFORM_LOWER}.h
     ${PLATFORM_LOWER}/${PLATFORM_LOWER}_platform.c
     ${PLATFORM_LOWER}/${PLATFORM_LOWER}_ticker.c
     ${PLATFORM_LOWER}/${PLATFORM_LOWER}_power.c
@@ -218,25 +237,42 @@ if (${TARGET} STREQUAL "MVS")
         src/mvs
     )
     set(TARGET_SRC ${TARGET_SRC}
+        cpu/m68000/m68000.h
         cpu/m68000/m68000.c
+        cpu/m68000/c68k.h
         cpu/m68000/c68k.c
+        cpu/m68000/c68kmacro.h
+        cpu/z80/z80.h
         cpu/z80/z80.c
+        cpu/z80/cz80.h
         cpu/z80/cz80.c
+        cpu/z80/cz80macro.h
     )
 
     set(TARGET_SRC ${TARGET_SRC}
+        mvs/mvs.h
         mvs/mvs.c
+        mvs/driver.h
         mvs/driver.c
+        mvs/memintrf.h
         mvs/memintrf.c
+        mvs/inptport.h
         mvs/inptport.c
+        mvs/dipsw.h
         mvs/dipsw.c
+        mvs/timer.h
         mvs/timer.c
+        mvs/vidhrdw.h
         mvs/vidhrdw.c
         mvs/${PLATFORM_LOWER}_sprite.c
+        mvs/pd4990a.h
         mvs/pd4990a.c
         mvs/neocrypt.c
+        mvs/biosmenu.h
         mvs/biosmenu.c
+        sound/2610intf.h
         sound/2610intf.c
+        sound/ym2610.h
         sound/ym2610.c
     )
 endif()
