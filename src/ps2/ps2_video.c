@@ -77,7 +77,9 @@ static uint32_t finish_sema_id = 0;
 
 static int finish_handler(void)
 {
-   iSignalSema(finish_sema_id);
+	if (GS_CSR_FINISH) {
+		iSignalSema(finish_sema_id);
+	}
 
    ExitHandler();
    return 0;
@@ -238,7 +240,7 @@ static inline u32 lzw(u32 val)
 
 static inline void gsKit_wait_finish(GSGLOBAL *gsGlobal)
 {
-	if (!gsGlobal->FirstFrame)
+	if (!GS_CSR_FINISH)
     	WaitSema(finish_sema_id);
 
    	while (PollSema(finish_sema_id) >= 0);
@@ -321,6 +323,8 @@ static void *ps2_workFrame(void *data, enum WorkBuffer buffer)
 	return NULL;
 }
 
+static void ps2_flipScreen(void *data, bool vsync);
+
 static void ps2_start(void *data) {
 	ee_sema_t sema;
 	ps2_video_t *ps2 = (ps2_video_t*)data;
@@ -398,10 +402,8 @@ static void ps2_start(void *data) {
 
 	ui_init();
 
-	gsKit_queue_exec(gsGlobal);
-	gsKit_finish();
-	gsKit_flip(gsGlobal);
 	ps2->finish_callback_id = gsKit_add_finish_handler(finish_handler);
+	ps2_flipScreen(data, true);
 }
 
 static void *ps2_init(void)
