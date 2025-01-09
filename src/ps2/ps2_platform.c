@@ -29,14 +29,14 @@ static void prepare_IOP()
 
 static void init_drivers()
 {
-	init_ps2_filesystem_driver();
+	init_only_boot_ps2_filesystem_driver();
 	init_audio_driver();
 }
 
 static void deinit_drivers()
 {
 	deinit_audio_driver();
-	deinit_ps2_filesystem_driver();
+	deinit_only_boot_ps2_filesystem_driver();
 }
 
 static void *ps2_init(void) {
