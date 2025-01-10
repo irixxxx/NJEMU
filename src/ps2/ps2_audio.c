@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <time.h>
 
 #include <kernel.h>
 #include <audsrv.h>
@@ -61,8 +63,7 @@ static void ps2_release(void *data) {
 static void ps2_srcOutputBlocking(void *data, int32_t volume, void *buffer, uint32_t size) {
 	ps2_audio_t *ps2 = (ps2_audio_t*)data;
 	
-	audsrv_wait_audio(size);
-	audsrv_play_audio(buffer, size);
+	sleep(1000);
 }
 
 static void ps2_outputPannedBlocking(void *data, int leftvol, int rightvol, void *buf) {
