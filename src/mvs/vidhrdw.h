@@ -18,6 +18,8 @@
 #define PALETTE_BANK_SIZE		(0x2000 / 2)
 #define PALETTE_BANKS			(2)
 
+#define TILE_FIX_SIZE 8
+
 extern uint16_t neogeo_videoram[0x20000 / 2];
 extern uint16_t videoram_read_buffer;
 extern uint16_t videoram_offset;

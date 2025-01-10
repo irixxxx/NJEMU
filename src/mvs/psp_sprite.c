@@ -517,10 +517,10 @@ void blit_draw_fix(int x, int y, uint32_t code, uint16_t attr)
 	vertices[0].u = vertices[1].u = (idx & 0x003f) << 3;
 	vertices[0].v = vertices[1].v = (idx & 0x0fc0) >> 3;
 
-	vertices[1].x += 8;
-	vertices[1].y += 8;
-	vertices[1].u += 8;
-	vertices[1].v += 8;
+	vertices[1].x += TILE_FIX_SIZE;
+	vertices[1].y += TILE_FIX_SIZE;
+	vertices[1].u += TILE_FIX_SIZE;
+	vertices[1].v += TILE_FIX_SIZE;
 }
 
 

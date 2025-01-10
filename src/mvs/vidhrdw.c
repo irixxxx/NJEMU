@@ -69,11 +69,11 @@ static void draw_fixed_layer_type0(void)
 {
 	uint16_t x, y, code, attr;
 
-	for (x = 8/8; x < 312/8; x++)
+	for (x = 8/TILE_FIX_SIZE; x < 312/TILE_FIX_SIZE; x++)
 	{
 		uint16_t *vram = &neogeo_videoram[0x7002 + (x << 5)];
 
-		for (y = 16/8; y < 240/8; y++)
+		for (y = 16/TILE_FIX_SIZE; y < 240/TILE_FIX_SIZE; y++)
 		{
 			code = *vram++;
 			attr = code >> 12;
@@ -107,11 +107,11 @@ static void draw_fixed_layer_type1(void)
 		i += 2;
 	}
 
-	for (x = 8/8; x < 312/8; x++)
+	for (x = 8/TILE_FIX_SIZE; x < 312/TILE_FIX_SIZE; x++)
 	{
 		uint16_t *vram = &neogeo_videoram[0x7002 + (x << 5)];
 
-		for (y = 16/8; y < 240/8; y++)
+		for (y = 16/TILE_FIX_SIZE; y < 240/TILE_FIX_SIZE; y++)
 		{
 			code = *vram++;
 			attr = code >> 12;
@@ -132,11 +132,11 @@ static void draw_fixed_layer_type2(void)
 {
 	uint16_t x, y, code, attr;
 
-	for (x = 8/8; x < 312/8; x++)
+	for (x = 8/TILE_FIX_SIZE; x < 312/TILE_FIX_SIZE; x++)
 	{
 		uint16_t *vram = &neogeo_videoram[0x7002 + (x << 5)];
 
-		for (y = 16/8; y < 240/8; y++)
+		for (y = 16/TILE_FIX_SIZE; y < 240/TILE_FIX_SIZE; y++)
 		{
 			code = *vram++;
 			attr = code >> 12;

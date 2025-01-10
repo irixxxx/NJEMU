@@ -527,10 +527,10 @@ void blit_draw_fix(int x, int y, uint32_t code, uint16_t attr)
 	uint32_t y0 = y;
 	uint32_t u0 = (idx & 0x003f) << 3;
 	uint32_t v0 = (idx & 0x0fc0) >> 3;
-	uint32_t x1 = x + 8;
-	uint32_t y1 = y + 8;
-	uint32_t u1 = u0 + 8;
-	uint32_t v1 = v0 + 8;
+	uint32_t x1 = x + TILE_FIX_SIZE;
+	uint32_t y1 = y + TILE_FIX_SIZE;
+	uint32_t u1 = u0 + TILE_FIX_SIZE;
+	uint32_t v1 = v0 + TILE_FIX_SIZE;
 
 
 	vertices[0].xyz2 = vertex_to_XYZ2_pixel_perfect(x0, y0);
