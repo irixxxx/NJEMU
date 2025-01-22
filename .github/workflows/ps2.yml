@@ -17,7 +17,7 @@ jobs:
     strategy:
       matrix:
         target: [MVS] #TOOD: CPS1, CPS2, NCDZ
-        large_memory: [ON, OFF]
+        large_memory: [OFF] #TODO: ON
         command_list: [OFF] #TODO: ON
         adhoc: [OFF] #TODO: ON
         save_state: [OFF] #TODO: OFF
@@ -36,6 +36,14 @@ jobs:
     - name: Install dependencies
       run: |
         apk add build-base git bash cmake
+    
+    - name: Compile custom ps2sdk branch
+      run: |
+        git clone https://github.com/fjtrujy/ps2sdk.git
+        cd ps2sdk
+        git checkout fix_timer_acurracy
+        make -j $(getconf _NPROCESSORS_ONLN) clean
+        make -j $(getconf _NPROCESSORS_ONLN) install
     
     - name: Compile custom gskit branch
       run: |
