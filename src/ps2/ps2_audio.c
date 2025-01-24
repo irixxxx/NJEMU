@@ -3,6 +3,7 @@
 
 #include <kernel.h>
 #include <audsrv.h>
+#include <ps2_audio_driver.h>
 
 #include "common/audio_driver.h"
 
@@ -13,11 +14,16 @@ typedef struct ps2_audio {
 
 static void *ps2_init(void) {
 	ps2_audio_t *ps2 = (ps2_audio_t*)calloc(1, sizeof(ps2_audio_t));
+
+	init_audio_driver();
+
 	return ps2;
 }
 
 static void ps2_free(void *data) {
 	ps2_audio_t *ps2 = (ps2_audio_t*)data;
+
+	deinit_audio_driver();
 
 	free(ps2);
 }
