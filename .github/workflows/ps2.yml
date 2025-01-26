@@ -36,14 +36,6 @@ jobs:
     - name: Install dependencies
       run: |
         apk add build-base git bash cmake
-    
-    - name: Compile custom gskit branch
-      run: |
-        git clone https://github.com/fjtrujy/gsKit.git
-        cd gsKit
-        git checkout finish_handler
-        make -j $(getconf _NPROCESSORS_ONLN) clean
-        make -j $(getconf _NPROCESSORS_ONLN) install
 
     - name: Compile custom ps2_driver branch
       run: |
